@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Saldo • L2 Impure</title>
+    <link rel="icon" type="image/png" href="../img/logo.png">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Open+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/dashboard.css">
+    <style>
+        .balance-info {
+            color: var(--accent-primary);
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+        
+        .balance-form {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 40px;
+        }
+        
+        .form-select {
+            width: 100%;
+            padding: 14px 16px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            color: var(--text-primary);
+            font-size: 14px;
+            cursor: pointer;
+        }
+        
+        .form-select:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+        }
+        
+        .coin-slider {
+            margin: 20px 0;
+        }
+        
+        .coin-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            background: var(--accent-primary);
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #000;
+            margin-bottom: 15px;
+        }
+        
+        .slider-input {
+            width: 100%;
+            height: 6px;
+            background: var(--bg-secondary);
+            border-radius: 3px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        .slider-input::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            background: var(--accent-primary);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        
+        .slider-marks {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+        
+        .payment-info {
+            margin-top: 20px;
+            padding: 15px;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+        }
+        
+        .payment-info h4 {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+        }
+        
+        .payment-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            font-size: 14px;
+        }
+        
+        .payment-row .currency {
+            color: var(--text-muted);
+        }
+        
+        .btn-recharge {
+            width: 100%;
+            padding: 14px;
+            background: var(--accent-primary);
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #000;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        
+        .btn-recharge:hover {
+            background: var(--accent-primary-hover);
+        }
+        
+        /* Bonus Table */
+        .bonus-table {
+            width: 100%;
+        }
+        
+        .bonus-title {
+            font-size: 14px;
+            margin-bottom: 15px;
+            color: var(--text-muted);
+        }
+        
+        .bonus-row {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            background: var(--bg-secondary);
+            border-radius: 6px;
+            margin-bottom: 8px;
+        }
+        
+        .bonus-row span {
+            flex: 1;
+            font-size: 13px;
+        }
+        
+        .bonus-row .amount {
+            color: var(--accent-primary);
+            font-weight: 600;
+        }
+        
+        .bonus-row .bonus {
+            color: var(--accent-green);
+            font-weight: 600;
+        }
+        
+        .bonus-note {
+            margin-top: 20px;
+            font-size: 12px;
+            color: var(--accent-primary);
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../index.html" class="sidebar-logo">
+                    <img src="../img/logo.png" alt="L2 Impure" class="sidebar-logo-img">
+                </a>
+                <div class="sidebar-nav-top">
+                    <a href="../index.html">Site</a>
+                    <a href="#">Fórum</a>
+                    <a href="#" class="active">Doações</a>
+                </div>
+            </div>
+
+            <div class="server-selector">
+                <div class="server-selector-label">Seleção de Servidor</div>
+                <select class="server-select">
+                    <option>Interlude x10 (NOVO)</option>
+                </select>
+            </div>
+
+            <nav class="sidebar-menu">
+                <div class="menu-section">
+                    <div class="menu-section-title">Painel de Controle</div>
+                    <a href="dashboard.html" class="menu-item">
+                        <span class="menu-item-icon">🏠</span>
+                        Página principal
+                    </a>
+                    <a href="characters.html" class="menu-item">
+                        <span class="menu-item-icon">👤</span>
+                        Meus personagens
+                    </a>
+                    <a href="warehouse.html" class="menu-item">
+                        <span class="menu-item-icon">📦</span>
+                        Meu depósito
+                    </a>
+                    <a href="balance.html" class="menu-item active">
+                        <span class="menu-item-icon">💰</span>
+                        Saldo
+                        <span class="menu-item-badge">0</span>
+                    </a>
+                    <a href="referrals.html" class="menu-item">
+                        <span class="menu-item-icon">🔗</span>
+                        Indicações
+                    </a>
+                    <a href="promocode.html" class="menu-item">
+                        <span class="menu-item-icon">🎁</span>
+                        Ativar Código Promocional
+                    </a>
+                    <a href="ranking.html" class="menu-item">
+                        <span class="menu-item-icon">📊</span>
+                        Classificação
+                    </a>
+                    <a href="support.html" class="menu-item">
+                        <span class="menu-item-icon">🎧</span>
+                        Suporte
+                    </a>
+                    <a href="settings.html" class="menu-item">
+                        <span class="menu-item-icon">⚙️</span>
+                        Configurações
+                    </a>
+                </div>
+            </nav>
+
+            <div class="sidebar-servers">
+                <div class="sidebar-servers-title">Status dos Servidores</div>
+                <div class="sidebar-server-item">
+                    <div class="sidebar-server-name">
+                        <span class="sidebar-server-icon">⚔️</span>
+                        Interlude x10 (NOVO)
+                    </div>
+                    <span class="sidebar-server-badge soon">Em Breve</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="dashboard-main">
+            <header class="dashboard-header">
+                <div class="dashboard-header-left">
+                    <button class="create-account-btn">
+                        <span>+</span>
+                        Criar uma conta no jogo
+                    </button>
+                </div>
+                <div class="dashboard-header-right">
+                    <button class="header-icon-btn">🇧🇷</button>
+                    <button class="header-icon-btn">⚙️</button>
+                    <div class="user-avatar">J</div>
+                </div>
+            </header>
+
+            <div class="dashboard-content">
+                <div class="section-box">
+                    <div class="section-box-header">
+                        <span class="section-box-title">Recarregar saldo</span>
+                    </div>
+                    
+                    <div style="padding: 25px;">
+                        <p class="balance-info">
+                            Topping up balance on the server: <strong>Interlude x10 (NOVO)</strong>
+                        </p>
+                        
+                        <div class="balance-form">
+                            <!-- Left Column: Form -->
+                            <div>
+                                <div class="form-group">
+                                    <label class="form-label">Forma de pagamento</label>
+                                    <select class="form-select">
+                                        <option>B2Pay (World Cards, Crypto)</option>
+                                        <option>PIX</option>
+                                        <option>Boleto</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label class="form-label">Quantia, Coin of Luck</label>
+                                    <input type="number" class="form-input" value="4" min="1" max="3000" id="coinAmount">
+                                </div>
+                                
+                                <div class="coin-slider">
+                                    <span class="coin-badge" id="coinBadge">4 Coin of Luck</span>
+                                    <input type="range" class="slider-input" min="4" max="3000" value="4" id="coinSlider">
+                                    <div class="slider-marks">
+                                        <span>4</span>
+                                        <span>753</span>
+                                        <span>1502</span>
+                                        <span>2251</span>
+                                        <span>3000</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="payment-info">
+                                    <h4>A pagar:</h4>
+                                    <div class="payment-row">
+                                        <span class="currency">EUR</span>
+                                        <span id="priceEUR">1</span>
+                                    </div>
+                                    <div class="payment-row">
+                                        <span class="currency">USD</span>
+                                        <span id="priceUSD">1.04</span>
+                                    </div>
+                                    <div class="payment-row">
+                                        <span class="currency">BRL</span>
+                                        <span id="priceBRL">5.13</span>
+                                    </div>
+                                </div>
+                                
+                                <button class="btn-recharge">Recarregar</button>
+                            </div>
+                            
+                            <!-- Right Column: Bonus -->
+                            <div class="bonus-table">
+                                <div class="bonus-title">Bônus no valor do depósito</div>
+                                
+                                <div class="bonus-row">
+                                    <span>A PARTIR DE</span>
+                                    <span class="amount">50 COIN OF LUCK</span>
+                                    <span>BÔNUS</span>
+                                    <span class="bonus">15%</span>
+                                </div>
+                                <div class="bonus-row">
+                                    <span>A PARTIR DE</span>
+                                    <span class="amount">100 COIN OF LUCK</span>
+                                    <span>BÔNUS</span>
+                                    <span class="bonus">20%</span>
+                                </div>
+                                <div class="bonus-row">
+                                    <span>A PARTIR DE</span>
+                                    <span class="amount">150 COIN OF LUCK</span>
+                                    <span>BÔNUS</span>
+                                    <span class="bonus">25%</span>
+                                </div>
+                                <div class="bonus-row">
+                                    <span>A PARTIR DE</span>
+                                    <span class="amount">200 COIN OF LUCK</span>
+                                    <span>BÔNUS</span>
+                                    <span class="bonus">30%</span>
+                                </div>
+                                <div class="bonus-row">
+                                    <span>A PARTIR DE</span>
+                                    <span class="amount">300 COIN OF LUCK</span>
+                                    <span>BÔNUS</span>
+                                    <span class="bonus">40%</span>
+                                </div>
+                                
+                                <p class="bonus-note">
+                                    O bônus é adicionado quando você retira moedas do saldo da sua conta para o jogo.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="../js/main.js"></script>
+    <script>
+        const slider = document.getElementById('coinSlider');
+        const amount = document.getElementById('coinAmount');
+        const badge = document.getElementById('coinBadge');
+        
+        function updatePrices(coins) {
+            const eur = (coins / 4).toFixed(2);
+            const usd = (eur * 1.04).toFixed(2);
+            const brl = (eur * 5.13).toFixed(2);
+            
+            document.getElementById('priceEUR').textContent = eur;
+            document.getElementById('priceUSD').textContent = usd;
+            document.getElementById('priceBRL').textContent = brl;
+            badge.textContent = coins + ' Coin of Luck';
+        }
+        
+        slider.addEventListener('input', function() {
+            amount.value = this.value;
+            updatePrices(this.value);
+        });
+        
+        amount.addEventListener('input', function() {
+            slider.value = this.value;
+            updatePrices(this.value);
+        });
+    </script>
+</body>
+</html>

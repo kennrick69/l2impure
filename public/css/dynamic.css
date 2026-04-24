@@ -1,0 +1,21 @@
+/* L2 Impure - Estilos Dinâmicos (API) */
+
+.auth-error {
+    display: none;
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #ef4444;
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    font-size: 14px;
+    text-align: center;
+}
+
+button:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.auth-error.auth-success {
+    background: rgba(74, 222, 128, 0.15);
+    border: 1px solid rgba(74, 222, 128, 0.3);
+    color: #4ade80;
+}

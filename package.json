@@ -1,0 +1,12 @@
+{
+  "name": "l2impure-site",
+  "version": "1.0.0",
+  "description": "L2 Impure - Site",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
