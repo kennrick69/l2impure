@@ -81,6 +81,35 @@ model GameAccount {
   @@map("game_accounts")
 }
 
+/// Códigos promocionais — admin cria, usuário resgata uma vez por código
+model PromoCode {
+  id        Int       @id @default(autoincrement())
+  code      String    @unique @db.VarChar(64)
+  reward    Json
+  maxUses   Int?      @map("max_uses")
+  uses      Int       @default(0)
+  expiresAt DateTime? @map("expires_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  redemptions PromoRedemption[]
+
+  @@index([code])
+  @@map("promo_codes")
+}
+
+model PromoRedemption {
+  id          Int      @id @default(autoincrement())
+  userId      Int      @map("user_id")
+  promoCodeId Int      @map("promo_code_id")
+  redeemedAt  DateTime @default(now()) @map("redeemed_at")
+
+  promoCode PromoCode @relation(fields: [promoCodeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, promoCodeId])
+  @@index([userId])
+  @@map("promo_redemptions")
+}
+
 /// Audit log — registra ações sensíveis (login, criar conta de jogo, reset HWID, etc)
 model AuditLog {
   id        Int      @id @default(autoincrement())
