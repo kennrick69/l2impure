@@ -35,6 +35,15 @@ const ResetHwidBody = z.object({
     .regex(/^[A-Za-z0-9]+$/, "alfanumérico"),
 });
 
+const ChangePasswordBody = z.object({
+  login: z
+    .string()
+    .min(4)
+    .max(45)
+    .regex(/^[A-Za-z0-9]+$/, "alfanumérico"),
+  password: z.string().min(6).max(45),
+});
+
 export async function accountRoutes(app: FastifyInstance) {
   app.post(
     "/accounts/create",
@@ -116,6 +125,94 @@ export async function accountRoutes(app: FastifyInstance) {
         reply.send({ ok: true, login });
       } catch (e) {
         req.log.error({ err: e }, "[/accounts/reset-hwid] failed");
+        reply.code(500).send({ error: "internal error" });
+      }
+    },
+  );
+
+  /**
+   * POST /accounts/change-password — autenticado.
+   * Body: { login, password }
+   * Atualiza a senha do L2J (SHA1+Base64).
+   */
+  app.post(
+    "/accounts/change-password",
+    { preHandler: authenticate },
+    async (req, reply) => {
+      const parsed = ChangePasswordBody.safeParse(req.body);
+      if (!parsed.success) {
+        reply.code(400).send({
+          error: "invalid body",
+          details: parsed.error.flatten(),
+        });
+        return;
+      }
+      const { login, password } = parsed.data;
+      const hash = l2jPasswordHash(password);
+      try {
+        const [result] = await pool.query<ResultSetHeader>(
+          "UPDATE accounts SET password = ? WHERE login = ?",
+          [hash, login],
+        );
+        if (result.affectedRows === 0) {
+          reply.code(404).send({ error: "account not found" });
+          return;
+        }
+        reply.send({ ok: true, login });
+      } catch (e) {
+        req.log.error({ err: e }, "[/accounts/change-password] failed");
+        reply.code(500).send({ error: "internal error" });
+      }
+    },
+  );
+
+  /**
+   * DELETE /accounts/:login — autenticado.
+   * Deleta a conta no L2J. Bloqueia se algum char dela está online.
+   * Apaga primeiro `characters` daquele account_name (chars perdidos)
+   * e depois `accounts`. Pode deixar órfãos em items/clan_subpledges/etc.
+   * — aceitável pra deletar conta de jogo do painel; o user concorda
+   * via modal de confirmação que diz "irreversível".
+   */
+  app.delete<{ Params: { login: string } }>(
+    "/accounts/:login",
+    { preHandler: authenticate },
+    async (req, reply) => {
+      const { login } = req.params;
+      if (!/^[A-Za-z0-9]{4,45}$/.test(login)) {
+        reply.code(400).send({ error: "invalid login" });
+        return;
+      }
+      try {
+        const [onlineRows] = await pool.query(
+          "SELECT COUNT(*) AS c FROM characters WHERE account_name = ? AND online > 0",
+          [login],
+        );
+        const onlineCount = (onlineRows as Array<{ c: number }>)[0]?.c ?? 0;
+        if (onlineCount > 0) {
+          reply.code(409).send({ error: "characters online", onlineCount });
+          return;
+        }
+
+        const [charsResult] = await pool.query<ResultSetHeader>(
+          "DELETE FROM characters WHERE account_name = ?",
+          [login],
+        );
+        const [accResult] = await pool.query<ResultSetHeader>(
+          "DELETE FROM accounts WHERE login = ?",
+          [login],
+        );
+        if (accResult.affectedRows === 0) {
+          reply.code(404).send({ error: "account not found" });
+          return;
+        }
+        reply.send({
+          ok: true,
+          login,
+          charactersDeleted: charsResult.affectedRows,
+        });
+      } catch (e) {
+        req.log.error({ err: e }, "[DELETE /accounts/:login] failed");
         reply.code(500).send({ error: "internal error" });
       }
     },
