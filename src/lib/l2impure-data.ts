@@ -40,6 +40,7 @@ export const navItems: NavItem[] = [
       { label: "YouTube", href: "#", external: true },
     ],
   },
+  { label: "Download", href: "/download" },
   { label: "Promoções", href: "#promocoes" },
   { label: "Doações", href: "/dashboard" },
 ];
@@ -187,7 +188,7 @@ export const footerColumns: FooterColumn[] = [
     heading: "Servidor",
     links: [
       { label: "Sobre", href: "#" },
-      { label: "Download", href: "#" },
+      { label: "Download", href: "/download" },
       { label: "Regras", href: "#" },
     ],
   },
