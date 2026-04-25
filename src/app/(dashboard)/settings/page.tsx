@@ -1,17 +1,14 @@
-import { PageTitle, Placeholder } from "@/components/dashboard/Placeholder";
+import { PageTitle } from "@/components/dashboard/Placeholder";
+import { ChangePasswordForm } from "@/components/dashboard/ChangePasswordForm";
 
 export default function SettingsPage() {
   return (
     <>
       <PageTitle
         title="Configurações"
-        subtitle="Email, senha, idioma e preferências da conta."
+        subtitle="Gerencie senha, email e preferências da conta."
       />
-      <Placeholder
-        icon="⚙️"
-        title="Configurações em construção"
-        description="Trocar senha, ativar 2FA e atualizar email vão aparecer aqui."
-      />
+      <ChangePasswordForm />
     </>
   );
 }
