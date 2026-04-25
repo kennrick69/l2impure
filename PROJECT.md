@@ -13,9 +13,13 @@
 
 - **Nome:** L2 Impure
 - **O que é:** Servidor privado de Lineage 2 Interlude
-- **Diferencial:** **Sistema de Híbridos** — combina 2 classes lvl 78 em um
-  personagem com skills das duas (sistema de cromossomos, documentado em
-  `L2-IMPURE-CLASSES-IMPURAS-v2.md`)
+- **Diferencial (planejado, não anunciado no site ainda):** **Sistema de
+  Híbridos** — combina 2 classes lvl 78 em um personagem com skills das
+  duas (sistema de cromossomos, documentado em
+  `L2-IMPURE-CLASSES-IMPURAS-v2.md`). É **Fase 5** do roadmap. Toda
+  menção foi REMOVIDA do UI público em 2026-04-25 (commit `ddc62ce`)
+  pra não anunciar feature inexistente — só voltar a aparecer quando
+  tiver tabela SQL + bridge endpoint + tela funcionando.
 - **Rates:** x10 XP/SP/Drop/Adena, Spoil x10, Raid x5
 - **Features complementares:** Auto-Farm, Olympiad dupla (normal + híbrida),
   Eventos 24/7 (DeathMatch, TvT, CTF), Rebirth lvl 81→84 com +3 stats
@@ -62,7 +66,7 @@ produção do domínio l2impure.com depende disso.
 | DB do jogo | MySQL 8 (já existente, L2J) | VPS 76.13.170.153 (localhost:3306) |
 | Bridge VPS | Node.js/Fastify (**Fase 3, ainda não construído**) | VPS:8080 atrás de Cloudflare Tunnel |
 | Game server | L2J Interlude (login :2106, game :7777) | VPS |
-| Email | Nodemailer → SMTP Hostinger (smtp.hostinger.com:465) | Next API routes |
+| Email | **Resend** (HTTPS API) com fallback Nodemailer SMTP — auto-detect via `RESEND_API_KEY` | Next API routes |
 | Auth | JWT access 15min + refresh UUID 7d, tudo em cookie HttpOnly+Secure+SameSite=Lax | Next API routes + Postgres |
 | Password hashing | bcryptjs 12 rounds | - |
 | Validação | zod | - |
@@ -104,9 +108,17 @@ l2impure/
     │   │   ├── verify/page.tsx
     │   │   ├── forgot-password/page.tsx
     │   │   └── reset-password/page.tsx
-    │   ├── (dashboard)/
-    │   │   ├── layout.tsx       # PROTEÇÃO — redireciona pra /login se sem sessão
-    │   │   └── dashboard/page.tsx   # placeholder "Em construção"
+    │   ├── (dashboard)/         # PROTEGIDO — layout chama getSession()
+    │   │   ├── layout.tsx       # shell: <Sidebar/> + <DashboardHeader/> + main
+    │   │   ├── dashboard/page.tsx       # 3 stat cards + tabela contas + help
+    │   │   ├── characters/page.tsx      # placeholder "Em construção"
+    │   │   ├── warehouse/page.tsx       # placeholder
+    │   │   ├── wallet/page.tsx          # placeholder
+    │   │   ├── settings/page.tsx        # placeholder
+    │   │   ├── referrals/page.tsx       # placeholder
+    │   │   ├── support/page.tsx         # placeholder
+    │   │   ├── rankings/page.tsx        # placeholder
+    │   │   └── promo-code/page.tsx      # placeholder
     │   └── api/
     │       └── auth/
     │           ├── register/route.ts    # POST — cria user, manda email
@@ -118,6 +130,10 @@ l2impure/
     │           ├── reset/route.ts       # POST — valida token e reseta senha
     │           └── me/route.ts          # GET — retorna {user} ou {user:null}
     ├── components/
+    │   ├── dashboard/
+    │   │   ├── Sidebar.tsx          # nav lateral 260px com active state via usePathname
+    │   │   ├── DashboardHeader.tsx  # CTA criar conta + ícones + avatar/logout
+    │   │   └── Placeholder.tsx      # <Placeholder> + <PageTitle> reutilizáveis
     │   ├── Header.tsx           # nav L2 Impure (Sobre/Comunidade/Promoções/Doações)
     │   ├── Hero.tsx             # "INTERLUDE X10 / EM BREVE"
     │   ├── MainContent.tsx      # Status servidores + Notícias
@@ -145,6 +161,7 @@ l2impure/
     │   ├── recaptcha.ts         # verifyRecaptcha(token, action, minScore=0.5)
     │   ├── bridge.ts            # scaffold HMAC pra Fase 3 (não testado ainda)
     │   ├── audit.ts             # audit({userId, action, ipAddress, details}) — nunca lança
+    │   ├── email.ts             # dispatch dual: Resend (HTTPS) | Nodemailer SMTP — auto-detect via RESEND_API_KEY
     │   ├── utils.ts             # cn() = clsx + twMerge
     │   ├── l2impure-data.ts     # conteúdo pt-BR (navItems, languages, serverCards, newsItems, featureCards, statisticsServers, footerColumns, downloadBlocks, joinSection, siteConfig)
     │   └── ~~l2impure-data.ts  (legado do clone L2MAD)~~
@@ -174,11 +191,13 @@ lista completa com descrição e onde buscar.
 | `REDIS_URL` | `redis://default:<senha>@redis.railway.internal:6379` | Redis interno Railway. Idem, dev local usa `REDIS_PUBLIC_URL` |
 | `JWT_SECRET` | string 40+ chars | Assina access tokens. Atual é fraco (`L2impure_SecretKey_2026_Railway`) — **trocar por `openssl rand -hex 64`** antes de abrir produção |
 | `JWT_REFRESH_SECRET` | string 40+ chars | Assina refresh tokens (reservado pra versão futura — hoje refresh token é UUID opaco no DB, não JWT). Pode gerar com `openssl rand -hex 64` |
-| `SMTP_HOST` | `smtp.hostinger.com` | SMTP Hostinger |
+| `RESEND_API_KEY` | `re_...` (~36 chars) | Resend transactional email (preferido). Se setada, `lib/email.ts` usa Resend e ignora SMTP_*. Cria em resend.com → API Keys |
+| `RESEND_FROM` | `L2 Impure <admin@l2impure.com>` | From header pros emails Resend (cai pra `SMTP_FROM` se ausente). Domínio precisa estar verificado no Resend (DNS SPF + DKIM na Hostinger) |
+| `SMTP_HOST` | `smtp.hostinger.com` | SMTP Hostinger (fallback — Railway bloqueia :465 outbound, então só funciona em dev local) |
 | `SMTP_PORT` | `465` | SSL |
 | `SMTP_USER` | `admin@l2impure.com` | caixa criada na Hostinger |
 | `SMTP_PASS` | string ~10 chars com símbolos | Senha gerada na Hostinger. Atual tem `:` que pode precisar escapar em YAML |
-| `SMTP_FROM` | `L2 Impure <admin@l2impure.com>` | From header nos emails |
+| `SMTP_FROM` | `L2 Impure <admin@l2impure.com>` | From header nos emails (fallback pra RESEND_FROM) |
 | `RECAPTCHA_SECRET_KEY` | string 40 chars (prefixo `6Le_1sgsAAAA`) | Server-side reCAPTCHA verify. Nunca expor ao cliente |
 | `RECAPTCHA_DISABLED` | `false` (ou ausente) | Bypass server-side. `true` aceita qualquer request sem verificar |
 | `RATE_LIMIT_*_MAX` / `RATE_LIMIT_*_WINDOW` | number | Override dos defaults. Ex: `RATE_LIMIT_REGISTER_MAX=20`, `RATE_LIMIT_REGISTER_WINDOW=3600` |
@@ -450,9 +469,13 @@ Ler com `git log arq-definitiva --oneline -20` pra ver o último estado.
 - [x] Deploy Railway em `l2impure-production-49e6.up.railway.app`
 
 ### Fase 2 — em andamento
-- [ ] Validar fluxo end-to-end: register → email → verify → login → dashboard
-- [ ] Sidebar compartilhada pro dashboard
-- [ ] Páginas internas vazias mas navegáveis: `/characters`, `/warehouse`, `/wallet`, `/settings`, `/referrals`, `/support`, `/rankings`, `/promo-code`
+- [x] Sidebar compartilhada pro dashboard (`components/dashboard/Sidebar.tsx`)
+- [x] DashboardHeader com avatar + logout (`components/dashboard/DashboardHeader.tsx`)
+- [x] 8 páginas internas vazias mas navegáveis: `/characters`, `/warehouse`, `/wallet`, `/settings`, `/referrals`, `/support`, `/rankings`, `/promo-code`
+- [x] Dashboard reescrito com 3 stat cards + tabela contas + help box (1:1 com legado `dashboard.html`)
+- [x] Email: migração pra Resend com fallback SMTP (commit `753f1ac`) — falta o user fazer setup externo (Resend account + DNS + API key + Railway env)
+- [x] Cleanup de Híbridos do UI público (commit `ddc62ce`)
+- [ ] Validar fluxo end-to-end: register → email → verify → login → dashboard (bloqueado por Resend setup)
 - [ ] Landing: lapidar visual até bater 1:1 com `public/css/homepage.css` do legado (branch `main`)
 - [ ] `/api/game/accounts` POST e GET (persistência no Postgres, sem bridge ainda)
 
@@ -523,88 +546,66 @@ curl -s  https://l2impure-production-49e6.up.railway.app/api/auth/me
 
 ---
 
-**Última atualização:** 2026-04-25 (madrugada)
+**Última atualização:** 2026-04-25 (tarde — sessão Fase 2 + Resend + Híbridos cleanup)
 **Último commit relevante:** ver `git log arq-definitiva --oneline -5`
 
 ---
 
-## 18. Estado da última sessão (PARAMOS AQUI)
+## 18. Estado da última sessão (2026-04-25 tarde)
 
 ### O que funciona em produção
 - ✅ Build Railway sobe sem erros (node:crypto resolvido removendo middleware edge)
-- ✅ Landing `/` renderizando L2 Impure correto
+- ✅ Landing `/` renderizando L2 Impure — title atualizado, sem menção a Híbridos
 - ✅ `/login`, `/register`, `/forgot-password`, `/reset-password`, `/verify` carregam
-- ✅ `/dashboard` redireciona pra `/login` quando sem cookie (layout protege)
+- ✅ `/dashboard` + 8 páginas internas (`/characters`, `/warehouse`, `/wallet`, `/settings`, `/referrals`, `/support`, `/rankings`, `/promo-code`) — todas redirecionam 307 pra `/login` sem cookie (layout protege)
+- ✅ Sidebar compartilhada com active state, header com avatar/logout
 - ✅ Migration Prisma aplicada no Postgres (`No pending migrations to apply`)
 - ✅ reCAPTCHA passa o gate do register (formulário aceita, mostra "Quase lá")
 
-### O que NÃO funciona (em ordem de prioridade pra resolver)
+### O que NÃO funciona — bloqueadores ativos
 
-#### 🔴 SMTP Hostinger → ETIMEDOUT
-Endpoint diagnóstico `/api/debug/smtp?key=<DEBUG_KEY>` retornou:
-```json
-{
-  "ok": false,
-  "env": {
-    "SMTP_HOST": "smtp.hostinger.com",
-    "SMTP_PORT": "465",
-    "SMTP_USER": "admin@l2impure.com",
-    "SMTP_PASS_length": 9,
-    "SMTP_PASS_starts_with_quote": false
-  },
-  "error": {
-    "code": "ETIMEDOUT",
-    "command": "CONN"
-  }
-}
-```
+#### 🔴 Email — código pronto, falta setup externo do Resend
+`src/lib/email.ts` agora suporta dois providers (auto-detect via
+`RESEND_API_KEY`). SMTP Hostinger continua dando ETIMEDOUT no Railway
+(GCP bloqueia :465 outbound). **Resend é o caminho** — pendente de
+setup do usuário:
 
-Railway (GCP us-west2) **não consegue abrir TCP em `smtp.hostinger.com:465`**.
-Senha e config estão certos — é bloqueio de rede.
-
-**Próxima ação ao retomar:** seguir um dos dois caminhos abaixo.
-
-**Caminho A (rápido, 1 min):** trocar `SMTP_PORT` no Railway de `465` pra `587`.
-Algumas redes liberam STARTTLS (587) mas bloqueiam SSL direto (465). O código
-já lida (`secure: port === 465`). Salvar → redeploy → bater de novo no
-`/api/debug/smtp` → se `ok:true`, resolveu.
-
-**Caminho B (correto a longo prazo, ~10 min):** migrar pra **Resend** (transactional email).
-Free tier 3 mil/mês, deliverability boa, deploys cloud sem dor:
-1. Cria conta em resend.com com kennrick@gmail.com
-2. Domains → Add `l2impure.com` → copia DNS records (SPF TXT + DKIM CNAMEs)
-3. Hostinger DNS Zone Editor → adiciona os records → Verify no Resend
-4. API Keys → Create → guarda `re_...`
-5. Pede pro Claude reescrever `src/lib/email.ts` pra usar `Resend` SDK
-6. Substitui env vars: tira SMTP_*, adiciona `RESEND_API_KEY` + `RESEND_FROM=admin@l2impure.com`
-7. `npm install resend` e push
+1. Cria conta em **resend.com** com kennrick@gmail.com
+2. Domains → Add `l2impure.com` → copia DNS records (SPF TXT + 3 DKIM CNAMEs)
+3. **Hostinger** DNS Zone Editor → adiciona records → volta no Resend → Verify
+4. API Keys → Create (full access) → guarda `re_...`
+5. **Railway** → serviço Next → Variables → adiciona:
+   - `RESEND_API_KEY=re_...`
+   - `RESEND_FROM=L2 Impure <admin@l2impure.com>` (opcional, cai pra SMTP_FROM)
+6. Redeploy → testa: `curl -s 'https://l2impure-production-49e6.up.railway.app/api/debug/smtp?key=<DEBUG_KEY>'`
+   deve voltar `{"ok":true,"env":{"provider":"resend",...}}`
 
 #### 🟡 reCAPTCHA — chave AINDA com typo no bundle Railway
 A chave correta da admin é `6Le_1sgsAAAAAC2IqfxInFd1XpKoDX_ZP7Fay07P` (com `I`
 maiúsculo nas posições 16 e 20). O bundle servido em produção em
-24/04 ainda tinha `6Le_1sgsAAAAAC2lqfxlnFd1XpKoDX_ZP7Fay07P` (com `l`).
-Usuário disse que corrigiu, mas redeploy provavelmente não rodou.
+2026-04-25 (depois do redeploy do commit `44dffba`) AINDA tem
+`6Le_1sgsAAAAAC2lqfxlnFd1XpKoDX_ZP7Fay07P` (com `l` minúsculo).
 
-Hipótese: registers passam o gate porque tem `RECAPTCHA_DISABLED=true`
-setado nas vars do Railway (bypass). Confirmar:
-
+Verificado com:
 ```
 curl -sL https://l2impure-production-49e6.up.railway.app/register \
   | grep -oE 'recaptcha/api\.js[^"]*'
 ```
 
-Se voltar URL com `l` minúsculo ainda → vars não atualizou OU rebuild
-não rolou. Trigger manual: Deployments → ⋮ → Redeploy.
+**Causa:** `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` no Railway ainda tem o
+typo. Edita no painel → Redeploy.
 
-Quando a chave estiver correta no bundle, **remover** `RECAPTCHA_DISABLED`
-e `NEXT_PUBLIC_RECAPTCHA_DISABLED` das vars Railway pra reativar a
-proteção real.
+Hipótese atual: registers passam o gate porque `RECAPTCHA_DISABLED=true`
+está setado (bypass). Quando a chave estiver correta no bundle,
+remover `RECAPTCHA_DISABLED` + `NEXT_PUBLIC_RECAPTCHA_DISABLED` das
+vars Railway pra reativar a proteção real.
 
-#### 🟢 Roadmap de UI pendente (depois de SMTP/reCAPTCHA fechados)
+### Próximas tarefas (depois de Resend + reCAPTCHA fechados)
 - Validar fluxo end-to-end: register → email recebido → click link → verify → login → dashboard
-- Lapidar landing pra bater 1:1 com o `public/css/homepage.css` original (branch `legacy-express` tem como referência)
-- Criar páginas internas vazias mas navegáveis: `/characters`, `/warehouse`, `/wallet`, `/settings`, `/referrals`, `/support`, `/rankings`, `/promo-code`
-- Sidebar compartilhada do dashboard (ver template em `dashboard.html` legado)
+- Lapidar landing pra bater 1:1 com `public/css/homepage.css` original (referência: branch `legacy-express`)
+- `/api/game/accounts` POST e GET (persistência no Postgres, sem bridge ainda) — botão "Criar conta no jogo" do header já existe, só não tem ação
+- Modal "Criar conta no jogo" (igual ao `dashboard.html` legado, linhas 224-264)
+- Substituir 9 stub itens do menu Sidebar por dados reais conforme APIs forem ficando prontas
 
 ### Env vars sensíveis vazadas no chat (rotacionar antes do launch)
 Em 2026-04-25 o usuário colou todos os valores no chat de debug. Antes de
