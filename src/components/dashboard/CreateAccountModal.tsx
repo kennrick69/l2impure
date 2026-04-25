@@ -78,7 +78,7 @@ function CreateAccountModal() {
     };
   }, [close]);
 
-  const loginValid = /^[a-zA-Z0-9]{4,16}$/.test(login);
+  const loginValid = /^[a-zA-Z0-9]{5,16}$/.test(login);
   const passwordValid = password.length >= 6;
   const passwordsMatch = password === confirm;
   const canSubmit = loginValid && passwordValid && passwordsMatch && !loading;
@@ -145,7 +145,7 @@ function CreateAccountModal() {
             <label className="mb-1.5 flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-white/65">
               <span>Login da conta</span>
               <span className="font-normal normal-case text-[10px] text-white/40">
-                4-16 caracteres, letras e números
+                5-16 caracteres, letras e números
               </span>
             </label>
             <input
@@ -155,7 +155,7 @@ function CreateAccountModal() {
                 setLogin(e.target.value.replace(/[^a-zA-Z0-9]/g, ""))
               }
               maxLength={16}
-              minLength={4}
+              minLength={5}
               placeholder="meulogin"
               required
               autoFocus
