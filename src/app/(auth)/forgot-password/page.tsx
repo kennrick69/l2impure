@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Input } from "@/components/ui/Input";
 import { GoldButton } from "@/components/ui/GoldButton";
 import { useToast } from "@/components/ui/Toast";
+import { EmailCheckAlert } from "@/components/ui/EmailCheckAlert";
 import { useRecaptcha } from "@/hooks/useRecaptcha";
 
 export default function ForgotPasswordPage() {
@@ -12,18 +13,20 @@ export default function ForgotPasswordPage() {
   const recaptcha = useRecaptcha();
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
+  const [submittedEmail, setSubmittedEmail] = useState("");
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
     const fd = new FormData(e.currentTarget);
+    const email = String(fd.get("email") ?? "");
     try {
       const recaptchaToken = await recaptcha.execute("forgot");
       const res = await fetch("/api/auth/forgot", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email: fd.get("email"),
+          email,
           recaptchaToken,
         }),
       });
@@ -32,6 +35,7 @@ export default function ForgotPasswordPage() {
         show(data.error ?? "Falha", "error");
         return;
       }
+      setSubmittedEmail(email);
       setDone(true);
     } catch {
       show("Erro de rede", "error");
@@ -50,12 +54,15 @@ export default function ForgotPasswordPage() {
           Se este email existe na nossa base, você receberá um link em alguns
           minutos.
         </p>
-        <Link
-          href="/login"
-          className="text-sm font-semibold text-[color:var(--l2-text-gold)] hover:underline"
-        >
-          Voltar pro login
-        </Link>
+        <EmailCheckAlert email={submittedEmail} />
+        <p className="mt-6 text-sm">
+          <Link
+            href="/login"
+            className="font-semibold text-[color:var(--l2-text-gold)] hover:underline"
+          >
+            Voltar pro login
+          </Link>
+        </p>
       </>
     );
   }

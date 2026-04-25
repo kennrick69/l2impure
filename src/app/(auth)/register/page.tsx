@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Input } from "@/components/ui/Input";
 import { GoldButton } from "@/components/ui/GoldButton";
 import { useToast } from "@/components/ui/Toast";
+import { EmailCheckAlert } from "@/components/ui/EmailCheckAlert";
 import { useRecaptcha } from "@/hooks/useRecaptcha";
 
 export default function RegisterPage() {
@@ -12,11 +13,13 @@ export default function RegisterPage() {
   const recaptcha = useRecaptcha();
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
+  const [submittedEmail, setSubmittedEmail] = useState("");
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
     const fd = new FormData(e.currentTarget);
+    const email = String(fd.get("email") ?? "");
     const password = String(fd.get("password") ?? "");
     const confirm = String(fd.get("confirm") ?? "");
     if (password !== confirm) {
@@ -35,7 +38,7 @@ export default function RegisterPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email: fd.get("email"),
+          email,
           password,
           recaptchaToken,
         }),
@@ -45,6 +48,7 @@ export default function RegisterPage() {
         show(data.error ?? "Falha no cadastro", "error");
         return;
       }
+      setSubmittedEmail(email);
       setDone(true);
     } catch {
       show("Erro de rede", "error");
@@ -63,9 +67,7 @@ export default function RegisterPage() {
           Enviamos um email de confirmação. Clique no link pra ativar sua
           conta.
         </p>
-        <p className="text-sm text-white/45">
-          Não recebeu? Verifique a pasta de spam ou aguarde alguns minutos.
-        </p>
+        <EmailCheckAlert email={submittedEmail} />
         <p className="mt-6 text-sm text-white/55">
           <Link
             href="/login"
