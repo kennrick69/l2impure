@@ -54,12 +54,12 @@ export default function AuthLayout({
                 lineHeight: 1.1,
               }}
             >
-              SISTEMA DE
+              INTERLUDE
               <br />
-              <span style={{ color: "rgb(var(--l2-gold))" }}>HÍBRIDOS</span>
+              <span style={{ color: "rgb(var(--l2-gold))" }}>X10</span>
             </h2>
             <p className="mt-6 max-w-md text-sm text-white/85" style={{ textShadow: "0 1px 10px rgba(0,0,0,0.85)" }}>
-              Combine 2 classes nível 78 e crie personagens únicos. O único servidor de Lineage 2 Interlude com sistema de cromossomos.
+              Servidor brasileiro de Lineage 2 Interlude. Auto-Farm, Olympiad e eventos 24/7. Beta aberto — junte-se à comunidade.
             </p>
           </div>
         </aside>

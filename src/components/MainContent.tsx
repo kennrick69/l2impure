@@ -88,7 +88,7 @@ function NewsCard() {
       <div className="rounded-xl border border-white/5 bg-[color:var(--l2-bg-card)] p-5">
         <div className="mb-4 flex items-center justify-between gap-3 border-b border-white/5 pb-4">
           <span className="text-xs text-white/55">
-            L2IMPURE.COM - Servidor Brasileiro com Sistema de Híbridos
+            L2IMPURE.COM - Servidor Brasileiro de Lineage 2 Interlude
           </span>
           <a
             href="#"

@@ -25,14 +25,14 @@ const RECAPTCHA_ENTERPRISE =
 
 export const metadata: Metadata = {
   title:
-    "L2 Impure – Servidor Brasileiro de Lineage 2 Interlude com Sistema de Híbridos",
+    "L2 Impure – Servidor Brasileiro de Lineage 2 Interlude x10",
   description:
-    "L2 Impure - O único servidor de Lineage 2 com Sistema de Híbridos. Combine 2 classes e crie personagens únicos. Interlude x10 com Auto-Farm.",
+    "L2 Impure — Servidor brasileiro de Lineage 2 Interlude x10 com Auto-Farm, Olympiad e Eventos 24/7.",
   icons: { icon: "/images/logo.png" },
   openGraph: {
-    title: "L2 Impure – Interlude x10 com Sistema de Híbridos",
+    title: "L2 Impure – Interlude x10",
     description:
-      "Combine 2 classes e crie personagens únicos. Auto-Farm, Olympiad Dupla, Eventos 24/7.",
+      "Servidor brasileiro de Lineage 2 Interlude x10. Auto-Farm, Olympiad, Eventos 24/7.",
     siteName: "L2 Impure",
     locale: "pt_BR",
     type: "website",

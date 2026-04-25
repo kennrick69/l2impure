@@ -11,9 +11,9 @@ import type {
 
 export const siteConfig = {
   name: "L2 Impure",
-  tagline: "O único servidor de Lineage 2 com Sistema de Híbridos",
+  tagline: "Servidor brasileiro de Lineage 2 Interlude",
   description:
-    "Servidor Interlude x10 com Sistema de Híbridos, Auto-Farm, Olympiad Dupla e Eventos 24/7.",
+    "Servidor Interlude x10 com Auto-Farm, Olympiad e Eventos 24/7.",
   copyright: "© 2026 L2 Impure. Este servidor não é afiliado à NCSoft.",
 };
 
@@ -22,7 +22,7 @@ export const navItems: NavItem[] = [
     label: "Sobre o Servidor",
     dropdown: [
       { label: "Interlude x10 [NOVO]", href: "#sobre-x10" },
-      { label: "Sistema de Híbridos", href: "#sistema-hibridos" },
+      { label: "Rates e Features", href: "#features" },
     ],
   },
   {
@@ -50,7 +50,7 @@ export const heroContent = {
   subtitle: "EM BREVE",
   features: [
     "⚔️ BETA ABERTO — DATA A DEFINIR",
-    "🔥 AUTO-FARM, SISTEMA DE HÍBRIDOS, TORNEIOS 1V1",
+    "🔥 AUTO-FARM, OLYMPIAD, TORNEIOS 1V1",
   ],
   ctaTitle: "JOGAR DE GRAÇA",
   ctaSubtitle: "ARQUIVOS E REGISTRO",
@@ -60,7 +60,7 @@ export const serverCards: ServerCard[] = [
   {
     rate: "X10",
     name: "INTERLUDE (NOVO)",
-    description: "Sistema de Híbridos",
+    description: "Servidor brasileiro",
     status: "coming-soon",
     statusText: "EM BREVE",
     accent: "gold",
@@ -79,15 +79,15 @@ export const serverCards: ServerCard[] = [
 export const newsItems: NewsItem[] = [
   {
     icon: "🔥",
-    html: "<strong>L2IMPURE.COM</strong> – Servidor Interlude x10 com Sistema de Híbridos – Em Breve!",
+    html: "<strong>L2IMPURE.COM</strong> – Servidor brasileiro de Lineage 2 Interlude x10 – Em Breve!",
   },
   {
     icon: "⚔️",
-    html: "Sistema de Híbridos – Combine 2 classes, crie personagens únicos!",
+    html: "Beta aberto em breve — registre sua conta e fique pronto pro lançamento.",
   },
-  { icon: "💎", html: "Primeiro Híbrido GRÁTIS para todos os jogadores!" },
-  { icon: "🏆", html: "Olympiad Normal + Olympiad Híbrida separadas" },
-  { icon: "🎮", html: "Auto-Farm integrado, eventos 24/7" },
+  { icon: "💎", html: "Auto-Farm integrado direto no cliente." },
+  { icon: "🏆", html: "Olympiad clássica com torneios 1v1 semanais." },
+  { icon: "🎮", html: "Eventos 24/7 — DeathMatch, TvT e CTF automáticos." },
   {
     icon: "😊",
     html: 'Confira as informações e <a href="#" class="underline text-[color:var(--l2-text-gold)]">junte-se à comunidade!</a>',
@@ -96,16 +96,10 @@ export const newsItems: NewsItem[] = [
 
 export const featureCards: FeatureCard[] = [
   {
-    icon: "🧬",
-    title: "Sistema de Híbridos",
-    description:
-      "Combine 2 personagens level 78 e crie um Híbrido com skills de ambas as classes!",
-    highlight: true,
-  },
-  {
     icon: "⚔️",
     title: "Rates x10",
     description: "XP, SP, Drop e Adena x10. Spoil x10. Raids x5.",
+    highlight: true,
   },
   {
     icon: "🤖",
@@ -114,8 +108,8 @@ export const featureCards: FeatureCard[] = [
   },
   {
     icon: "🏆",
-    title: "Olympiad Dupla",
-    description: "Olympiad Normal + Olympiad Híbrida separadas!",
+    title: "Olympiad",
+    description: "Torneios 1v1 semanais com prêmios in-game.",
   },
   {
     icon: "🎮",
@@ -126,6 +120,11 @@ export const featureCards: FeatureCard[] = [
     icon: "🔄",
     title: "Rebirth System",
     description: "Level 81 → Rebirth com +3 stats. Máximo 3x!",
+  },
+  {
+    icon: "🇧🇷",
+    title: "Comunidade BR",
+    description: "Suporte em português, Discord ativo e staff brasileira.",
   },
 ];
 
