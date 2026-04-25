@@ -11,6 +11,8 @@ const NAV = [
   { href: "/admin/referrals", icon: "🔗", label: "Indicações" },
   { href: "/admin/announcements", icon: "📣", label: "Anúncios" },
   { href: "/admin/game-master", icon: "⚔️", label: "Game master" },
+  { href: "/admin/characters", icon: "🧝", label: "Personagens" },
+  { href: "/admin/items", icon: "💎", label: "Items (busca)" },
 ];
 
 export function AdminSidebar() {

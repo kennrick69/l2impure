@@ -130,6 +130,83 @@ export type AdminGmSearchResponse = {
   count: number;
 };
 
+export type AdminGmCharListItem = AdminGmCharacter & {
+  pvp: number;
+  pk: number;
+};
+export type AdminGmListResponse = {
+  characters: AdminGmCharListItem[];
+  total: number;
+  limit: number;
+  offset: number;
+};
+
+export type AdminGmInventoryItem = {
+  objectId: number;
+  itemId: number;
+  count: number;
+  enchantLevel: number;
+  loc: string;
+  locData: number;
+};
+export type AdminGmCharFull = AdminGmCharacter & {
+  pvp: number;
+  pk: number;
+  exp: number;
+  sp: number;
+  karma: number;
+  x: number;
+  y: number;
+  z: number;
+  maxHp: number;
+  maxMp: number;
+  maxCp: number;
+  race: number;
+  sex: number;
+  lastAccess: number;
+  onlinetime: number;
+  nobless: boolean;
+  hero: boolean;
+};
+export type AdminGmCharFullResponse = {
+  char: AdminGmCharFull;
+  inventory: AdminGmInventoryItem[];
+};
+
+export type AdminGmItemOwner = {
+  objectId: number;
+  charId: number;
+  charName: string;
+  account: string;
+  online: boolean;
+  level: number;
+  classId: number;
+  count: number;
+  enchantLevel: number;
+  loc: string;
+};
+export type AdminGmItemOwnersResponse = {
+  owners: AdminGmItemOwner[];
+  total: number;
+  itemId: number;
+  limit: number;
+  offset: number;
+};
+
+export type ItemMetadata = {
+  id: number;
+  type: string;
+  name: string;
+  grade: string;
+  slot: string | null;
+  weight: number;
+  weaponType: string | null;
+  armorType: string | null;
+  material: string | null;
+  stackable: boolean;
+  price: number;
+};
+
 export const bridge = {
   async status(): Promise<ServerStatus> {
     return cached("server:status", 30, () =>
@@ -239,6 +316,66 @@ export const bridge = {
         y,
         z,
       });
+    },
+    async listCharacters(
+      query: Record<string, string | number | boolean | undefined>,
+    ): Promise<AdminGmListResponse> {
+      const qs = new URLSearchParams();
+      for (const [k, v] of Object.entries(query)) {
+        if (v !== undefined && v !== null && v !== "") {
+          qs.append(k, String(v));
+        }
+      }
+      return bridgeFetch<AdminGmListResponse>(
+        "GET",
+        `/admin/characters/list?${qs.toString()}`,
+      );
+    },
+    async getCharacterFull(charId: number): Promise<AdminGmCharFullResponse> {
+      return bridgeFetch<AdminGmCharFullResponse>(
+        "GET",
+        `/admin/characters/${charId}/full`,
+      );
+    },
+    async addInventoryItem(
+      charId: number,
+      itemId: number,
+      count: number,
+      enchantLevel: number = 0,
+    ) {
+      return bridgeFetch("POST", `/admin/characters/${charId}/items/add`, {
+        itemId,
+        count,
+        enchantLevel,
+      });
+    },
+    async modifyInventoryItem(
+      charId: number,
+      objectId: number,
+      patch: { count?: number; enchantLevel?: number },
+    ) {
+      return bridgeFetch("POST", `/admin/characters/${charId}/items/modify`, {
+        objectId,
+        ...patch,
+      });
+    },
+    async removeInventoryItem(charId: number, objectId: number) {
+      return bridgeFetch("POST", `/admin/characters/${charId}/items/remove`, {
+        objectId,
+      });
+    },
+    async findItemOwners(
+      itemId: number,
+      limit: number = 100,
+      offset: number = 0,
+    ): Promise<AdminGmItemOwnersResponse> {
+      return bridgeFetch<AdminGmItemOwnersResponse>(
+        "GET",
+        `/admin/items/owners?itemId=${itemId}&limit=${limit}&offset=${offset}`,
+      );
+    },
+    async getItemsMetadata(): Promise<ItemMetadata[]> {
+      return bridgeFetch<ItemMetadata[]>("GET", "/admin/items/metadata");
     },
   },
 };
