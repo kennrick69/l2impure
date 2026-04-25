@@ -14,6 +14,8 @@ import { characterRoutes } from "./routes/characters.js";
 import { rankingRoutes } from "./routes/rankings.js";
 import { serverRoutes } from "./routes/server.js";
 import { adminRoutes } from "./routes/admin.js";
+import { adminCharactersRoutes } from "./routes/admin-characters.js";
+import { adminItemsRoutes } from "./routes/admin-items.js";
 
 async function build() {
   const app = Fastify({
@@ -57,6 +59,8 @@ async function build() {
   await app.register(rankingRoutes);
   await app.register(serverRoutes);
   await app.register(adminRoutes);
+  await app.register(adminCharactersRoutes);
+  await app.register(adminItemsRoutes);
 
   app.setNotFoundHandler((_req, reply) => {
     reply.code(404).send({ error: "not found" });
