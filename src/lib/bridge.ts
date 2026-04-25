@@ -41,7 +41,7 @@ function signRequest(method: string, path: string, body: string) {
 }
 
 export async function bridgeFetch<T>(
-  method: "GET" | "POST",
+  method: "GET" | "POST" | "DELETE",
   path: string,
   body?: Record<string, unknown>,
 ): Promise<T> {
@@ -56,7 +56,7 @@ export async function bridgeFetch<T>(
   const res = await fetch(`${BRIDGE_URL}${path}`, {
     method,
     headers,
-    body: method === "POST" ? bodyStr : undefined,
+    body: method !== "GET" && bodyStr ? bodyStr : undefined,
   });
   if (!res.ok) {
     const text = await res.text().catch(() => "");
@@ -134,6 +134,18 @@ export const bridge = {
   },
   async resetHwid(login: string) {
     return bridgeFetch("POST", "/accounts/reset-hwid", { login });
+  },
+  async changeGamePassword(login: string, password: string) {
+    return bridgeFetch("POST", "/accounts/change-password", {
+      login,
+      password,
+    });
+  },
+  async deleteAccount(login: string) {
+    return bridgeFetch<{ ok: true; login: string; charactersDeleted: number }>(
+      "DELETE",
+      `/accounts/${encodeURIComponent(login)}`,
+    );
   },
   async getCharacters(login: string): Promise<CharactersResponse> {
     return bridgeFetch<CharactersResponse>(

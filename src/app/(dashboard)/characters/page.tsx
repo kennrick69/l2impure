@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { bridge, type GameCharacter } from "@/lib/bridge";
@@ -6,15 +7,29 @@ import { CreateAccountTrigger } from "@/components/dashboard/CreateAccountTrigge
 
 type Row = GameCharacter & { account: string };
 
-export default async function CharactersPage() {
+export default async function CharactersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ login?: string }>;
+}) {
   const session = await getSession();
   if (!session) return null;
 
-  const accounts = await prisma.gameAccount.findMany({
-    where: { userId: session.sub },
+  const params = await searchParams;
+  const filterLogin =
+    params.login && /^[A-Za-z0-9]{4,45}$/.test(params.login)
+      ? params.login
+      : undefined;
+
+  const accountsQuery = await prisma.gameAccount.findMany({
+    where: {
+      userId: session.sub,
+      ...(filterLogin ? { gameLogin: filterLogin } : {}),
+    },
     select: { gameLogin: true },
     orderBy: { createdAt: "asc" },
   });
+  const accounts = accountsQuery;
 
   const all: Row[] = [];
   let bridgeFailed = false;
@@ -55,6 +70,23 @@ export default async function CharactersPage() {
           bridgeFailed ? " Algumas contas não puderam ser carregadas." : ""
         }`}
       />
+
+      {filterLogin && (
+        <div className="mb-6 flex items-center justify-between rounded-md border border-white/8 bg-[color:var(--l2-bg-card)] px-4 py-3 text-sm">
+          <span className="text-white/65">
+            Filtrando por conta:{" "}
+            <strong className="font-display uppercase text-l2-gold">
+              {filterLogin}
+            </strong>
+          </span>
+          <Link
+            href="/characters"
+            className="font-display text-[10px] font-semibold uppercase tracking-wider text-white/55 transition hover:text-white"
+          >
+            Ver todas →
+          </Link>
+        </div>
+      )}
 
       {accounts.length === 0 ? (
         <EmptyState
