@@ -10,6 +10,7 @@ const NAV = [
   { href: "/admin/server", icon: "🖥️", label: "Servidor" },
   { href: "/admin/referrals", icon: "🔗", label: "Indicações" },
   { href: "/admin/announcements", icon: "📣", label: "Anúncios" },
+  { href: "/admin/game-master", icon: "⚔️", label: "Game master" },
 ];
 
 export function AdminSidebar() {

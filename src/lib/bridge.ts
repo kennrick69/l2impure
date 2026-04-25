@@ -113,6 +113,23 @@ export type CharactersResponse = {
   count: number;
 };
 
+/** Resposta da busca admin (/admin/characters/search) — campos extras vs GameCharacter. */
+export type AdminGmCharacter = {
+  charId: number;
+  name: string;
+  classId: number;
+  className: string;
+  level: number;
+  online: boolean;
+  account: string;
+  clanId: number | null;
+  clanName: string | null;
+};
+export type AdminGmSearchResponse = {
+  characters: AdminGmCharacter[];
+  count: number;
+};
+
 export const bridge = {
   async status(): Promise<ServerStatus> {
     return cached("server:status", 30, () =>
@@ -170,5 +187,58 @@ export const bridge = {
       "/server/restart",
       {},
     );
+  },
+  gm: {
+    async searchCharacters(name: string): Promise<AdminGmSearchResponse> {
+      return bridgeFetch<AdminGmSearchResponse>(
+        "GET",
+        `/admin/characters/search?name=${encodeURIComponent(name)}`,
+      );
+    },
+    async setLevel(charName: string, level: number) {
+      return bridgeFetch("POST", "/admin/characters/set-level", {
+        charName,
+        level,
+      });
+    },
+    async setClass(charName: string, classId: number) {
+      return bridgeFetch("POST", "/admin/characters/set-class", {
+        charName,
+        classId,
+      });
+    },
+    async addItem(charName: string, itemId: number, count: number) {
+      return bridgeFetch("POST", "/admin/characters/add-item", {
+        charName,
+        itemId,
+        count,
+      });
+    },
+    async setName(charId: number, newName: string) {
+      return bridgeFetch("POST", "/admin/characters/set-name", {
+        charId,
+        newName,
+      });
+    },
+    async addAdena(charName: string, amount: number) {
+      return bridgeFetch("POST", "/admin/characters/add-adena", {
+        charName,
+        amount,
+      });
+    },
+    async setAccessLevel(login: string, level: number) {
+      return bridgeFetch("POST", "/admin/accounts/set-access-level", {
+        login,
+        level,
+      });
+    },
+    async teleport(charName: string, x: number, y: number, z: number) {
+      return bridgeFetch("POST", "/admin/characters/teleport", {
+        charName,
+        x,
+        y,
+        z,
+      });
+    },
   },
 };
