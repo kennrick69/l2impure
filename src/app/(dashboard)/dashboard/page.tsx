@@ -1,56 +1,136 @@
-import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getSession } from "@/lib/auth";
+import { PageTitle } from "@/components/dashboard/Placeholder";
 
 export default async function DashboardPage() {
   const session = await getSession();
-  if (!session) {
-    redirect("/login?redirect=/dashboard");
-  }
 
   return (
-    <div className="min-h-screen bg-[color:var(--l2-bg-primary)] p-8">
-      <div className="l2-container-wide">
-        <header className="mb-8 flex items-center justify-between">
-          <Link href="/" className="inline-flex items-center gap-3">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/images/logo.png"
-              alt="L2 Impure"
-              className="h-12 w-auto"
-            />
-          </Link>
-          <form action="/api/auth/logout" method="post">
-            <button
-              type="submit"
-              className="font-display text-xs font-semibold uppercase tracking-wider text-white/70 transition hover:text-white"
+    <>
+      <PageTitle
+        title="Página principal"
+        subtitle={`Logado como ${session?.email ?? "—"}`}
+      />
+
+      <section className="mb-8 grid gap-4 sm:grid-cols-3">
+        <StatCard
+          title="Saldo"
+          icon="🪙"
+          value="0"
+          accent="gold"
+          footer={
+            <Link
+              href="/wallet"
+              className="text-xs text-white/55 transition hover:text-white"
             >
-              Sair
-            </button>
-          </form>
-        </header>
+              💸 Transferir / recarregar →
+            </Link>
+          }
+        />
+        <StatCard
+          title="Armazém"
+          icon="📦"
+          value="0"
+          footer={
+            <Link
+              href="/warehouse"
+              className="text-xs text-white/55 transition hover:text-white"
+            >
+              Ver itens armazenados →
+            </Link>
+          }
+        />
+        <StatCard
+          title="Personagens"
+          icon="⚔️"
+          value="0"
+          footer={
+            <Link
+              href="/characters"
+              className="text-xs text-white/55 transition hover:text-white"
+            >
+              Gerenciar personagens →
+            </Link>
+          }
+        />
+      </section>
 
-        <h1 className="mb-2 font-display text-4xl font-bold uppercase tracking-wide text-white">
-          Dashboard
-        </h1>
-        <p className="text-sm text-white/55">
-          Logado como{" "}
-          <span className="text-[color:var(--l2-text-gold)]">
-            {session.email}
+      <section className="mb-8 rounded-xl border border-white/5 bg-[color:var(--l2-bg-card)]">
+        <div className="flex items-center justify-between border-b border-white/5 px-6 py-4">
+          <h3 className="font-display text-sm font-semibold uppercase tracking-wider text-white">
+            Contas do Jogo
+          </h3>
+          <span className="font-display text-[10px] font-semibold uppercase tracking-[1.5px] text-white/45">
+            (0/15)
           </span>
-        </p>
-
-        <div className="mt-10 rounded-xl border border-white/5 bg-[color:var(--l2-bg-card)] p-8">
-          <h2 className="mb-2 font-display text-xl font-bold uppercase tracking-wider text-white">
-            Em construção
-          </h2>
-          <p className="text-sm text-white/65">
-            As próximas fases vão trazer: criar conta de jogo, listar
-            personagens, ver rankings, transferir saldo, reset HWID e o sistema
-            de Híbridos.
+        </div>
+        <div className="px-6 py-12 text-center">
+          <div className="mb-3 text-4xl opacity-30">⚔️</div>
+          <p className="mb-1 text-sm text-white/65">
+            Você ainda não tem contas de jogo
+          </p>
+          <p className="text-xs text-white/45">
+            A criação de contas será liberada na Fase 3 (bridge VPS).
           </p>
         </div>
+      </section>
+
+      <section className="flex items-center gap-4 rounded-xl border border-white/5 bg-[color:var(--l2-bg-card)] p-6">
+        <div className="text-3xl">🛟</div>
+        <div className="flex-1">
+          <h4 className="font-display text-sm font-semibold uppercase tracking-wider text-white">
+            Precisa de ajuda?
+          </h4>
+          <p className="mt-1 text-xs text-white/55">
+            Faça uma pergunta ou relate problemas. Nossa equipe entra em
+            contato o mais breve possível.
+          </p>
+        </div>
+        <Link
+          href="/support"
+          className="rounded-md border border-white/8 bg-[color:var(--l2-bg-card-hover)] px-4 py-2 font-display text-xs font-semibold uppercase tracking-wider text-white/75 transition hover:border-white/20 hover:text-white"
+        >
+          Suporte
+        </Link>
+      </section>
+    </>
+  );
+}
+
+function StatCard({
+  title,
+  icon,
+  value,
+  accent,
+  footer,
+}: {
+  title: string;
+  icon: string;
+  value: string;
+  accent?: "gold";
+  footer: React.ReactNode;
+}) {
+  return (
+    <div className="flex flex-col rounded-xl border border-white/5 bg-[color:var(--l2-bg-card)] p-5">
+      <div className="mb-3 flex items-center justify-between">
+        <span className="font-display text-xs font-semibold uppercase tracking-wider text-white/55">
+          {title}
+        </span>
+        <span className="text-white/30">⋯</span>
       </div>
+      <div className="flex items-center gap-2">
+        <span
+          className={
+            accent === "gold"
+              ? "font-display text-3xl font-bold text-[color:var(--l2-text-gold)]"
+              : "font-display text-3xl font-bold text-white"
+          }
+        >
+          {value}
+        </span>
+        <span className="text-2xl">{icon}</span>
+      </div>
+      <div className="mt-4 border-t border-white/5 pt-3">{footer}</div>
     </div>
   );
 }

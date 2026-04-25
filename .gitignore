@@ -21,6 +21,9 @@ Thumbs.db
 .idea/
 *.swp
 
+# claude code
+.claude/settings.local.json
+
 # logs
 *.log
 npm-debug.log*
