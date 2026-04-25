@@ -31,7 +31,7 @@
 | Item | URL |
 |---|---|
 | Repositório | https://github.com/kennrick69/l2impure |
-| Deploy Next.js (branch `arq-definitiva`) | https://l2impure-production-49e6.up.railway.app |
+| Deploy Next.js (branch `arq-definitiva`) | https://l2impure.com |
 | Deploy legado Express (branch `main`) | https://l2impure-production.up.railway.app |
 | Domínio futuro | https://l2impure.com (Cloudflare → Railway quando promovido) |
 | Admin reCAPTCHA | https://www.google.com/recaptcha/admin/site/751359679 |
@@ -180,7 +180,7 @@ lista completa com descrição e onde buscar.
 | Var | Valor | Descrição |
 |---|---|---|
 | `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` | `6Le_1sgsAAAAAC2lqfxlnFd1XpKoDX_ZP7Fay07P` | Site key reCAPTCHA v3 Classic. Posições 15 e 19 são `l` (L minúsculo) — confirmado direto no Google admin em 2026-04-25. Versões anteriores deste doc tinham `I` por engano (font confusion) — **a chave correta é com `l`** |
-| `NEXT_PUBLIC_SITE_URL` | `https://l2impure-production-49e6.up.railway.app` (hoje) → `https://l2impure.com` (prod) | URL pública usada em templates de email e OG tags |
+| `NEXT_PUBLIC_SITE_URL` | `https://l2impure.com` | URL pública usada em templates de email, OG tags e referral links. Domínio apontado pro Railway via Cloudflare em 2026-04-25 |
 | `NEXT_PUBLIC_RECAPTCHA_DISABLED` | `false` (ou ausente) | Se `true`, cliente não carrega script nem chama execute. Bypass pra troubleshooting |
 | `NEXT_PUBLIC_RECAPTCHA_ENTERPRISE` | `false` (ou ausente) | Se `true`, cliente usa `grecaptcha.enterprise.execute` + `enterprise.js`. Hoje a chave é Classic, então `false` |
 
@@ -470,7 +470,7 @@ Ler com `git log arq-definitiva --oneline -20` pra ver o último estado.
 - [x] Nodemailer SMTP Hostinger + templates HTML
 - [x] Páginas auth 5 + landing + dashboard placeholder
 - [x] Audit log em ações sensíveis
-- [x] Deploy Railway em `l2impure-production-49e6.up.railway.app`
+- [x] Deploy Railway em `l2impure.com`
 
 ### Fase 2 — em andamento
 - [x] Sidebar compartilhada pro dashboard (`components/dashboard/Sidebar.tsx`)
@@ -509,7 +509,7 @@ Ler com `git log arq-definitiva --oneline -20` pra ver o último estado.
 3. `cd C:/Users/sss/Pictures/l2impure && git status` pra ver estado local.
 4. `git log arq-definitiva --oneline -20` pra ver progresso recente.
 5. Confirmar qual o problema atual:
-   - Checar se o último deploy em `l2impure-production-49e6.up.railway.app` está saudável (`/`, `/login`, `/register`, `/dashboard` devem responder)
+   - Checar se o último deploy em `l2impure.com` está saudável (`/`, `/login`, `/register`, `/dashboard` devem responder)
    - Checar se existem commits sem push
 6. Se precisar rodar dev local: copiar chaves de `ACESSOS-FASE1-CLAUDE-CODE.txt` pro `.env.local` (usar as URLs `DATABASE_PUBLIC_URL` / `REDIS_PUBLIC_URL` em vez das `*.railway.internal`)
 7. Qualquer mudança → testar build local (`npm run build`), commit, push em `arq-definitiva`, validar redeploy em produção
@@ -544,8 +544,8 @@ git push origin arq-definitiva
 openssl rand -hex 64
 
 # Testar endpoint em prod
-curl -sI https://l2impure-production-49e6.up.railway.app/dashboard
-curl -s  https://l2impure-production-49e6.up.railway.app/api/auth/me
+curl -sI https://l2impure.com/dashboard
+curl -s  https://l2impure.com/api/auth/me
 ```
 
 ---
@@ -583,7 +583,7 @@ Próximos passos:
 2. Railway → serviço Next → Variables → adiciona `RESEND_API_KEY=re_...`
    (opcional: `RESEND_FROM=L2 Impure <admin@l2impure.com>` — código tem default)
 3. Salvar → redeploy automático
-4. Testar: `curl -s 'https://l2impure-production-49e6.up.railway.app/api/debug/smtp?key=<DEBUG_KEY>'`
+4. Testar: `curl -s 'https://l2impure.com/api/debug/smtp?key=<DEBUG_KEY>'`
    deve voltar `{"ok":true,"env":{"provider":"resend",...}}`
 
 #### 🟢 reCAPTCHA — RESOLVIDO (era erro de doc, não de código)
@@ -625,8 +625,8 @@ cd C:/Users/sss/Pictures/l2impure
 git pull origin arq-definitiva
 
 # 2. Confirmar estado dos servidores
-curl -sI https://l2impure-production-49e6.up.railway.app/
-curl -s https://l2impure-production-49e6.up.railway.app/api/debug/smtp?key=<DEBUG_KEY>
+curl -sI https://l2impure.com/
+curl -s https://l2impure.com/api/debug/smtp?key=<DEBUG_KEY>
 
 # 3. Continuar a partir do caminho A ou B do SMTP
 ```
