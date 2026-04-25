@@ -19,6 +19,41 @@ type CharRow = {
 };
 
 export async function characterRoutes(app: FastifyInstance) {
+  /**
+   * GET /characters/max-level/:login — autenticado.
+   * Retorna o maior level de qualquer personagem da conta. Usado pelo
+   * Next pra checar se uma indicação convergiu (level >= 40).
+   *
+   * Atenção: registrado ANTES do /:login pra Fastify casar a rota
+   * estática primeiro.
+   */
+  app.get<{ Params: { login: string } }>(
+    "/characters/max-level/:login",
+    { preHandler: authenticate },
+    async (req, reply) => {
+      const { login } = req.params;
+      if (!/^[A-Za-z0-9]{4,45}$/.test(login)) {
+        reply.code(400).send({ error: "invalid login" });
+        return;
+      }
+      try {
+        const [rows] = await pool.query(
+          "SELECT MAX(level) AS max_level FROM characters WHERE account_name = ?",
+          [login],
+        );
+        const max =
+          (rows as Array<{ max_level: number | null }>)[0]?.max_level ?? 0;
+        reply.send({ login, maxLevel: max ?? 0 });
+      } catch (e) {
+        req.log.error(
+          { err: e },
+          "[/characters/max-level/:login] failed",
+        );
+        reply.code(500).send({ error: "internal error" });
+      }
+    },
+  );
+
   app.get<{ Params: { login: string } }>(
     "/characters/:login",
     { preHandler: authenticate },
