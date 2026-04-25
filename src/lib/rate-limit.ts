@@ -48,13 +48,28 @@ export async function rateLimit(
 /**
  * Limites do doc L2-IMPURE-ARQUITETURA-DEFINITIVA.md § Rate Limiting
  */
+/**
+ * Os limites default podem ser sobrescritos por env vars
+ * (ex: RATE_LIMIT_REGISTER_MAX=20, RATE_LIMIT_REGISTER_WINDOW=3600).
+ * Útil pra afrouxar durante testes sem mudar código.
+ */
+function envLimit(name: string, defaultMax: number, defaultWindow: number) {
+  const max = Number(
+    process.env[`RATE_LIMIT_${name}_MAX`] ?? defaultMax,
+  );
+  const window = Number(
+    process.env[`RATE_LIMIT_${name}_WINDOW`] ?? defaultWindow,
+  );
+  return { max, window };
+}
+
 export const rateLimits = {
-  login: { max: 5, window: 60 }, // 5/min/IP
-  register: { max: 3, window: 3600 }, // 3/hora/IP
-  forgotPassword: { max: 3, window: 3600 }, // 3/hora/email
-  refresh: { max: 30, window: 60 }, // 30/min/user
-  createGameAccount: { max: 5, window: 3600 }, // 5/hora/user
-  default: { max: 60, window: 60 }, // 60/min/IP
+  login: envLimit("LOGIN", 5, 60), // 5/min/IP
+  register: envLimit("REGISTER", 10, 3600), // 10/hora/IP (afrouxado de 3)
+  forgotPassword: envLimit("FORGOT", 3, 3600), // 3/hora/email
+  refresh: envLimit("REFRESH", 30, 60), // 30/min/user
+  createGameAccount: envLimit("CREATE_GAME_ACCOUNT", 5, 3600), // 5/hora/user
+  default: envLimit("DEFAULT", 60, 60), // 60/min/IP
 } as const;
 
 export function clientIp(req: Request): string {

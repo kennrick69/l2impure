@@ -15,6 +15,8 @@ declare global {
 }
 
 const SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
+const DISABLED =
+  process.env.NEXT_PUBLIC_RECAPTCHA_DISABLED === "true" || !SITE_KEY;
 
 type Status = "idle" | "loading" | "ready" | "disabled";
 
@@ -29,10 +31,12 @@ export function useRecaptcha(): {
   status: Status;
   execute: (action: string) => Promise<string | null>;
 } {
-  const [status, setStatus] = useState<Status>(SITE_KEY ? "idle" : "disabled");
+  const [status, setStatus] = useState<Status>(
+    DISABLED ? "disabled" : "idle",
+  );
 
   useEffect(() => {
-    if (!SITE_KEY) return;
+    if (DISABLED || !SITE_KEY) return;
     if (window.grecaptcha) {
       setStatus("ready");
       return;
@@ -62,7 +66,7 @@ export function useRecaptcha(): {
 
   const execute = useCallback(
     async (action: string): Promise<string | null> => {
-      if (!SITE_KEY || !window.grecaptcha) return null;
+      if (DISABLED || !SITE_KEY || !window.grecaptcha) return null;
       try {
         return await window.grecaptcha.execute(SITE_KEY, { action });
       } catch (e) {

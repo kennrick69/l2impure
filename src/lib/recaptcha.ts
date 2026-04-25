@@ -17,6 +17,10 @@ export async function verifyRecaptcha(
   expectedAction?: string,
   minScore = 0.5,
 ): Promise<RecaptchaResult> {
+  // Opt-out explícito (pra troubleshooting / testes sem reCAPTCHA configurado)
+  if (process.env.RECAPTCHA_DISABLED === "true") {
+    return { success: true, score: 1, action: expectedAction };
+  }
   const secret = process.env.RECAPTCHA_SECRET_KEY;
   if (!secret) {
     // Sem secret configurado — comportamento de dev: permitir.
