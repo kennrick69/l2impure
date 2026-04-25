@@ -30,6 +30,10 @@ const Schema = z.object({
   L2J_LOGIN_PORT: z.coerce.number().int().positive().default(2106),
   L2J_GAME_HOST: z.string().default("127.0.0.1"),
   L2J_GAME_PORT: z.coerce.number().int().positive().default(7777),
+
+  // Marketing offset somado ao COUNT real de players em /status.
+  // Permite valores negativos (esconder bots, etc). Default 0 = sem offset.
+  PLAYER_COUNT_OFFSET: z.coerce.number().int().default(0),
 });
 
 const parsed = Schema.safeParse(process.env);

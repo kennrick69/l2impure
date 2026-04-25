@@ -68,7 +68,7 @@ export async function statusRoutes(app: FastifyInstance) {
       const online = gameServerReachable && loginServerReachable && dbOk;
       reply.send({
         online,
-        players,
+        players: players + env.PLAYER_COUNT_OFFSET,
         dbOk,
         gameServerReachable,
         loginServerReachable,
