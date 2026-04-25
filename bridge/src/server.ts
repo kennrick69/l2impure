@@ -13,6 +13,7 @@ import { accountRoutes } from "./routes/accounts.js";
 import { characterRoutes } from "./routes/characters.js";
 import { rankingRoutes } from "./routes/rankings.js";
 import { serverRoutes } from "./routes/server.js";
+import { adminRoutes } from "./routes/admin.js";
 
 async function build() {
   const app = Fastify({
@@ -55,6 +56,7 @@ async function build() {
   await app.register(characterRoutes);
   await app.register(rankingRoutes);
   await app.register(serverRoutes);
+  await app.register(adminRoutes);
 
   app.setNotFoundHandler((_req, reply) => {
     reply.code(404).send({ error: "not found" });

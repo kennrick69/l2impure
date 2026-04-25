@@ -111,3 +111,34 @@ const CLASS_NAMES: Record<number, string> = {
 export function classIdToName(classId: number): string {
   return CLASS_NAMES[classId] ?? `Unknown (${classId})`;
 }
+
+/**
+ * Tabela de exp do L2J Interlude (default). Index = nível, valor = exp
+ * mínimo pra entrar naquele nível. Levels 1..85 cobertos.
+ *
+ * Quando um GM seta level=N, a bridge também faz exp=EXP_TABLE[N] pra
+ * o servidor não derivar level errado do exp na próxima carga do char.
+ */
+const EXP_TABLE: number[] = [
+  0,
+  0, 68, 363, 1168, 2884, 6038, 11287, 19423, 31378, 48229,
+  71171, 100075, 136473, 181233, 235723, 301716, 380075, 472492,
+  580366, 705689, 850285, 1016239, 1205616, 1420870, 1664676,
+  1939883, 2249446, 2596578, 2984537, 3416790, 3897053, 4429209,
+  5017212, 5665099, 6376964, 7156944, 8009109, 8937841, 9947514,
+  11042798, 12228876, 13511145, 14895164, 16386854, 17993239,
+  19720773, 21576473, 23567593, 25700701, 27986213, 30421030,
+  33013681, 35773505, 38709020, 41829594, 45146121, 48652221,
+  52364892, 56285604, 60571398, 65257634, 70391464, 75993482,
+  82091919, 88701589, 95857201, 103583882, 111874360, 120822486,
+  130466928, 140817152, 152040253, 164430816, 178277684, 193640574,
+  210701490, 229629298, 250551849, 273774275, 299444459, 327787577,
+  359069118, 393629679, 432037412, 474727320,
+];
+
+export function expForLevel(level: number): number {
+  if (!Number.isFinite(level) || level < 1) return 0;
+  const lastValue = EXP_TABLE[EXP_TABLE.length - 1] ?? 0;
+  if (level >= EXP_TABLE.length) return lastValue;
+  return EXP_TABLE[level] ?? 0;
+}
