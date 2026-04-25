@@ -12,6 +12,7 @@ function LoginForm() {
   const params = useSearchParams();
   const redirect = params.get("redirect") || "/dashboard";
   const verified = params.get("verified");
+  const reset = params.get("reset");
   const { show } = useToast();
   const [loading, setLoading] = useState(false);
 
@@ -54,6 +55,12 @@ function LoginForm() {
       {verified && (
         <div className="mb-6 rounded-md border border-[color:var(--l2-green)]/40 bg-[color:var(--l2-green)]/10 px-4 py-3 text-sm text-[color:var(--l2-green)]">
           Email confirmado com sucesso! Faça login pra continuar.
+        </div>
+      )}
+
+      {reset && (
+        <div className="mb-6 rounded-md border border-[color:var(--l2-green)]/40 bg-[color:var(--l2-green)]/10 px-4 py-3 text-sm text-[color:var(--l2-green)]">
+          Senha redefinida! Entre com a nova senha.
         </div>
       )}
 

@@ -2,13 +2,12 @@
 
 import { useState, type FormEvent, Suspense } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { Input } from "@/components/ui/Input";
 import { GoldButton } from "@/components/ui/GoldButton";
 import { useToast } from "@/components/ui/Toast";
 
 function ResetForm() {
-  const router = useRouter();
   const params = useSearchParams();
   const token = params.get("token");
   const { show } = useToast();
@@ -60,8 +59,13 @@ function ResetForm() {
         show(data.error ?? "Falha", "error");
         return;
       }
-      show("Senha redefinida! Faça login.", "success");
-      setTimeout(() => router.push("/login"), 1200);
+      show("Senha redefinida! Redirecionando...", "success");
+      // Hard navigation: garante que vai chegar no /login mesmo se
+      // router.push falhar (acontece esporadicamente no Next 16 +
+      // Turbopack quando a sessão é invalidada no mesmo request).
+      setTimeout(() => {
+        window.location.href = "/login?reset=1";
+      }, 1000);
     } catch {
       show("Erro de rede", "error");
     } finally {
