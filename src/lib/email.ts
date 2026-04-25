@@ -1,8 +1,11 @@
 import nodemailer, { type Transporter } from "nodemailer";
+import { Resend } from "resend";
 
 declare global {
   // eslint-disable-next-line no-var
   var emailTransporter: Transporter | undefined;
+  // eslint-disable-next-line no-var
+  var resendClient: Resend | undefined;
 }
 
 /**
@@ -15,6 +18,37 @@ function clean(v: string | undefined): string | undefined {
   const m = v.match(/^["'](.+)["']$/);
   return m ? m[1] : v;
 }
+
+const SITE_URL =
+  clean(process.env.NEXT_PUBLIC_SITE_URL) ?? "https://l2impure.com";
+
+const FROM =
+  clean(process.env.SMTP_FROM) ||
+  clean(process.env.RESEND_FROM) ||
+  `L2 Impure <${clean(process.env.SMTP_USER) ?? "admin@l2impure.com"}>`;
+
+/**
+ * Provider ativo. Auto-detect: se RESEND_API_KEY existe, usa Resend.
+ * Senão cai pra Nodemailer SMTP (legado Hostinger).
+ */
+export function emailProvider(): "resend" | "smtp" {
+  return clean(process.env.RESEND_API_KEY) ? "resend" : "smtp";
+}
+
+// ---------- Resend ----------
+
+function getResend(): Resend {
+  if (globalThis.resendClient) return globalThis.resendClient;
+  const key = clean(process.env.RESEND_API_KEY);
+  if (!key) throw new Error("RESEND_API_KEY não definida");
+  const client = new Resend(key);
+  if (process.env.NODE_ENV !== "production") {
+    globalThis.resendClient = client;
+  }
+  return client;
+}
+
+// ---------- Nodemailer SMTP ----------
 
 function createTransporter(): Transporter {
   const host = clean(process.env.SMTP_HOST);
@@ -32,24 +66,57 @@ function createTransporter(): Transporter {
     port,
     secure: port === 465,
     auth: { user, pass },
-    // Loga o handshake SMTP no stdout — só durante debug.
     logger: process.env.SMTP_DEBUG === "true",
     debug: process.env.SMTP_DEBUG === "true",
   });
 }
 
-export const transporter: Transporter =
-  globalThis.emailTransporter ?? createTransporter();
-
-if (process.env.NODE_ENV !== "production") {
-  globalThis.emailTransporter = transporter;
+function getTransporter(): Transporter {
+  if (globalThis.emailTransporter) return globalThis.emailTransporter;
+  const t = createTransporter();
+  if (process.env.NODE_ENV !== "production") {
+    globalThis.emailTransporter = t;
+  }
+  return t;
 }
 
-const FROM =
-  clean(process.env.SMTP_FROM) ||
-  `L2 Impure <${clean(process.env.SMTP_USER) ?? "admin@l2impure.com"}>`;
-const SITE_URL =
-  clean(process.env.NEXT_PUBLIC_SITE_URL) ?? "https://l2impure.com";
+/** Mantido pra compatibilidade com /api/debug/smtp. */
+export const transporter: Transporter = new Proxy({} as Transporter, {
+  get(_t, prop) {
+    return getTransporter()[prop as keyof Transporter];
+  },
+});
+
+// ---------- Dispatch ----------
+
+async function dispatch(params: {
+  to: string;
+  subject: string;
+  html: string;
+}): Promise<void> {
+  const provider = emailProvider();
+  if (provider === "resend") {
+    const resend = getResend();
+    const { error } = await resend.emails.send({
+      from: FROM,
+      to: params.to,
+      subject: params.subject,
+      html: params.html,
+    });
+    if (error) {
+      throw new Error(`[resend] ${error.name}: ${error.message}`);
+    }
+    return;
+  }
+  await getTransporter().sendMail({
+    from: FROM,
+    to: params.to,
+    subject: params.subject,
+    html: params.html,
+  });
+}
+
+// ---------- Templates ----------
 
 function wrap(title: string, bodyHtml: string): string {
   return `<!DOCTYPE html>
@@ -62,7 +129,7 @@ function wrap(title: string, bodyHtml: string): string {
             <tr>
               <td style="padding:34px 34px 21px 34px;border-bottom:1px solid rgba(255,255,255,0.08);">
                 <div style="font-family:'Oswald','Impact',sans-serif;font-weight:700;font-size:26px;letter-spacing:1px;color:#d4a14a;text-transform:uppercase;">L2 Impure</div>
-                <div style="color:#707080;font-size:13px;margin-top:5px;">Servidor Interlude com Sistema de Híbridos</div>
+                <div style="color:#707080;font-size:13px;margin-top:5px;">Servidor brasileiro de Lineage 2 Interlude</div>
               </td>
             </tr>
             <tr>
@@ -102,12 +169,7 @@ export async function sendVerificationEmail(
     <p style="color:#707080;font-size:11px;margin-top:21px;">O link expira em 24 horas.</p>
     `,
   );
-  await transporter.sendMail({
-    from: FROM,
-    to,
-    subject: "Confirme seu email • L2 Impure",
-    html,
-  });
+  await dispatch({ to, subject: "Confirme seu email • L2 Impure", html });
 }
 
 export async function sendPasswordResetEmail(
@@ -124,10 +186,5 @@ export async function sendPasswordResetEmail(
     <p style="color:#707080;font-size:11px;margin-top:21px;">O link expira em 1 hora. Se não foi você, ignore este email.</p>
     `,
   );
-  await transporter.sendMail({
-    from: FROM,
-    to,
-    subject: "Redefinir senha • L2 Impure",
-    html,
-  });
+  await dispatch({ to, subject: "Redefinir senha • L2 Impure", html });
 }
