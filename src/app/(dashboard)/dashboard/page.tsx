@@ -3,6 +3,7 @@ import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { PageTitle } from "@/components/dashboard/Placeholder";
 import { CreateAccountTrigger } from "@/components/dashboard/CreateAccountTrigger";
+import { AccountRowActions } from "@/components/dashboard/AccountRowActions";
 
 const MAX_ACCOUNTS = 15;
 
@@ -130,14 +131,7 @@ export default async function DashboardPage() {
                       </span>
                     </td>
                     <td className="px-6 py-3 text-right">
-                      <button
-                        type="button"
-                        disabled
-                        title="Disponível na Fase 3"
-                        className="text-xs text-white/30"
-                      >
-                        ⋯
-                      </button>
+                      <AccountRowActions gameLogin={acc.gameLogin} />
                     </td>
                   </tr>
                 ))}

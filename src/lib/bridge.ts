@@ -78,14 +78,18 @@ export type ServerStatus = {
 export type PvpRow = {
   rank: number;
   name: string;
-  clan?: string;
+  className: string;
+  level: number;
+  clan: string | null;
   value: number;
 };
 export type ClanRow = {
   rank: number;
   name: string;
-  leader?: string;
+  level: number;
   reputation: number;
+  members: number;
+  leader: string | null;
 };
 export type GameCharacter = {
   name: string;

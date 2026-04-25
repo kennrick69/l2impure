@@ -70,6 +70,7 @@ export const rateLimits = {
   refresh: envLimit("REFRESH", 30, 60), // 30/min/user
   createGameAccount: envLimit("CREATE_GAME_ACCOUNT", 5, 3600), // 5/hora/user
   changePassword: envLimit("CHANGE_PASSWORD", 5, 3600), // 5/hora/user
+  resetHwid: envLimit("RESET_HWID", 1, 604800), // 1/semana/conta de jogo
   default: envLimit("DEFAULT", 60, 60), // 60/min/IP
 } as const;
 
