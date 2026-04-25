@@ -1,5 +1,26 @@
 import type { SVGProps } from "react";
 
+export function HeadsetIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      xmlns="http://www.w3.org/2000/svg"
+      {...props}
+    >
+      <path d="M4 14v-2a8 8 0 0 1 16 0v2" />
+      <path d="M4 14a2 2 0 0 1 2-2h1a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1H6a2 2 0 0 1-2-2v-2z" />
+      <path d="M20 14a2 2 0 0 0-2-2h-1a1 1 0 0 0-1 1v4a1 1 0 0 0 1 1h1a2 2 0 0 0 2-2v-2z" />
+      <path d="M18 17v.5a3.5 3.5 0 0 1-3.5 3.5H13" />
+      <path d="M11 21h2" />
+    </svg>
+  );
+}
+
 export function CaretDownIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <svg

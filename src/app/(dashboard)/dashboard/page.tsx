@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { PageTitle } from "@/components/dashboard/Placeholder";
 import { CreateAccountTrigger } from "@/components/dashboard/CreateAccountTrigger";
 import { AccountRowActions } from "@/components/dashboard/AccountRowActions";
+import { HeadsetIcon } from "@/components/icons";
 
 const MAX_ACCOUNTS = 15;
 
@@ -142,7 +143,9 @@ export default async function DashboardPage() {
       </section>
 
       <section className="flex items-center gap-4 rounded-xl border border-white/5 bg-[color:var(--l2-bg-card)] p-6">
-        <div className="text-3xl">🛟</div>
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-l2-gold/10 text-l2-gold">
+          <HeadsetIcon className="h-7 w-7" />
+        </div>
         <div className="flex-1">
           <h4 className="font-display text-sm font-semibold uppercase tracking-wider text-white">
             Precisa de ajuda?
