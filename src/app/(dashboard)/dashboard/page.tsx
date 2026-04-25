@@ -124,9 +124,9 @@ export default async function DashboardPage() {
                       {new Date(acc.createdAt).toLocaleString("pt-BR")}
                     </td>
                     <td className="px-6 py-3">
-                      <span className="inline-flex items-center gap-1.5 text-xs text-white/45">
-                        <span className="h-1.5 w-1.5 rounded-full bg-white/20" />
-                        Reservada (sync na Fase 3)
+                      <span className="inline-flex items-center gap-1.5 text-xs text-[color:var(--l2-green)]">
+                        <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--l2-green)]" />
+                        Ativa
                       </span>
                     </td>
                     <td className="px-6 py-3 text-right">
