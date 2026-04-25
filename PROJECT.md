@@ -39,8 +39,9 @@
 | Painel Railway | https://railway.app |
 | Painel Hostinger (SMTP + domínio) | https://hpanel.hostinger.com |
 | Owner GitHub/Railway | kennrick69 |
-| Email admin | kennrick@gmail.com |
-| Email SMTP sender | admin@l2impure.com |
+| Email admin (GitHub/Railway/Hostinger) | kennrick@gmail.com |
+| Email da conta Resend | ocaradaia.br@gmail.com |
+| Email SMTP sender / Resend FROM | admin@l2impure.com |
 
 ## 3. Branches git (GitHub)
 
@@ -178,7 +179,7 @@ lista completa com descrição e onde buscar.
 
 | Var | Valor | Descrição |
 |---|---|---|
-| `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` | `6Le_1sgsAAAAAC2IqfxInFd1XpKoDX_ZP7Fay07P` | Site key reCAPTCHA v3 Classic. **CUIDADO:** chars `I` (i maiúsculo) vs `l` (L minúsculo) — já tivemos bug de typo aqui |
+| `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` | `6Le_1sgsAAAAAC2lqfxlnFd1XpKoDX_ZP7Fay07P` | Site key reCAPTCHA v3 Classic. Posições 15 e 19 são `l` (L minúsculo) — confirmado direto no Google admin em 2026-04-25. Versões anteriores deste doc tinham `I` por engano (font confusion) — **a chave correta é com `l`** |
 | `NEXT_PUBLIC_SITE_URL` | `https://l2impure-production-49e6.up.railway.app` (hoje) → `https://l2impure.com` (prod) | URL pública usada em templates de email e OG tags |
 | `NEXT_PUBLIC_RECAPTCHA_DISABLED` | `false` (ou ausente) | Se `true`, cliente não carrega script nem chama execute. Bypass pra troubleshooting |
 | `NEXT_PUBLIC_RECAPTCHA_ENTERPRISE` | `false` (ou ausente) | Se `true`, cliente usa `grecaptcha.enterprise.execute` + `enterprise.js`. Hoje a chave é Classic, então `false` |
@@ -412,9 +413,12 @@ Especificação futura, código em `src/lib/bridge.ts` já scaffold:
    `(dashboard)/layout.tsx` em Node runtime. Não recriar middleware sem
    testar build em produção no Railway primeiro.
 
-2. **reCAPTCHA `I` vs `l`.** A chave `6Le_1sgsAAAAAC2IqfxInFd1XpKoDX_ZP7Fay07P`
-   tem `I` (i maiúsculo) em 2 posições (index 15 e 19). Em algumas fontes,
-   esse `I` se parece com `l` minúsculo. Já tivemos o bug em 24/04.
+2. **reCAPTCHA — site key tem `l` minúsculo** nas posições 15 e 19,
+   confirmado direto no Google admin em 2026-04-25:
+   `6Le_1sgsAAAAAC2lqfxlnFd1XpKoDX_ZP7Fay07P`. Versões anteriores deste
+   doc tinham `I` (i maiúsculo) por engano de transcrição (font
+   confusion) — passei semanas caçando "typo" que não existia. Sempre
+   confirmar com o Google admin antes de mudar a env var.
 
 3. **`output: "standalone"` no `next.config.ts`** causa warning `next start does not work with output: standalone`. Foi removido.
 
@@ -564,41 +568,39 @@ curl -s  https://l2impure-production-49e6.up.railway.app/api/auth/me
 
 ### O que NÃO funciona — bloqueadores ativos
 
-#### 🔴 Email — código pronto, falta setup externo do Resend
-`src/lib/email.ts` agora suporta dois providers (auto-detect via
+#### 🟡 Email — Resend setup quase completo, falta API key + Railway env
+`src/lib/email.ts` suporta dois providers (auto-detect via
 `RESEND_API_KEY`). SMTP Hostinger continua dando ETIMEDOUT no Railway
-(GCP bloqueia :465 outbound). **Resend é o caminho** — pendente de
-setup do usuário:
+(GCP bloqueia :465 outbound). **Resend é o caminho.**
 
-1. Cria conta em **resend.com** com kennrick@gmail.com
-2. Domains → Add `l2impure.com` → copia DNS records (SPF TXT + 3 DKIM CNAMEs)
-3. **Hostinger** DNS Zone Editor → adiciona records → volta no Resend → Verify
-4. API Keys → Create (full access) → guarda `re_...`
-5. **Railway** → serviço Next → Variables → adiciona:
-   - `RESEND_API_KEY=re_...`
-   - `RESEND_FROM=L2 Impure <admin@l2impure.com>` (opcional, cai pra SMTP_FROM)
-6. Redeploy → testa: `curl -s 'https://l2impure-production-49e6.up.railway.app/api/debug/smtp?key=<DEBUG_KEY>'`
+Status em 2026-04-25 tarde:
+- ✅ Conta Resend criada (`ocaradaia.br@gmail.com`)
+- ✅ Domínio `l2impure.com` adicionado e DNS verified (SPF + DKIM)
+- ⏳ Falta: criar API key, setar `RESEND_API_KEY` no Railway, redeploy
+
+Próximos passos:
+1. Resend → API Keys → Create (Full access, domain l2impure.com) → guarda `re_...`
+2. Railway → serviço Next → Variables → adiciona `RESEND_API_KEY=re_...`
+   (opcional: `RESEND_FROM=L2 Impure <admin@l2impure.com>` — código tem default)
+3. Salvar → redeploy automático
+4. Testar: `curl -s 'https://l2impure-production-49e6.up.railway.app/api/debug/smtp?key=<DEBUG_KEY>'`
    deve voltar `{"ok":true,"env":{"provider":"resend",...}}`
 
-#### 🟡 reCAPTCHA — chave AINDA com typo no bundle Railway
-A chave correta da admin é `6Le_1sgsAAAAAC2IqfxInFd1XpKoDX_ZP7Fay07P` (com `I`
-maiúsculo nas posições 16 e 20). O bundle servido em produção em
-2026-04-25 (depois do redeploy do commit `44dffba`) AINDA tem
-`6Le_1sgsAAAAAC2lqfxlnFd1XpKoDX_ZP7Fay07P` (com `l` minúsculo).
+#### 🟢 reCAPTCHA — RESOLVIDO (era erro de doc, não de código)
+Em 2026-04-25 ficamos um tempo achando que o bundle Railway tinha
+typo (`l` minúsculo) e a chave admin tinha `I` maiúsculo. Confirmação
+direta do Google admin mostra que a chave SEMPRE foi com `l`
+minúsculo: `6Le_1sgsAAAAAC2lqfxlnFd1XpKoDX_ZP7Fay07P`. Bundle
+Railway está e sempre esteve correto.
 
-Verificado com:
-```
-curl -sL https://l2impure-production-49e6.up.railway.app/register \
-  | grep -oE 'recaptcha/api\.js[^"]*'
-```
+PROJECT.md (esse arquivo) tinha o valor errado escrito por engano de
+transcrição (font onde `I` e `l` se parecem). **Lição:** sempre
+copiar a chave direto do `https://www.google.com/recaptcha/admin/site/751359679`,
+nunca confiar no que está escrito em doc.
 
-**Causa:** `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` no Railway ainda tem o
-typo. Edita no painel → Redeploy.
-
-Hipótese atual: registers passam o gate porque `RECAPTCHA_DISABLED=true`
-está setado (bypass). Quando a chave estiver correta no bundle,
-remover `RECAPTCHA_DISABLED` + `NEXT_PUBLIC_RECAPTCHA_DISABLED` das
-vars Railway pra reativar a proteção real.
+Quando quiser ativar a proteção real (hoje está em bypass via
+`RECAPTCHA_DISABLED=true` no Railway), basta remover essa env var +
+`NEXT_PUBLIC_RECAPTCHA_DISABLED` e redeploy.
 
 ### Próximas tarefas (depois de Resend + reCAPTCHA fechados)
 - Validar fluxo end-to-end: register → email recebido → click link → verify → login → dashboard
