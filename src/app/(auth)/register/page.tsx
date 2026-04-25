@@ -5,9 +5,11 @@ import Link from "next/link";
 import { Input } from "@/components/ui/Input";
 import { GoldButton } from "@/components/ui/GoldButton";
 import { useToast } from "@/components/ui/Toast";
+import { useRecaptcha } from "@/hooks/useRecaptcha";
 
 export default function RegisterPage() {
   const { show } = useToast();
+  const recaptcha = useRecaptcha();
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
 
@@ -28,12 +30,14 @@ export default function RegisterPage() {
       return;
     }
     try {
+      const recaptchaToken = await recaptcha.execute("register");
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: fd.get("email"),
           password,
+          recaptchaToken,
         }),
       });
       const data = await res.json();
@@ -74,6 +78,9 @@ export default function RegisterPage() {
     );
   }
 
+  const disabled =
+    loading || (recaptcha.status !== "ready" && recaptcha.status !== "disabled");
+
   return (
     <>
       <h1 className="mb-2 font-display text-3xl font-bold uppercase tracking-wide text-white">
@@ -111,10 +118,36 @@ export default function RegisterPage() {
           minLength={8}
           autoComplete="new-password"
         />
-        <GoldButton type="submit" size="full" disabled={loading}>
-          {loading ? "Criando..." : "Criar conta"}
+        <GoldButton type="submit" size="full" disabled={disabled}>
+          {loading
+            ? "Criando..."
+            : recaptcha.status === "loading"
+              ? "Carregando..."
+              : "Criar conta"}
         </GoldButton>
       </form>
+
+      <p className="mt-6 text-center text-[11px] leading-relaxed text-white/35">
+        Protegido por reCAPTCHA.{" "}
+        <a
+          href="https://policies.google.com/privacy"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="hover:text-white/60"
+        >
+          Privacidade
+        </a>{" "}
+        &{" "}
+        <a
+          href="https://policies.google.com/terms"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="hover:text-white/60"
+        >
+          Termos
+        </a>{" "}
+        do Google.
+      </p>
 
       <p className="mt-8 text-center text-sm text-white/55">
         Já tem conta?{" "}

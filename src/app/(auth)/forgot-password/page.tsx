@@ -5,9 +5,11 @@ import Link from "next/link";
 import { Input } from "@/components/ui/Input";
 import { GoldButton } from "@/components/ui/GoldButton";
 import { useToast } from "@/components/ui/Toast";
+import { useRecaptcha } from "@/hooks/useRecaptcha";
 
 export default function ForgotPasswordPage() {
   const { show } = useToast();
+  const recaptcha = useRecaptcha();
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
 
@@ -16,10 +18,14 @@ export default function ForgotPasswordPage() {
     setLoading(true);
     const fd = new FormData(e.currentTarget);
     try {
+      const recaptchaToken = await recaptcha.execute("forgot");
       const res = await fetch("/api/auth/forgot", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: fd.get("email") }),
+        body: JSON.stringify({
+          email: fd.get("email"),
+          recaptchaToken,
+        }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -72,10 +78,43 @@ export default function ForgotPasswordPage() {
           required
           autoComplete="email"
         />
-        <GoldButton type="submit" size="full" disabled={loading}>
-          {loading ? "Enviando..." : "Enviar link"}
+        <GoldButton
+          type="submit"
+          size="full"
+          disabled={
+            loading ||
+            (recaptcha.status !== "ready" && recaptcha.status !== "disabled")
+          }
+        >
+          {loading
+            ? "Enviando..."
+            : recaptcha.status === "loading"
+              ? "Carregando..."
+              : "Enviar link"}
         </GoldButton>
       </form>
+
+      <p className="mt-6 text-center text-[11px] leading-relaxed text-white/35">
+        Protegido por reCAPTCHA.{" "}
+        <a
+          href="https://policies.google.com/privacy"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="hover:text-white/60"
+        >
+          Privacidade
+        </a>{" "}
+        &{" "}
+        <a
+          href="https://policies.google.com/terms"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="hover:text-white/60"
+        >
+          Termos
+        </a>{" "}
+        do Google.
+      </p>
 
       <p className="mt-8 text-center text-sm text-white/55">
         Lembrou da senha?{" "}
