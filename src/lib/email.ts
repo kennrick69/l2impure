@@ -5,19 +5,36 @@ declare global {
   var emailTransporter: Transporter | undefined;
 }
 
+/**
+ * Tira aspas literais que podem ter sido coladas dentro do valor da env var.
+ * Railway aceita ambos os formatos, mas se o usuário colar com aspas
+ * elas viram parte do valor.
+ */
+function clean(v: string | undefined): string | undefined {
+  if (!v) return v;
+  const m = v.match(/^["'](.+)["']$/);
+  return m ? m[1] : v;
+}
+
 function createTransporter(): Transporter {
-  const host = process.env.SMTP_HOST;
-  const port = Number(process.env.SMTP_PORT ?? 465);
-  const user = process.env.SMTP_USER;
-  const pass = process.env.SMTP_PASS;
+  const host = clean(process.env.SMTP_HOST);
+  const port = Number(clean(process.env.SMTP_PORT) ?? 465);
+  const user = clean(process.env.SMTP_USER);
+  const pass = clean(process.env.SMTP_PASS);
   if (!host || !user || !pass) {
     throw new Error("SMTP_HOST / SMTP_USER / SMTP_PASS não definidos");
   }
+  console.info(
+    `[smtp] init host=${host} port=${port} secure=${port === 465} user=${user} pass.length=${pass.length}`,
+  );
   return nodemailer.createTransport({
     host,
     port,
     secure: port === 465,
     auth: { user, pass },
+    // Loga o handshake SMTP no stdout — só durante debug.
+    logger: process.env.SMTP_DEBUG === "true",
+    debug: process.env.SMTP_DEBUG === "true",
   });
 }
 
@@ -29,9 +46,10 @@ if (process.env.NODE_ENV !== "production") {
 }
 
 const FROM =
-  process.env.SMTP_FROM ||
-  `L2 Impure <${process.env.SMTP_USER ?? "admin@l2impure.com"}>`;
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://l2impure.com";
+  clean(process.env.SMTP_FROM) ||
+  `L2 Impure <${clean(process.env.SMTP_USER) ?? "admin@l2impure.com"}>`;
+const SITE_URL =
+  clean(process.env.NEXT_PUBLIC_SITE_URL) ?? "https://l2impure.com";
 
 function wrap(title: string, bodyHtml: string): string {
   return `<!DOCTYPE html>
