@@ -17,6 +17,8 @@ model User {
   email         String   @unique @db.VarChar(255)
   passwordHash  String   @map("password_hash") @db.VarChar(255)
   isVerified    Boolean  @default(false) @map("is_verified")
+  coins         Int      @default(0)
+  referralCode  String   @unique @map("referral_code") @db.VarChar(16)
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @default(now()) @updatedAt @map("updated_at")
 
@@ -24,8 +26,34 @@ model User {
   verificationTokens VerificationToken[]
   gameAccounts       GameAccount[]
   auditLogs          AuditLog[]
+  referralsGiven     Referral[] @relation("UserReferrals")
+  referralReceived   Referral?  @relation("UserReferralBy")
 
   @@map("users")
+}
+
+/// Indicação: ligação 1-pra-1 entre quem indicou (referrer) e quem foi indicado (referred).
+/// Conversão acontece quando o referred atinge level 40 em qualquer personagem.
+model Referral {
+  id          Int             @id @default(autoincrement())
+  referrerId  Int             @map("referrer_id")
+  referredId  Int             @unique @map("referred_id")
+  status      ReferralStatus  @default(pending)
+  convertedAt DateTime?       @map("converted_at")
+  createdAt   DateTime        @default(now()) @map("created_at")
+
+  referrer User @relation("UserReferrals", fields: [referrerId], references: [id], onDelete: Cascade)
+  referred User @relation("UserReferralBy", fields: [referredId], references: [id], onDelete: Cascade)
+
+  @@index([referrerId])
+  @@map("referrals")
+}
+
+enum ReferralStatus {
+  pending
+  converted
+
+  @@map("referral_status")
 }
 
 /// Refresh tokens (UUID opaco, armazenado pra permitir revoke)

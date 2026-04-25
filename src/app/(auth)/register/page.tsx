@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { Input } from "@/components/ui/Input";
 import { GoldButton } from "@/components/ui/GoldButton";
 import { useToast } from "@/components/ui/Toast";
@@ -11,6 +12,8 @@ import { useRecaptcha } from "@/hooks/useRecaptcha";
 export default function RegisterPage() {
   const { show } = useToast();
   const recaptcha = useRecaptcha();
+  const searchParams = useSearchParams();
+  const ref = searchParams.get("ref") ?? undefined;
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
   const [submittedEmail, setSubmittedEmail] = useState("");
@@ -41,6 +44,7 @@ export default function RegisterPage() {
           email,
           password,
           recaptchaToken,
+          ...(ref ? { ref } : {}),
         }),
       });
       const data = await res.json();
@@ -91,6 +95,13 @@ export default function RegisterPage() {
       <p className="mb-8 text-sm text-white/55">
         Cadastro grátis. Você precisará confirmar seu email.
       </p>
+
+      {ref && (
+        <div className="mb-6 rounded-md border border-l2-gold/40 bg-l2-gold/10 px-4 py-3 text-sm text-l2-gold">
+          Você foi indicado por um amigo. Quando atingir level 40, vocês
+          dois ganham coins!
+        </div>
+      )}
 
       <form onSubmit={onSubmit} className="flex flex-col gap-5">
         <Input

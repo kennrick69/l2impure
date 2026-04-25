@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import {
   hashPassword,
@@ -9,11 +10,18 @@ import { sendVerificationEmail } from "@/lib/email";
 import { verifyRecaptcha } from "@/lib/recaptcha";
 import { rateLimit, rateLimits, clientIp } from "@/lib/rate-limit";
 import { audit } from "@/lib/audit";
+import { generateReferralCode } from "@/lib/referral";
 
 const schema = z.object({
   email: z.string().email().max(255).toLowerCase(),
   password: z.string().min(8).max(128),
   recaptchaToken: z.string().optional(),
+  ref: z
+    .string()
+    .min(3)
+    .max(16)
+    .regex(/^[A-Za-z0-9]+$/)
+    .optional(),
 });
 
 export async function POST(req: Request) {
@@ -93,11 +101,63 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true, resent: true }, { status: 201 });
   }
 
+  // Resolve referrer pelo código (silencioso — código inválido não bloqueia)
+  let referrerId: number | null = null;
+  if (body.ref) {
+    const referrer = await prisma.user.findUnique({
+      where: { referralCode: body.ref.toUpperCase() },
+      select: { id: true },
+    });
+    if (referrer) referrerId = referrer.id;
+  }
+
   const passwordHash = await hashPassword(body.password);
-  const user = await prisma.user.create({
-    data: { email: body.email, passwordHash },
-    select: { id: true, email: true },
-  });
+
+  // Cria user com referralCode random — retry em caso de colisão (raro)
+  let user: { id: number; email: string } | null = null;
+  for (let attempt = 0; attempt < 5; attempt++) {
+    try {
+      user = await prisma.user.create({
+        data: {
+          email: body.email,
+          passwordHash,
+          referralCode: generateReferralCode(),
+        },
+        select: { id: true, email: true },
+      });
+      break;
+    } catch (e) {
+      if (
+        e instanceof Prisma.PrismaClientKnownRequestError &&
+        e.code === "P2002" &&
+        Array.isArray(e.meta?.target) &&
+        (e.meta.target as string[]).includes("referral_code")
+      ) {
+        continue;
+      }
+      throw e;
+    }
+  }
+  if (!user) {
+    return NextResponse.json(
+      { error: "Não conseguimos gerar uma chave única — tente de novo" },
+      { status: 500 },
+    );
+  }
+
+  if (referrerId !== null) {
+    try {
+      await prisma.referral.create({
+        data: { referrerId, referredId: user.id },
+      });
+    } catch (e) {
+      // P2002 (já tinha indicação) — ignora silenciosamente
+      console.warn(
+        "[register] failed to create referral:",
+        (e as Error).message,
+      );
+    }
+  }
 
   const { token } = await createVerificationToken(
     user.id,
@@ -116,7 +176,7 @@ export async function POST(req: Request) {
     userId: user.id,
     action: "register",
     ipAddress: ip,
-    details: { email: user.email },
+    details: { email: user.email, referrerId },
   });
 
   return NextResponse.json({ ok: true }, { status: 201 });

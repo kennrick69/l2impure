@@ -153,4 +153,10 @@ export const bridge = {
       `/characters/${encodeURIComponent(login)}`,
     );
   },
+  async getMaxLevel(login: string): Promise<{ login: string; maxLevel: number }> {
+    return bridgeFetch<{ login: string; maxLevel: number }>(
+      "GET",
+      `/characters/max-level/${encodeURIComponent(login)}`,
+    );
+  },
 };

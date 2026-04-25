@@ -1,6 +1,16 @@
+import { getSession } from "@/lib/auth";
+import { prisma } from "@/lib/db";
 import { PageTitle } from "@/components/dashboard/Placeholder";
 
-export default function WalletPage() {
+export default async function WalletPage() {
+  const session = await getSession();
+  if (!session) return null;
+  const user = await prisma.user.findUnique({
+    where: { id: session.sub },
+    select: { coins: true },
+  });
+  const coins = user?.coins ?? 0;
+
   return (
     <>
       <PageTitle
@@ -16,12 +26,12 @@ export default function WalletPage() {
             </div>
             <div className="mt-2 flex items-end gap-2">
               <span className="font-display text-5xl font-bold text-l2-gold">
-                0
+                {coins}
               </span>
               <span className="mb-1 text-2xl">🪙</span>
             </div>
             <div className="mt-1 text-xs text-white/45">
-              créditos do painel L2 Impure
+              {coins === 1 ? "crédito" : "créditos"} do painel L2 Impure
             </div>
           </div>
 
