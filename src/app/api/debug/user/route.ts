@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { assertDebugAccess } from "@/lib/debug-auth";
 
 /**
  * GET /api/debug/user?key=<DEBUG_KEY>&email=<email>
@@ -7,19 +8,11 @@ import { prisma } from "@/lib/db";
  * últimos eventos do audit log). Read-only.
  */
 export async function GET(req: Request) {
+  const guard = assertDebugAccess(req);
+  if (guard) return guard;
+
   const url = new URL(req.url);
-  const key = url.searchParams.get("key");
   const email = url.searchParams.get("email")?.toLowerCase();
-  const expected = process.env.DEBUG_KEY;
-  if (!expected) {
-    return NextResponse.json(
-      { error: "DEBUG_KEY env não setada" },
-      { status: 503 },
-    );
-  }
-  if (key !== expected) {
-    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  }
   if (!email) {
     return NextResponse.json(
       { error: "Falta query string ?email=<email>" },
@@ -84,28 +77,32 @@ export async function GET(req: Request) {
 }
 
 /**
- * DELETE /api/debug/user?key=<DEBUG_KEY>&email=<email>
+ * DELETE /api/debug/user?key=<DEBUG_KEY>&email=<email>&confirm=DELETE_USER
  * Apaga o user. Cascade FK derruba refresh_tokens, verification_tokens,
  * game_accounts. Audit log fica com user_id=null (preserva histórico).
- * Útil pra reset de teste end-to-end.
+ *
+ * Exige ?confirm=DELETE_USER pra evitar accidentes — sem isso retorna 400.
  */
 export async function DELETE(req: Request) {
+  const guard = assertDebugAccess(req);
+  if (guard) return guard;
+
   const url = new URL(req.url);
-  const key = url.searchParams.get("key");
   const email = url.searchParams.get("email")?.toLowerCase();
-  const expected = process.env.DEBUG_KEY;
-  if (!expected) {
-    return NextResponse.json(
-      { error: "DEBUG_KEY env não setada" },
-      { status: 503 },
-    );
-  }
-  if (key !== expected) {
-    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-  }
+  const confirm = url.searchParams.get("confirm");
+
   if (!email) {
     return NextResponse.json(
       { error: "Falta query string ?email=<email>" },
+      { status: 400 },
+    );
+  }
+  if (confirm !== "DELETE_USER") {
+    return NextResponse.json(
+      {
+        error:
+          "Confirmação obrigatória — adicione &confirm=DELETE_USER ao querystring",
+      },
       { status: 400 },
     );
   }
