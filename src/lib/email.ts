@@ -159,7 +159,10 @@ export async function sendVerificationEmail(
   to: string,
   token: string,
 ): Promise<void> {
-  const link = `${SITE_URL}/verify?token=${encodeURIComponent(token)}`;
+  // Aponta direto pro endpoint API (GET handler) que consome o token,
+  // marca isVerified=true e redireciona pra /login?verified=1.
+  // A página /verify só serve pra mostrar erros (?error=...).
+  const link = `${SITE_URL}/api/auth/verify?token=${encodeURIComponent(token)}`;
   const html = wrap(
     "Confirme seu email",
     `
