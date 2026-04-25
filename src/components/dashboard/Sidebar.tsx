@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import type { ServerStatus } from "@/lib/bridge";
 
 type MenuItem = {
   href: string;
@@ -22,7 +23,11 @@ const MENU: MenuItem[] = [
   { href: "/settings", icon: "⚙️", label: "Configurações" },
 ];
 
-export function Sidebar() {
+export function Sidebar({
+  serverStatus,
+}: {
+  serverStatus: ServerStatus | null;
+}) {
   const pathname = usePathname();
   const isActive = (href: string) =>
     href === "/dashboard"
@@ -86,9 +91,7 @@ export function Sidebar() {
               <span>🏰</span>
               <span>Bartz · x10 NOVO</span>
             </span>
-            <span className="font-display text-[10px] font-semibold uppercase tracking-wider text-[color:var(--l2-text-gold)]">
-              Em Breve
-            </span>
+            <BartzStatusBadge status={serverStatus} />
           </li>
           <li>
             <a
@@ -113,5 +116,36 @@ export function Sidebar() {
         </ul>
       </div>
     </aside>
+  );
+}
+
+function BartzStatusBadge({ status }: { status: ServerStatus | null }) {
+  if (!status) {
+    return (
+      <span className="flex items-center gap-1.5 font-display text-[10px] font-semibold uppercase tracking-wider text-white/35">
+        <span className="h-1.5 w-1.5 rounded-full bg-white/25" />
+        Indisponível
+      </span>
+    );
+  }
+  if (status.online) {
+    return (
+      <span className="flex items-center gap-1.5 font-display text-[10px] font-semibold uppercase tracking-wider text-[color:var(--l2-green)]">
+        <span className="relative flex h-1.5 w-1.5">
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[color:var(--l2-green)] opacity-75"></span>
+          <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[color:var(--l2-green)]"></span>
+        </span>
+        Online
+        <span className="text-white/55 normal-case tracking-normal">
+          · {status.players} {status.players === 1 ? "jogador" : "jogadores"}
+        </span>
+      </span>
+    );
+  }
+  return (
+    <span className="flex items-center gap-1.5 font-display text-[10px] font-semibold uppercase tracking-wider text-[color:var(--l2-red)]">
+      <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--l2-red)]" />
+      Offline
+    </span>
   );
 }
