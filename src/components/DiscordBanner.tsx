@@ -1,4 +1,5 @@
 import { DiscordIcon } from "./icons";
+import { siteConfig } from "@/lib/l2impure-data";
 
 export function DiscordBanner() {
   return (
@@ -27,7 +28,7 @@ export function DiscordBanner() {
             </p>
           </div>
           <a
-            href="#"
+            href={siteConfig.discordUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center justify-center rounded-lg px-6 py-3 font-display text-sm font-semibold uppercase tracking-wider text-white transition hover:brightness-110"

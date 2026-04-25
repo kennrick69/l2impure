@@ -90,18 +90,25 @@ export function Sidebar() {
               Em Breve
             </span>
           </li>
-          <li className="flex items-center justify-between">
-            <span className="flex items-center gap-2 text-white/75">
-              <span>⚔️</span>
-              <span>Discord</span>
-            </span>
-            <span className="flex items-center gap-1.5 font-display text-[10px] font-semibold uppercase tracking-wider text-[color:var(--l2-green)]">
-              <span className="relative flex h-1.5 w-1.5">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[color:var(--l2-green)] opacity-75"></span>
-                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[color:var(--l2-green)]"></span>
+          <li>
+            <a
+              href="https://discord.gg/pbGXNRuWVX"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="-mx-1 flex items-center justify-between rounded-md px-1 py-0.5 transition hover:bg-white/5"
+            >
+              <span className="flex items-center gap-2 text-white/75">
+                <span>⚔️</span>
+                <span>Discord</span>
               </span>
-              Online
-            </span>
+              <span className="flex items-center gap-1.5 font-display text-[10px] font-semibold uppercase tracking-wider text-[color:var(--l2-green)]">
+                <span className="relative flex h-1.5 w-1.5">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[color:var(--l2-green)] opacity-75"></span>
+                  <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[color:var(--l2-green)]"></span>
+                </span>
+                Online
+              </span>
+            </a>
           </li>
         </ul>
       </div>

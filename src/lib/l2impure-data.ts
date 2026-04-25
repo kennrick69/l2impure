@@ -15,6 +15,7 @@ export const siteConfig = {
   description:
     "Servidor Interlude x10 com Auto-Farm, Olympiad e Eventos 24/7.",
   copyright: "© 2026 L2 Impure. Este servidor não é afiliado à NCSoft.",
+  discordUrl: "https://discord.gg/pbGXNRuWVX",
 };
 
 export const navItems: NavItem[] = [
@@ -30,7 +31,11 @@ export const navItems: NavItem[] = [
     dropdown: [
       { label: "Fórum", href: "#", external: true },
       { label: "Telegram", href: "#", external: true },
-      { label: "Discord", href: "#", external: true },
+      {
+        label: "Discord",
+        href: "https://discord.gg/pbGXNRuWVX",
+        external: true,
+      },
       { label: "Instagram", href: "#", external: true },
       { label: "YouTube", href: "#", external: true },
     ],
@@ -72,7 +77,7 @@ export const serverCards: ServerCard[] = [
     status: "online",
     statusText: "ONLINE",
     accent: "discord",
-    href: "#",
+    href: "https://discord.gg/pbGXNRuWVX",
   },
 ];
 
@@ -189,7 +194,7 @@ export const footerColumns: FooterColumn[] = [
   {
     heading: "Comunidade",
     links: [
-      { label: "Discord", href: "#" },
+      { label: "Discord", href: "https://discord.gg/pbGXNRuWVX" },
       { label: "Fórum", href: "#" },
       { label: "Instagram", href: "#" },
     ],
