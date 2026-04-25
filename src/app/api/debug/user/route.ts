@@ -82,3 +82,50 @@ export async function GET(req: Request) {
     recentAudit,
   });
 }
+
+/**
+ * DELETE /api/debug/user?key=<DEBUG_KEY>&email=<email>
+ * Apaga o user. Cascade FK derruba refresh_tokens, verification_tokens,
+ * game_accounts. Audit log fica com user_id=null (preserva histórico).
+ * Útil pra reset de teste end-to-end.
+ */
+export async function DELETE(req: Request) {
+  const url = new URL(req.url);
+  const key = url.searchParams.get("key");
+  const email = url.searchParams.get("email")?.toLowerCase();
+  const expected = process.env.DEBUG_KEY;
+  if (!expected) {
+    return NextResponse.json(
+      { error: "DEBUG_KEY env não setada" },
+      { status: 503 },
+    );
+  }
+  if (key !== expected) {
+    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  }
+  if (!email) {
+    return NextResponse.json(
+      { error: "Falta query string ?email=<email>" },
+      { status: 400 },
+    );
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { email },
+    select: { id: true },
+  });
+  if (!user) {
+    return NextResponse.json({ ok: true, deleted: false, reason: "not_found" });
+  }
+
+  const deleted = await prisma.user.delete({
+    where: { id: user.id },
+    select: { id: true, email: true },
+  });
+  return NextResponse.json({
+    ok: true,
+    deleted: true,
+    user: deleted,
+    note: "Audit log preservado com user_id=null",
+  });
+}
