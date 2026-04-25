@@ -11,6 +11,7 @@ import { healthRoutes } from "./routes/health.js";
 import { statusRoutes } from "./routes/status.js";
 import { accountRoutes } from "./routes/accounts.js";
 import { characterRoutes } from "./routes/characters.js";
+import { rankingRoutes } from "./routes/rankings.js";
 
 async function build() {
   const app = Fastify({
@@ -51,6 +52,7 @@ async function build() {
   await app.register(statusRoutes);
   await app.register(accountRoutes);
   await app.register(characterRoutes);
+  await app.register(rankingRoutes);
 
   app.setNotFoundHandler((_req, reply) => {
     reply.code(404).send({ error: "not found" });

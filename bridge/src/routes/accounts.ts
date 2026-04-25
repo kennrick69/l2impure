@@ -12,6 +12,7 @@
  * Retorna 201 + { ok:true, login } | 409 se login já existe.
  */
 import type { FastifyInstance } from "fastify";
+import type { ResultSetHeader } from "mysql2";
 import { z } from "zod";
 import { pool } from "../db.js";
 import { authenticate } from "../auth.js";
@@ -24,6 +25,14 @@ const CreateBody = z.object({
     .max(45)
     .regex(/^[A-Za-z0-9]+$/, "alfanumérico"),
   password: z.string().min(6).max(45),
+});
+
+const ResetHwidBody = z.object({
+  login: z
+    .string()
+    .min(4)
+    .max(45)
+    .regex(/^[A-Za-z0-9]+$/, "alfanumérico"),
 });
 
 export async function accountRoutes(app: FastifyInstance) {
@@ -67,6 +76,46 @@ export async function accountRoutes(app: FastifyInstance) {
           return;
         }
         req.log.error({ err }, "[/accounts/create] failed");
+        reply.code(500).send({ error: "internal error" });
+      }
+    },
+  );
+
+  /**
+   * POST /accounts/reset-hwid — autenticado.
+   * Body: { login }
+   * Limpa o lock por IP/HWID da conta no L2J.
+   *
+   * Schema deste fork tem `lastIP` mas NÃO `lastHWID` — só `lastIP=''`
+   * é aplicado. Em forks que adicionem a coluna, expandir aqui.
+   *
+   * Rate-limit (1 por semana / conta) é feito no Next, não aqui.
+   */
+  app.post(
+    "/accounts/reset-hwid",
+    { preHandler: authenticate },
+    async (req, reply) => {
+      const parsed = ResetHwidBody.safeParse(req.body);
+      if (!parsed.success) {
+        reply.code(400).send({
+          error: "invalid body",
+          details: parsed.error.flatten(),
+        });
+        return;
+      }
+      const { login } = parsed.data;
+      try {
+        const [result] = await pool.query<ResultSetHeader>(
+          "UPDATE accounts SET lastIP = '' WHERE login = ?",
+          [login],
+        );
+        if (result.affectedRows === 0) {
+          reply.code(404).send({ error: "account not found" });
+          return;
+        }
+        reply.send({ ok: true, login });
+      } catch (e) {
+        req.log.error({ err: e }, "[/accounts/reset-hwid] failed");
         reply.code(500).send({ error: "internal error" });
       }
     },
