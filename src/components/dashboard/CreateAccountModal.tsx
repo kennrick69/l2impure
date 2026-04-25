@@ -54,24 +54,13 @@ export function CreateAccountModalProvider({
   );
 }
 
-// ---------- Helpers ----------
-
-function randomPrefix(): string {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ"; // sem I/O pra evitar confusão visual
-  return (
-    chars[Math.floor(Math.random() * chars.length)] +
-    chars[Math.floor(Math.random() * chars.length)]
-  );
-}
-
 // ---------- Modal ----------
 
 function CreateAccountModal() {
   const { close } = useCreateAccountModal();
   const router = useRouter();
   const { show } = useToast();
-  const [prefix, setPrefix] = useState(() => randomPrefix());
-  const [name, setName] = useState("");
+  const [login, setLogin] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
@@ -89,11 +78,10 @@ function CreateAccountModal() {
     };
   }, [close]);
 
-  const fullLogin = `${prefix}${name}`;
-  const nameValid = /^[a-zA-Z0-9]{3,14}$/.test(name);
+  const loginValid = /^[a-zA-Z0-9]{4,16}$/.test(login);
   const passwordValid = password.length >= 6;
   const passwordsMatch = password === confirm;
-  const canSubmit = nameValid && passwordValid && passwordsMatch && !loading;
+  const canSubmit = loginValid && passwordValid && passwordsMatch && !loading;
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -103,14 +91,14 @@ function CreateAccountModal() {
       const res = await fetch("/api/game/accounts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ gameLogin: fullLogin, password }),
+        body: JSON.stringify({ gameLogin: login, password }),
       });
       const data = await res.json();
       if (!res.ok) {
-        show(data.error ?? "Falha ao reservar conta", "error");
+        show(data.error ?? "Falha ao criar conta", "error");
         return;
       }
-      show(`Conta ${fullLogin} reservada!`, "success");
+      show(`Conta ${login} criada!`, "success");
       close();
       router.refresh();
     } catch {
@@ -152,51 +140,28 @@ function CreateAccountModal() {
             🏰 Bartz · Interlude x10
           </div>
 
-          {/* Prefixo + Nome */}
+          {/* Login */}
           <div>
             <label className="mb-1.5 flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-white/65">
               <span>Login da conta</span>
               <span className="font-normal normal-case text-[10px] text-white/40">
-                3-14 caracteres, letras e números
+                4-16 caracteres, letras e números
               </span>
             </label>
-            <div className="flex items-stretch gap-2">
-              <div className="flex items-center gap-1.5 rounded-md border border-[color:var(--l2-border-gold)]/40 bg-[color:var(--l2-bg-card)] px-3 py-2.5">
-                <span className="font-display text-sm font-bold uppercase text-[color:var(--l2-text-gold)]">
-                  {prefix}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setPrefix(randomPrefix())}
-                  title="Gerar novo prefixo"
-                  className="text-xs text-white/55 transition hover:text-white"
-                >
-                  🔄
-                </button>
-              </div>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) =>
-                  setName(e.target.value.replace(/[^a-zA-Z0-9]/g, ""))
-                }
-                maxLength={14}
-                minLength={3}
-                placeholder="seunome"
-                required
-                autoFocus
-                autoComplete="off"
-                className="flex-1 rounded-md border border-white/8 bg-[color:var(--l2-bg-input)] px-3 py-2.5 text-sm text-white placeholder:text-white/30 focus:border-[color:var(--l2-text-gold)] focus:outline-none"
-              />
-            </div>
-            {name && (
-              <div className="mt-2 text-xs text-white/55">
-                Login final:{" "}
-                <span className="font-display font-bold uppercase text-[color:var(--l2-text-gold)]">
-                  {fullLogin}
-                </span>
-              </div>
-            )}
+            <input
+              type="text"
+              value={login}
+              onChange={(e) =>
+                setLogin(e.target.value.replace(/[^a-zA-Z0-9]/g, ""))
+              }
+              maxLength={16}
+              minLength={4}
+              placeholder="meulogin"
+              required
+              autoFocus
+              autoComplete="off"
+              className="w-full rounded-md border border-white/8 bg-[color:var(--l2-bg-input)] px-3 py-2.5 text-sm text-white placeholder:text-white/30 focus:border-[color:var(--l2-text-gold)] focus:outline-none"
+            />
           </div>
 
           {/* Senha */}
