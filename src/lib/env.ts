@@ -96,17 +96,20 @@ function rawWithClean<T extends Record<string, z.ZodTypeAny>>(
 const serverParsed = ServerEnv.safeParse(rawWithClean(ServerEnv.shape));
 const publicParsed = PublicEnv.safeParse(rawWithClean(PublicEnv.shape));
 
+// Nunca dá throw — Railway build não tem acesso a TODAS as env vars
+// runtime, e validação que falha hard quebra o build mesmo quando a app
+// rodaria normalmente em produção. Loga warning aqui; downstream
+// (Prisma, jwt.sign, fetch ao Resend, etc) falha com mensagem clara
+// se a var realmente faltar em runtime.
 if (!serverParsed.success) {
-  // Em dev, loga e segue (permite scripts de migrate sem todas as vars).
-  // Em prod, falha hard pra build/start não passar.
-  const msg = `[env] server validation failed:\n${JSON.stringify(serverParsed.error.flatten(), null, 2)}`;
-  if (isProd) throw new Error(msg);
-  console.warn(msg);
+  console.warn(
+    `[env] server validation warning:\n${JSON.stringify(serverParsed.error.flatten(), null, 2)}`,
+  );
 }
 if (!publicParsed.success) {
-  const msg = `[env] public validation failed:\n${JSON.stringify(publicParsed.error.flatten(), null, 2)}`;
-  if (isProd) throw new Error(msg);
-  console.warn(msg);
+  console.warn(
+    `[env] public validation warning:\n${JSON.stringify(publicParsed.error.flatten(), null, 2)}`,
+  );
 }
 
 // ---------- Export ----------
