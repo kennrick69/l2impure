@@ -47,17 +47,29 @@ export async function POST(req: Request) {
     );
   }
 
-  // Evita enumeração: responde sucesso mesmo se email já existir.
+  // Email duplicado responde 409 com mensagem clara (priorizamos UX
+  // sobre anti-enumeração — decisão de produto: servidor de jogo, não
+  // fintech, o ganho de UX vale mais que a proteção).
   const existing = await prisma.user.findUnique({
     where: { email: body.email },
+    select: { id: true, isVerified: true },
   });
   if (existing) {
     await audit({
+      userId: existing.id,
       action: "register_duplicate",
       ipAddress: ip,
       details: { email: body.email },
     });
-    return NextResponse.json({ ok: true }, { status: 201 });
+    return NextResponse.json(
+      {
+        error: existing.isVerified
+          ? "Este email já está cadastrado. Faça login ou recupere sua senha."
+          : "Este email já está cadastrado mas ainda não foi verificado. Cheque seu inbox ou peça novo link.",
+        code: existing.isVerified ? "already_registered" : "already_registered_unverified",
+      },
+      { status: 409 },
+    );
   }
 
   const passwordHash = await hashPassword(body.password);
