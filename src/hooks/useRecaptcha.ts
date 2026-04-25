@@ -24,84 +24,64 @@ declare global {
 const SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
 const DISABLED =
   process.env.NEXT_PUBLIC_RECAPTCHA_DISABLED === "true" || !SITE_KEY;
-// Permite trocar pra Enterprise sem recompilar código, se for esse o caso.
 const ENTERPRISE =
   process.env.NEXT_PUBLIC_RECAPTCHA_ENTERPRISE === "true";
 
-type Status = "idle" | "loading" | "ready" | "disabled" | "error";
+type Status = "disabled" | "loading" | "ready" | "error";
 
-function logPrefix(k: string | undefined) {
+function prefix(k: string | undefined) {
   if (!k) return "<empty>";
-  return `${k.slice(0, 10)}...${k.slice(-4)} (len=${k.length})`;
+  return `${k.slice(0, 10)}…${k.slice(-4)} (len=${k.length})`;
 }
 
+/**
+ * O script é carregado no root layout via <Script> do Next.js
+ * (idempotente, uma vez por documento, antes de qualquer form).
+ * Este hook só aguarda o `grecaptcha` ficar disponível e expõe execute().
+ */
 export function useRecaptcha(): {
   status: Status;
   execute: (action: string) => Promise<string | null>;
 } {
   const [status, setStatus] = useState<Status>(
-    DISABLED ? "disabled" : "idle",
+    DISABLED ? "disabled" : "loading",
   );
 
   useEffect(() => {
-    if (DISABLED || !SITE_KEY) {
-      console.info(
-        `[recaptcha] disabled (key=${logPrefix(SITE_KEY)}, flag=${process.env.NEXT_PUBLIC_RECAPTCHA_DISABLED})`,
-      );
-      return;
-    }
-    console.info(
-      `[recaptcha] loading (key=${logPrefix(SITE_KEY)}, enterprise=${ENTERPRISE}, hostname=${typeof location !== "undefined" ? location.hostname : "?"})`,
-    );
+    if (DISABLED || !SITE_KEY) return;
+    let cancelled = false;
+    let attempts = 0;
+    const maxAttempts = 50; // 5s de timeout (100ms × 50)
 
-    const grOnWindow = ENTERPRISE
-      ? window.grecaptcha?.enterprise
-      : window.grecaptcha;
-    if (grOnWindow) {
-      setStatus("ready");
-      return;
-    }
-    const existing = document.querySelector<HTMLScriptElement>(
-      "script[data-grecaptcha]",
-    );
-    if (existing) {
-      existing.addEventListener("load", () => {
-        const gr = ENTERPRISE
-          ? window.grecaptcha?.enterprise
-          : window.grecaptcha;
-        gr?.ready(() => setStatus("ready"));
-      });
-      return;
-    }
-    setStatus("loading");
-    const script = document.createElement("script");
-    script.src = ENTERPRISE
-      ? `https://www.google.com/recaptcha/enterprise.js?render=${SITE_KEY}`
-      : `https://www.google.com/recaptcha/api.js?render=${SITE_KEY}`;
-    script.async = true;
-    script.defer = true;
-    script.dataset.grecaptcha = "1";
-    script.onload = () => {
+    function check() {
+      if (cancelled) return;
       const gr = ENTERPRISE
         ? window.grecaptcha?.enterprise
         : window.grecaptcha;
-      if (!gr) {
+      if (gr && typeof gr.ready === "function") {
+        gr.ready(() => {
+          if (!cancelled) {
+            console.info(
+              `[recaptcha] ready (key=${prefix(SITE_KEY)}, enterprise=${ENTERPRISE}, host=${location.hostname})`,
+            );
+            setStatus("ready");
+          }
+        });
+        return;
+      }
+      if (++attempts >= maxAttempts) {
         console.error(
-          `[recaptcha] script loaded mas window.grecaptcha${ENTERPRISE ? ".enterprise" : ""} não existe`,
+          `[recaptcha] timeout aguardando window.grecaptcha${ENTERPRISE ? ".enterprise" : ""} (key=${prefix(SITE_KEY)})`,
         );
         setStatus("error");
         return;
       }
-      gr.ready(() => {
-        console.info("[recaptcha] ready");
-        setStatus("ready");
-      });
+      setTimeout(check, 100);
+    }
+    check();
+    return () => {
+      cancelled = true;
     };
-    script.onerror = () => {
-      console.error("[recaptcha] script failed to load");
-      setStatus("error");
-    };
-    document.head.appendChild(script);
   }, []);
 
   const execute = useCallback(
@@ -111,28 +91,20 @@ export function useRecaptcha(): {
         ? window.grecaptcha?.enterprise
         : window.grecaptcha;
       if (!gr) {
-        console.error("[recaptcha] execute: grecaptcha não carregado");
+        console.error("[recaptcha] execute: grecaptcha ainda não carregado");
         return null;
       }
       try {
         const token = await gr.execute(SITE_KEY, { action });
         console.info(
-          `[recaptcha] execute ok (action=${action}, token_prefix=${token.slice(0, 12)}...)`,
+          `[recaptcha] execute OK (action=${action}, token=${token.slice(0, 12)}…)`,
         );
         return token;
       } catch (e) {
         const msg = (e as Error)?.message ?? String(e);
         console.error(
-          `[recaptcha] execute FAILED (action=${action}, key=${logPrefix(SITE_KEY)}, enterprise=${ENTERPRISE}): ${msg}`,
+          `[recaptcha] execute FAILED (action=${action}, key=${prefix(SITE_KEY)}, enterprise=${ENTERPRISE}, host=${location.hostname}): ${msg}`,
         );
-        if (msg.includes("Invalid site key")) {
-          console.error(
-            "[recaptcha] Hipóteses:\n" +
-              "  1. A chave no env var não bate com a cadastrada no Google.\n" +
-              "  2. A chave é reCAPTCHA Enterprise — setar NEXT_PUBLIC_RECAPTCHA_ENTERPRISE=true.\n" +
-              "  3. Domain mismatch — verificar allowlist no console Google.",
-          );
-        }
         return null;
       }
     },
