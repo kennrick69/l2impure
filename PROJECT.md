@@ -523,6 +523,121 @@ curl -s  https://l2impure-production-49e6.up.railway.app/api/auth/me
 
 ---
 
-**Última atualização:** 2026-04-25
+**Última atualização:** 2026-04-25 (madrugada)
 **Último commit relevante:** ver `git log arq-definitiva --oneline -5`
-**Próximo passo:** validar fluxo register → email → verify → login → dashboard em produção após o fix da chave reCAPTCHA.
+
+---
+
+## 18. Estado da última sessão (PARAMOS AQUI)
+
+### O que funciona em produção
+- ✅ Build Railway sobe sem erros (node:crypto resolvido removendo middleware edge)
+- ✅ Landing `/` renderizando L2 Impure correto
+- ✅ `/login`, `/register`, `/forgot-password`, `/reset-password`, `/verify` carregam
+- ✅ `/dashboard` redireciona pra `/login` quando sem cookie (layout protege)
+- ✅ Migration Prisma aplicada no Postgres (`No pending migrations to apply`)
+- ✅ reCAPTCHA passa o gate do register (formulário aceita, mostra "Quase lá")
+
+### O que NÃO funciona (em ordem de prioridade pra resolver)
+
+#### 🔴 SMTP Hostinger → ETIMEDOUT
+Endpoint diagnóstico `/api/debug/smtp?key=<DEBUG_KEY>` retornou:
+```json
+{
+  "ok": false,
+  "env": {
+    "SMTP_HOST": "smtp.hostinger.com",
+    "SMTP_PORT": "465",
+    "SMTP_USER": "admin@l2impure.com",
+    "SMTP_PASS_length": 9,
+    "SMTP_PASS_starts_with_quote": false
+  },
+  "error": {
+    "code": "ETIMEDOUT",
+    "command": "CONN"
+  }
+}
+```
+
+Railway (GCP us-west2) **não consegue abrir TCP em `smtp.hostinger.com:465`**.
+Senha e config estão certos — é bloqueio de rede.
+
+**Próxima ação ao retomar:** seguir um dos dois caminhos abaixo.
+
+**Caminho A (rápido, 1 min):** trocar `SMTP_PORT` no Railway de `465` pra `587`.
+Algumas redes liberam STARTTLS (587) mas bloqueiam SSL direto (465). O código
+já lida (`secure: port === 465`). Salvar → redeploy → bater de novo no
+`/api/debug/smtp` → se `ok:true`, resolveu.
+
+**Caminho B (correto a longo prazo, ~10 min):** migrar pra **Resend** (transactional email).
+Free tier 3 mil/mês, deliverability boa, deploys cloud sem dor:
+1. Cria conta em resend.com com kennrick@gmail.com
+2. Domains → Add `l2impure.com` → copia DNS records (SPF TXT + DKIM CNAMEs)
+3. Hostinger DNS Zone Editor → adiciona os records → Verify no Resend
+4. API Keys → Create → guarda `re_...`
+5. Pede pro Claude reescrever `src/lib/email.ts` pra usar `Resend` SDK
+6. Substitui env vars: tira SMTP_*, adiciona `RESEND_API_KEY` + `RESEND_FROM=admin@l2impure.com`
+7. `npm install resend` e push
+
+#### 🟡 reCAPTCHA — chave AINDA com typo no bundle Railway
+A chave correta da admin é `6Le_1sgsAAAAAC2IqfxInFd1XpKoDX_ZP7Fay07P` (com `I`
+maiúsculo nas posições 16 e 20). O bundle servido em produção em
+24/04 ainda tinha `6Le_1sgsAAAAAC2lqfxlnFd1XpKoDX_ZP7Fay07P` (com `l`).
+Usuário disse que corrigiu, mas redeploy provavelmente não rodou.
+
+Hipótese: registers passam o gate porque tem `RECAPTCHA_DISABLED=true`
+setado nas vars do Railway (bypass). Confirmar:
+
+```
+curl -sL https://l2impure-production-49e6.up.railway.app/register \
+  | grep -oE 'recaptcha/api\.js[^"]*'
+```
+
+Se voltar URL com `l` minúsculo ainda → vars não atualizou OU rebuild
+não rolou. Trigger manual: Deployments → ⋮ → Redeploy.
+
+Quando a chave estiver correta no bundle, **remover** `RECAPTCHA_DISABLED`
+e `NEXT_PUBLIC_RECAPTCHA_DISABLED` das vars Railway pra reativar a
+proteção real.
+
+#### 🟢 Roadmap de UI pendente (depois de SMTP/reCAPTCHA fechados)
+- Validar fluxo end-to-end: register → email recebido → click link → verify → login → dashboard
+- Lapidar landing pra bater 1:1 com o `public/css/homepage.css` original (branch `legacy-express` tem como referência)
+- Criar páginas internas vazias mas navegáveis: `/characters`, `/warehouse`, `/wallet`, `/settings`, `/referrals`, `/support`, `/rankings`, `/promo-code`
+- Sidebar compartilhada do dashboard (ver template em `dashboard.html` legado)
+
+### Env vars sensíveis vazadas no chat (rotacionar antes do launch)
+Em 2026-04-25 o usuário colou todos os valores no chat de debug. Antes de
+abrir produção real:
+- [ ] Gerar novos `JWT_SECRET` e `JWT_REFRESH_SECRET` com `openssl rand -hex 64`
+- [ ] Trocar senha `SMTP_PASS` no painel da Hostinger
+- [ ] Considerar trocar `RECAPTCHA_SECRET_KEY` (criar nova chave Classic v3 no console e arquivar a velha)
+- [ ] Senhas Postgres/Redis: Railway gerencia automaticamente — pode regerar pelo painel
+
+### Comandos pra retomar a sessão
+
+```bash
+# 1. Cd e sync
+cd C:/Users/sss/Pictures/l2impure
+git pull origin arq-definitiva
+
+# 2. Confirmar estado dos servidores
+curl -sI https://l2impure-production-49e6.up.railway.app/
+curl -s https://l2impure-production-49e6.up.railway.app/api/debug/smtp?key=<DEBUG_KEY>
+
+# 3. Continuar a partir do caminho A ou B do SMTP
+```
+
+### Onde estão os documentos importantes
+- `PROJECT.md` (este arquivo, raiz do projeto, no git)
+- `C:\Users\sss\Downloads\CLAUDE.md` — instruções do projeto original (legado, mas referência boa)
+- `C:\Users\sss\Downloads\L2-IMPURE-DESIGN-GUIDE (1).md` — design system
+- `C:\Users\sss\Downloads\L2-IMPURE-ARQUITETURA-DEFINITIVA.md` — decisões arquiteturais finais
+- `C:\Users\sss\Downloads\ACESSOS-FASE1-CLAUDE-CODE.txt` — secrets reais (não commitar)
+- `C:\Users\sss\Downloads\dashboard.html` — referência visual do dashboard interno (vanilla, do legado)
+- Railway: https://railway.app → projeto L2 Impure → serviço Next + Postgres + Redis
+- GitHub: https://github.com/kennrick69/l2impure → branch `arq-definitiva`
+
+---
+
+**Boa noite. Quando voltar, manda "leia PROJECT.md" e a gente continua.**
