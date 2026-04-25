@@ -3,6 +3,18 @@ import { requireAdmin, AdminError } from "@/lib/admin";
 import { audit } from "@/lib/audit";
 import { clientIp } from "@/lib/rate-limit";
 import { bridge, BridgeError } from "@/lib/bridge";
+import { isGmUnlocked } from "@/lib/gm-pin";
+
+async function ensureGmUnlocked(userId: number) {
+  if (await isGmUnlocked(userId)) return null;
+  return NextResponse.json(
+    {
+      error: "Sessão GM expirada. Insira o PIN novamente.",
+      code: "pin_required",
+    },
+    { status: 403 },
+  );
+}
 
 async function ensureAdmin(req: Request) {
   try {
@@ -52,6 +64,8 @@ function bridgeFail(e: unknown) {
 export async function GET(req: Request) {
   const guard = await ensureAdmin(req);
   if (guard.response) return guard.response;
+  const pinResp = await ensureGmUnlocked(guard.admin.userId);
+  if (pinResp) return pinResp;
 
   const url = new URL(req.url);
   const action = url.searchParams.get("action");
@@ -74,6 +88,8 @@ export async function POST(req: Request) {
   const guard = await ensureAdmin(req);
   if (guard.response) return guard.response;
   const admin = guard.admin;
+  const pinResp = await ensureGmUnlocked(admin.userId);
+  if (pinResp) return pinResp;
 
   const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
   const action = body.action;

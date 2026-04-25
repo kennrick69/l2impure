@@ -1,16 +1,23 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
 import { useToast } from "@/components/ui/Toast";
 import { CLASS_OPTIONS, TELEPORT_PRESETS } from "@/lib/l2j-classes";
 import type { AdminGmCharacter } from "@/lib/bridge";
 
 export function GameMasterPanel() {
+  const router = useRouter();
   const { show } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [searching, setSearching] = useState(false);
   const [results, setResults] = useState<AdminGmCharacter[] | null>(null);
   const [selected, setSelected] = useState<AdminGmCharacter | null>(null);
+
+  function handlePinExpiry() {
+    show("Sessão GM expirada. Reabrindo formulário do PIN…", "info");
+    router.refresh();
+  }
 
   async function search(e: FormEvent) {
     e.preventDefault();
@@ -23,9 +30,14 @@ export function GameMasterPanel() {
       );
       const data = (await res.json().catch(() => ({}))) as {
         error?: string;
+        code?: string;
         characters?: AdminGmCharacter[];
       };
       if (!res.ok) {
+        if (data.code === "pin_required") {
+          handlePinExpiry();
+          return;
+        }
         show(data.error ?? "Falha na busca", "error");
         return;
       }
@@ -46,8 +58,15 @@ export function GameMasterPanel() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      const data = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        code?: string;
+      };
       if (!res.ok) {
+        if (data.code === "pin_required") {
+          handlePinExpiry();
+          return false;
+        }
         show(data.error ?? "Falha", "error");
         return false;
       }
