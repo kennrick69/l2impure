@@ -5,6 +5,7 @@ import {
   REFERRAL_REWARD_REFERRER,
   REFERRAL_TARGET_LEVEL,
 } from "./referral";
+import { getSetting, SETTINGS } from "./settings";
 
 /**
  * Maior level entre todos os personagens de TODAS as contas de jogo
@@ -76,6 +77,22 @@ export async function checkAndConvertReferral(
     return { status: "still_pending", maxLevel };
   }
 
+  // Sistema desativado pelo admin → não converte
+  const enabled = await getSetting<boolean>(SETTINGS.referralsEnabled, true);
+  if (!enabled) {
+    return { status: "still_pending", maxLevel };
+  }
+
+  // Recompensas: settings sobrescrevem o default
+  const rewardReferrer = await getSetting<number>(
+    SETTINGS.referralRewardReferrer,
+    REFERRAL_REWARD_REFERRER,
+  );
+  const rewardReferred = await getSetting<number>(
+    SETTINGS.referralRewardReferred,
+    REFERRAL_REWARD_REFERRED,
+  );
+
   // Updates atômicos: o updateMany com filtro pending evita double-credit
   // se duas chamadas concorrerem.
   const updated = await prisma.referral.updateMany({
@@ -89,11 +106,11 @@ export async function checkAndConvertReferral(
   await prisma.$transaction([
     prisma.user.update({
       where: { id: ref.referrerId },
-      data: { coins: { increment: REFERRAL_REWARD_REFERRER } },
+      data: { coins: { increment: rewardReferrer } },
     }),
     prisma.user.update({
       where: { id: ref.referredId },
-      data: { coins: { increment: REFERRAL_REWARD_REFERRED } },
+      data: { coins: { increment: rewardReferred } },
     }),
   ]);
 

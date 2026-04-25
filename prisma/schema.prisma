@@ -13,23 +13,61 @@ datasource db {
 
 /// Usuário do site (conta web, não é a conta de jogo)
 model User {
-  id            Int      @id @default(autoincrement())
-  email         String   @unique @db.VarChar(255)
-  passwordHash  String   @map("password_hash") @db.VarChar(255)
-  isVerified    Boolean  @default(false) @map("is_verified")
-  coins         Int      @default(0)
-  referralCode  String   @unique @map("referral_code") @db.VarChar(16)
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @default(now()) @updatedAt @map("updated_at")
+  id            Int       @id @default(autoincrement())
+  email         String    @unique @db.VarChar(255)
+  passwordHash  String    @map("password_hash") @db.VarChar(255)
+  isVerified    Boolean   @default(false) @map("is_verified")
+  role          UserRole  @default(user)
+  coins         Int       @default(0)
+  referralCode  String    @unique @map("referral_code") @db.VarChar(16)
+  bannedAt      DateTime? @map("banned_at")
+  bannedReason  String?   @map("banned_reason") @db.VarChar(255)
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @default(now()) @updatedAt @map("updated_at")
 
   refreshTokens      RefreshToken[]
   verificationTokens VerificationToken[]
   gameAccounts       GameAccount[]
   auditLogs          AuditLog[]
-  referralsGiven     Referral[] @relation("UserReferrals")
-  referralReceived   Referral?  @relation("UserReferralBy")
+  referralsGiven     Referral[]    @relation("UserReferrals")
+  referralReceived   Referral?     @relation("UserReferralBy")
+  announcements      Announcement[]
 
   @@map("users")
+}
+
+enum UserRole {
+  user
+  admin
+
+  @@map("user_role")
+}
+
+/// Configurações de runtime editáveis pelo admin (offset de player count,
+/// flag do sistema de referrals, valores de recompensa, etc).
+/// Valor é JSON pra ser flexível.
+model Setting {
+  key       String   @id @db.VarChar(64)
+  value     Json
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@map("settings")
+}
+
+/// Anúncios do servidor — aparecem na seção "Últimas Notícias" da landing.
+model Announcement {
+  id           Int       @id @default(autoincrement())
+  title        String    @db.VarChar(120)
+  content      String
+  publishedAt  DateTime  @default(now()) @map("published_at")
+  archivedAt   DateTime? @map("archived_at")
+  createdById  Int?      @map("created_by_id")
+
+  createdBy User? @relation(fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([publishedAt])
+  @@index([archivedAt])
+  @@map("announcements")
 }
 
 /// Indicação: ligação 1-pra-1 entre quem indicou (referrer) e quem foi indicado (referred).

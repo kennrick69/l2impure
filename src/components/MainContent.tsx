@@ -1,5 +1,6 @@
 import { ArrowUpRightIcon, DiscordIcon, TelegramIcon } from "./icons";
 import { serverCards, newsItems } from "@/lib/l2impure-data";
+import { prisma } from "@/lib/db";
 
 function SectionHeader({
   icon,
@@ -81,7 +82,35 @@ function ServerList() {
   );
 }
 
-function NewsCard() {
+type AnnouncementRow = {
+  id: number;
+  title: string;
+  content: string;
+  publishedAt: Date;
+};
+
+async function NewsCard() {
+  // Prisma pode falhar em build/render se DB indisponível — fail-soft.
+  let announcements: AnnouncementRow[] = [];
+  try {
+    announcements = await prisma.announcement.findMany({
+      where: { archivedAt: null },
+      orderBy: { publishedAt: "desc" },
+      take: 8,
+      select: {
+        id: true,
+        title: true,
+        content: true,
+        publishedAt: true,
+      },
+    });
+  } catch (e) {
+    console.warn(
+      "[MainContent] prisma.announcement falhou:",
+      (e as Error).message,
+    );
+  }
+
   return (
     <div>
       <SectionHeader icon="⚡">Últimas Notícias</SectionHeader>
@@ -100,15 +129,35 @@ function NewsCard() {
           </a>
         </div>
         <ul className="flex flex-col gap-3">
-          {newsItems.map((n, i) => (
-            <li key={i} className="flex items-start gap-3 text-sm text-white/85">
-              <span className="mt-0.5 shrink-0">{n.icon}</span>
-              <p
-                className="leading-relaxed"
-                dangerouslySetInnerHTML={{ __html: n.html }}
-              />
-            </li>
-          ))}
+          {announcements.length > 0
+            ? announcements.map((a) => (
+                <li
+                  key={a.id}
+                  className="flex items-start gap-3 text-sm text-white/85"
+                >
+                  <span className="mt-0.5 shrink-0">📣</span>
+                  <div className="flex-1">
+                    <div className="font-display text-xs font-semibold uppercase tracking-wider text-white">
+                      {a.title}
+                    </div>
+                    <p className="mt-1 whitespace-pre-wrap leading-relaxed text-white/75">
+                      {a.content}
+                    </p>
+                  </div>
+                </li>
+              ))
+            : newsItems.map((n, i) => (
+                <li
+                  key={i}
+                  className="flex items-start gap-3 text-sm text-white/85"
+                >
+                  <span className="mt-0.5 shrink-0">{n.icon}</span>
+                  <p
+                    className="leading-relaxed"
+                    dangerouslySetInnerHTML={{ __html: n.html }}
+                  />
+                </li>
+              ))}
         </ul>
       </div>
     </div>

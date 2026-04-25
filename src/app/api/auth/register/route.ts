@@ -11,6 +11,7 @@ import { verifyRecaptcha } from "@/lib/recaptcha";
 import { rateLimit, rateLimits, clientIp } from "@/lib/rate-limit";
 import { audit } from "@/lib/audit";
 import { generateReferralCode } from "@/lib/referral";
+import { getSetting, SETTINGS } from "@/lib/settings";
 
 const schema = z.object({
   email: z.string().email().max(255).toLowerCase(),
@@ -101,9 +102,14 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true, resent: true }, { status: 201 });
   }
 
-  // Resolve referrer pelo código (silencioso — código inválido não bloqueia)
+  // Resolve referrer pelo código (silencioso — código inválido não bloqueia).
+  // Sistema desativado pelo admin → ignora ?ref também.
   let referrerId: number | null = null;
-  if (body.ref) {
+  const referralsEnabled = await getSetting<boolean>(
+    SETTINGS.referralsEnabled,
+    true,
+  );
+  if (body.ref && referralsEnabled) {
     const referrer = await prisma.user.findUnique({
       where: { referralCode: body.ref.toUpperCase() },
       select: { id: true },

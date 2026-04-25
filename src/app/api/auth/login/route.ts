@@ -71,6 +71,22 @@ export async function POST(req: Request) {
     );
   }
 
+  if (user.bannedAt) {
+    await audit({
+      userId: user.id,
+      action: "login_fail_banned",
+      ipAddress: ip,
+    });
+    return NextResponse.json(
+      {
+        error:
+          "Esta conta está suspensa. Entre em contato com o suporte se acha que foi engano.",
+        code: "banned",
+      },
+      { status: 403 },
+    );
+  }
+
   const accessToken = signAccessToken({ id: user.id, email: user.email });
   const { token: refreshToken, expiresAt } = await createAndStoreRefreshToken(
     user.id,

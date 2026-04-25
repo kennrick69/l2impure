@@ -7,6 +7,7 @@ import { CreateAccountModalProvider } from "@/components/dashboard/CreateAccount
 import { ToastProvider } from "@/components/ui/Toast";
 import { bridge, type ServerStatus } from "@/lib/bridge";
 import { checkAndConvertReferral } from "@/lib/referral-conversion";
+import { getSetting, SETTINGS } from "@/lib/settings";
 
 /**
  * Shell do painel: header full-width sticky topo, sidebar 280px à esquerda,
@@ -28,6 +29,21 @@ export default async function DashboardLayout({
   let serverStatus: ServerStatus | null = null;
   try {
     serverStatus = await bridge.status();
+    // Override admin: se PG.settings tem player_count_offset, soma ao
+    // playersRaw em vez de usar o offset hardcoded da bridge .env.
+    const override = await getSetting<number | null>(
+      SETTINGS.playerCountOffset,
+      null,
+    );
+    if (
+      typeof override === "number" &&
+      typeof serverStatus.playersRaw === "number"
+    ) {
+      serverStatus = {
+        ...serverStatus,
+        players: serverStatus.playersRaw + override,
+      };
+    }
   } catch (e) {
     console.warn(
       "[dashboard layout] bridge.status() falhou:",

@@ -73,6 +73,11 @@ export async function bridgeFetch<T>(
 export type ServerStatus = {
   online: boolean;
   players: number;
+  playersRaw?: number;
+  dbOk?: boolean;
+  gameServerReachable?: boolean;
+  loginServerReachable?: boolean;
+  timestamp?: number;
   uptime?: number;
 };
 export type PvpRow = {
@@ -157,6 +162,13 @@ export const bridge = {
     return bridgeFetch<{ login: string; maxLevel: number }>(
       "GET",
       `/characters/max-level/${encodeURIComponent(login)}`,
+    );
+  },
+  async restartGameServer() {
+    return bridgeFetch<{ ok: true; stdout?: string; stderr?: string }>(
+      "POST",
+      "/server/restart",
+      {},
     );
   },
 };
