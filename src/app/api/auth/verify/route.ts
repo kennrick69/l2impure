@@ -44,12 +44,24 @@ export async function POST(req: Request) {
 export async function GET(req: Request) {
   const url = new URL(req.url);
   const token = url.searchParams.get("token");
+
+  // Railway/Vercel: req.url reflete o host interno (localhost:8080),
+  // não o público. Forwarded headers ou NEXT_PUBLIC_SITE_URL são as
+  // fontes corretas. Preferência: header forwarded → env var → req.url.
+  const forwardedHost = req.headers.get("x-forwarded-host");
+  const forwardedProto = req.headers.get("x-forwarded-proto") ?? "https";
+  const siteUrl =
+    forwardedHost
+      ? `${forwardedProto}://${forwardedHost}`
+      : (process.env.NEXT_PUBLIC_SITE_URL?.replace(/^["'](.+)["']$/, "$1") ??
+        url.origin);
+
   if (!token) {
-    return NextResponse.redirect(new URL("/verify?error=missing", req.url));
+    return NextResponse.redirect(`${siteUrl}/verify?error=missing`);
   }
   const result = await consumeVerificationToken(token, "verification");
   if (!result) {
-    return NextResponse.redirect(new URL("/verify?error=invalid", req.url));
+    return NextResponse.redirect(`${siteUrl}/verify?error=invalid`);
   }
   await prisma.user.update({
     where: { id: result.userId },
@@ -60,5 +72,5 @@ export async function GET(req: Request) {
     action: "verify_email",
     ipAddress: clientIp(req),
   });
-  return NextResponse.redirect(new URL("/login?verified=1", req.url));
+  return NextResponse.redirect(`${siteUrl}/login?verified=1`);
 }
