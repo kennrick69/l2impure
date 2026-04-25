@@ -1,0 +1,99 @@
+// L2 Impure — PostgreSQL schema (Fase 1)
+// Ver: L2-IMPURE-ARQUITETURA-DEFINITIVA.md
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// Usuário do site (conta web, não é a conta de jogo)
+model User {
+  id            Int      @id @default(autoincrement())
+  email         String   @unique @db.VarChar(255)
+  passwordHash  String   @map("password_hash") @db.VarChar(255)
+  isVerified    Boolean  @default(false) @map("is_verified")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @default(now()) @updatedAt @map("updated_at")
+
+  refreshTokens      RefreshToken[]
+  verificationTokens VerificationToken[]
+  gameAccounts       GameAccount[]
+  auditLogs          AuditLog[]
+
+  @@map("users")
+}
+
+/// Refresh tokens (UUID opaco, armazenado pra permitir revoke)
+model RefreshToken {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  token     String   @unique @db.VarChar(255)
+  expiresAt DateTime @map("expires_at")
+  revoked   Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
+  @@map("refresh_tokens")
+}
+
+/// Tokens de verificação de email e reset de senha (one-shot, uso único)
+model VerificationToken {
+  id        Int                   @id @default(autoincrement())
+  userId    Int                   @map("user_id")
+  token     String                @unique @db.VarChar(255)
+  type      VerificationTokenType
+  expiresAt DateTime              @map("expires_at")
+  used      Boolean               @default(false)
+  createdAt DateTime              @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
+  @@map("verification_tokens")
+}
+
+enum VerificationTokenType {
+  verification
+  reset
+
+  @@map("verification_token_type")
+}
+
+/// Contas de jogo do L2J vinculadas ao usuário do site
+model GameAccount {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @map("user_id")
+  gameLogin String   @unique @map("game_login") @db.VarChar(45)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("game_accounts")
+}
+
+/// Audit log — registra ações sensíveis (login, criar conta de jogo, reset HWID, etc)
+model AuditLog {
+  id        Int      @id @default(autoincrement())
+  userId    Int?     @map("user_id")
+  action    String   @db.VarChar(50)
+  ipAddress String?  @map("ip_address") @db.VarChar(45)
+  details   Json?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([action])
+  @@map("audit_log")
+}

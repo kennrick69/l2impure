@@ -1,0 +1,91 @@
+"use client";
+
+import { useState, type FormEvent } from "react";
+import Link from "next/link";
+import { Input } from "@/components/ui/Input";
+import { GoldButton } from "@/components/ui/GoldButton";
+import { useToast } from "@/components/ui/Toast";
+
+export default function ForgotPasswordPage() {
+  const { show } = useToast();
+  const [loading, setLoading] = useState(false);
+  const [done, setDone] = useState(false);
+
+  async function onSubmit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setLoading(true);
+    const fd = new FormData(e.currentTarget);
+    try {
+      const res = await fetch("/api/auth/forgot", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: fd.get("email") }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        show(data.error ?? "Falha", "error");
+        return;
+      }
+      setDone(true);
+    } catch {
+      show("Erro de rede", "error");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  if (done) {
+    return (
+      <>
+        <h1 className="mb-2 font-display text-3xl font-bold uppercase tracking-wide text-white">
+          Email Enviado
+        </h1>
+        <p className="mb-6 text-sm text-white/65">
+          Se este email existe na nossa base, você receberá um link em alguns
+          minutos.
+        </p>
+        <Link
+          href="/login"
+          className="text-sm font-semibold text-[color:var(--l2-text-gold)] hover:underline"
+        >
+          Voltar pro login
+        </Link>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <h1 className="mb-2 font-display text-3xl font-bold uppercase tracking-wide text-white">
+        Esqueci a Senha
+      </h1>
+      <p className="mb-8 text-sm text-white/55">
+        Digite seu email e enviaremos um link pra redefinir a senha.
+      </p>
+
+      <form onSubmit={onSubmit} className="flex flex-col gap-5">
+        <Input
+          name="email"
+          type="email"
+          label="Email"
+          placeholder="seu@email.com"
+          required
+          autoComplete="email"
+        />
+        <GoldButton type="submit" size="full" disabled={loading}>
+          {loading ? "Enviando..." : "Enviar link"}
+        </GoldButton>
+      </form>
+
+      <p className="mt-8 text-center text-sm text-white/55">
+        Lembrou da senha?{" "}
+        <Link
+          href="/login"
+          className="font-semibold text-[color:var(--l2-text-gold)] hover:underline"
+        >
+          Entrar
+        </Link>
+      </p>
+    </>
+  );
+}
