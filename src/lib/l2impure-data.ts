@@ -36,7 +36,7 @@ export const navItems: NavItem[] = [
     ],
   },
   { label: "Promoções", href: "#promocoes" },
-  { label: "Doações", href: "/pages/login.html" },
+  { label: "Doações", href: "/dashboard" },
 ];
 
 export const languages: Language[] = [

@@ -63,7 +63,7 @@ export function PlayModalProvider({ children }: { children: React.ReactNode }) {
                   </span>
                 </div>
                 <a
-                  href="/pages/register.html"
+                  href="/register"
                   className="block w-full rounded-md bg-[var(--l2-gold-gradient)] px-5 py-3 text-center font-display text-sm font-semibold uppercase tracking-wider text-black transition hover:brightness-110"
                   style={{ background: "var(--l2-gold-gradient)" }}
                 >
@@ -153,7 +153,7 @@ export function PlayModalProvider({ children }: { children: React.ReactNode }) {
               <div className="pt-2 text-center text-xs uppercase tracking-wider text-white/60">
                 Precisa de ajuda?{" "}
                 <a
-                  href="/pages/support.html"
+                  href="/support"
                   className="text-[color:var(--l2-text-gold)] underline underline-offset-2 hover:no-underline"
                 >
                   Entre em contato conosco

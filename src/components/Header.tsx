@@ -80,7 +80,7 @@ export function Header() {
 
           <div className="ml-auto flex items-center gap-4">
             <a
-              href="/pages/login.html"
+              href="/login"
               className="hidden font-display text-[12px] font-semibold uppercase tracking-wider text-white/80 transition hover:text-white md:inline-block"
             >
               Entrar
@@ -165,7 +165,7 @@ export function Header() {
               ))}
               <li className="mt-6 border-t border-white/10 pt-6">
                 <a
-                  href="/pages/login.html"
+                  href="/login"
                   className="font-display text-xl font-semibold uppercase tracking-wider text-white"
                 >
                   Entrar

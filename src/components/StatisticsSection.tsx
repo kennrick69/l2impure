@@ -138,7 +138,7 @@ export function StatisticsSection() {
 
         <div className="mt-8 text-center">
           <Link
-            href="/pages/ranking.html"
+            href="/rankings"
             className="inline-block font-display text-xs font-semibold uppercase tracking-wider text-[color:var(--l2-text-gold)] underline underline-offset-4 hover:no-underline"
           >
             Mostrar todas as estatísticas
