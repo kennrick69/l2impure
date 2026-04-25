@@ -87,6 +87,22 @@ export type ClanRow = {
   leader?: string;
   reputation: number;
 };
+export type GameCharacter = {
+  name: string;
+  classId: number;
+  className: string;
+  level: number;
+  online: boolean;
+  pvp: number;
+  pk: number;
+  clanId: number | null;
+  clanName: string | null;
+};
+export type CharactersResponse = {
+  login: string;
+  characters: GameCharacter[];
+  count: number;
+};
 
 export const bridge = {
   async status(): Promise<ServerStatus> {
@@ -114,5 +130,11 @@ export const bridge = {
   },
   async resetHwid(login: string) {
     return bridgeFetch("POST", "/accounts/reset-hwid", { login });
+  },
+  async getCharacters(login: string): Promise<CharactersResponse> {
+    return bridgeFetch<CharactersResponse>(
+      "GET",
+      `/characters/${encodeURIComponent(login)}`,
+    );
   },
 };
