@@ -104,10 +104,10 @@ export function Sidebar({
                 <span>⚔️</span>
                 <span>Discord</span>
               </span>
-              <span className="flex items-center gap-1.5 font-display text-[10px] font-semibold uppercase tracking-wider text-[color:var(--l2-green)]">
+              <span className="flex items-center gap-1.5 font-display text-[10px] font-semibold uppercase tracking-wider text-l2-green">
                 <span className="relative flex h-1.5 w-1.5">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[color:var(--l2-green)] opacity-75"></span>
-                  <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[color:var(--l2-green)]"></span>
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-l2-green opacity-75"></span>
+                  <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-l2-green"></span>
                 </span>
                 Online
               </span>
@@ -130,10 +130,10 @@ function BartzStatusBadge({ status }: { status: ServerStatus | null }) {
   }
   if (status.online) {
     return (
-      <span className="flex items-center gap-1.5 font-display text-[10px] font-semibold uppercase tracking-wider text-[color:var(--l2-green)]">
+      <span className="flex items-center gap-1.5 font-display text-[10px] font-semibold uppercase tracking-wider text-l2-green">
         <span className="relative flex h-1.5 w-1.5">
-          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[color:var(--l2-green)] opacity-75"></span>
-          <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[color:var(--l2-green)]"></span>
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-l2-green opacity-75"></span>
+          <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-l2-green"></span>
         </span>
         Online
         <span className="text-white/55 normal-case tracking-normal">
@@ -143,8 +143,8 @@ function BartzStatusBadge({ status }: { status: ServerStatus | null }) {
     );
   }
   return (
-    <span className="flex items-center gap-1.5 font-display text-[10px] font-semibold uppercase tracking-wider text-[color:var(--l2-red)]">
-      <span className="h-1.5 w-1.5 rounded-full bg-[color:var(--l2-red)]" />
+    <span className="flex items-center gap-1.5 font-display text-[10px] font-semibold uppercase tracking-wider text-l2-red">
+      <span className="h-1.5 w-1.5 rounded-full bg-l2-red" />
       Offline
     </span>
   );
