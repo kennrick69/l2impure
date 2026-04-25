@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { requireSession, AuthError } from "@/lib/auth";
 import { rateLimit, rateLimits, clientIp } from "@/lib/rate-limit";
 import { audit } from "@/lib/audit";
+import { bridge, BridgeError } from "@/lib/bridge";
 
 const MAX_GAME_ACCOUNTS_PER_USER = 15;
 
@@ -48,11 +49,14 @@ export async function GET() {
 
 /**
  * POST /api/game/accounts
- * Reserva um login de conta de jogo. Por enquanto persiste só no PG;
- * sync com MySQL L2J vai entrar na Fase 3 via bridge VPS.
+ * Cria conta de jogo: chama bridge.createAccount() (que insere no MySQL
+ * L2J com SHA1+Base64) e depois persiste o vínculo no Postgres.
  *
- * TODO Fase 3: chamar bridge.createAccount(gameLogin, sha1(password))
- * antes do INSERT no PG. Se bridge falhar, abortar.
+ * Ordem é deliberada: se a bridge falhar, abortamos sem tocar no PG —
+ * assim o painel nunca aponta pra uma conta que não existe no jogo.
+ *
+ * Em dev local sem BRIDGE_URL setada, pula o sync e segue PG-only
+ * (BridgeError 503).
  */
 export async function POST(req: Request) {
   let session;
@@ -105,7 +109,7 @@ export async function POST(req: Request) {
     );
   }
 
-  // Verifica unicidade global do login
+  // Verifica unicidade global do login no painel
   const taken = await prisma.gameAccount.findUnique({
     where: { gameLogin: body.gameLogin },
     select: { id: true },
@@ -117,6 +121,39 @@ export async function POST(req: Request) {
     );
   }
 
+  // Cria no MySQL L2J via bridge ANTES do INSERT no PG.
+  // BridgeError 503 = bridge não configurada (dev local) → segue PG-only.
+  const bridgeConfigured = Boolean(process.env.BRIDGE_URL);
+  if (bridgeConfigured) {
+    try {
+      await bridge.createAccount(body.gameLogin, body.password);
+    } catch (e) {
+      if (e instanceof BridgeError && e.status === 409) {
+        return NextResponse.json(
+          { error: "Esse login já está reservado. Tente outro nome." },
+          { status: 409 },
+        );
+      }
+      console.error("[/api/game/accounts] bridge createAccount falhou:", e);
+      await audit({
+        userId: session.sub,
+        action: "create_game_account_bridge_fail",
+        ipAddress: ip,
+        details: {
+          gameLogin: body.gameLogin,
+          status: e instanceof BridgeError ? e.status : null,
+        },
+      });
+      return NextResponse.json(
+        {
+          error:
+            "Não foi possível criar a conta no servidor de jogo. Tente novamente em alguns minutos.",
+        },
+        { status: 502 },
+      );
+    }
+  }
+
   const account = await prisma.gameAccount.create({
     data: { userId: session.sub, gameLogin: body.gameLogin },
     select: { id: true, gameLogin: true, createdAt: true },
@@ -126,14 +163,16 @@ export async function POST(req: Request) {
     userId: session.sub,
     action: "create_game_account",
     ipAddress: ip,
-    details: { gameLogin: body.gameLogin },
+    details: { gameLogin: body.gameLogin, bridgeSynced: bridgeConfigured },
   });
 
   return NextResponse.json(
     {
       ok: true,
       account,
-      note: "Reservado no painel. Sincronização com servidor de jogo na Fase 3 (bridge VPS).",
+      note: bridgeConfigured
+        ? "Conta criada no servidor de jogo e vinculada ao painel."
+        : "Reservada no painel (bridge não configurada nesse ambiente).",
     },
     { status: 201 },
   );
