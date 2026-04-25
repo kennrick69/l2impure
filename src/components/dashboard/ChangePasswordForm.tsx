@@ -143,7 +143,7 @@ function PasswordField({
         className="w-full rounded-md border border-white/8 bg-[color:var(--l2-bg-input)] px-3 py-2.5 text-sm text-white placeholder:text-white/30 focus:border-[color:var(--l2-text-gold)] focus:outline-none"
       />
       {error && (
-        <p className="mt-1 text-xs text-[color:var(--l2-red)]">{error}</p>
+        <p className="mt-1 text-xs text-l2-red">{error}</p>
       )}
     </div>
   );

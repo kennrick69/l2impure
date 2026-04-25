@@ -202,14 +202,14 @@ function CreateAccountModal() {
               className="w-full rounded-md border border-white/8 bg-[color:var(--l2-bg-input)] px-3 py-2.5 text-sm text-white placeholder:text-white/30 focus:border-[color:var(--l2-text-gold)] focus:outline-none"
             />
             {confirm && !passwordsMatch && (
-              <p className="mt-1 text-xs text-[color:var(--l2-red)]">
+              <p className="mt-1 text-xs text-l2-red">
                 As senhas não coincidem
               </p>
             )}
           </div>
 
           {/* Aviso */}
-          <div className="rounded-md border border-[color:var(--l2-border-gold)]/30 bg-[color:var(--l2-gold)]/5 p-3 text-xs text-white/65">
+          <div className="rounded-md border border-[color:var(--l2-border-gold)]/30 bg-l2-gold/5 p-3 text-xs text-white/65">
             <span className="font-semibold text-[color:var(--l2-text-gold)]">
               ⚠️ Atenção:
             </span>{" "}

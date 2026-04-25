@@ -12,7 +12,7 @@ const STYLES = {
   primary:
     "inline-flex items-center gap-2 rounded-md px-4 py-2 font-display text-xs font-semibold uppercase tracking-wider text-black transition hover:opacity-90",
   outline:
-    "inline-flex items-center gap-2 rounded-md border border-[color:var(--l2-border-gold)] bg-transparent px-4 py-2 font-display text-xs font-semibold uppercase tracking-wider text-[color:var(--l2-text-gold)] transition hover:bg-[color:var(--l2-gold)]/10",
+    "inline-flex items-center gap-2 rounded-md border border-[color:var(--l2-border-gold)] bg-transparent px-4 py-2 font-display text-xs font-semibold uppercase tracking-wider text-[color:var(--l2-text-gold)] transition hover:bg-l2-gold/10",
   link: "text-xs font-semibold uppercase tracking-wider text-[color:var(--l2-text-gold)] transition hover:underline",
 };
 

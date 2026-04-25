@@ -53,13 +53,13 @@ function LoginForm() {
       </p>
 
       {verified && (
-        <div className="mb-6 rounded-md border border-[color:var(--l2-green)]/40 bg-[color:var(--l2-green)]/10 px-4 py-3 text-sm text-[color:var(--l2-green)]">
+        <div className="mb-6 rounded-md border border-l2-green/40 bg-l2-green/10 px-4 py-3 text-sm text-l2-green">
           Email confirmado com sucesso! Faça login pra continuar.
         </div>
       )}
 
       {reset && (
-        <div className="mb-6 rounded-md border border-[color:var(--l2-green)]/40 bg-[color:var(--l2-green)]/10 px-4 py-3 text-sm text-[color:var(--l2-green)]">
+        <div className="mb-6 rounded-md border border-l2-green/40 bg-l2-green/10 px-4 py-3 text-sm text-l2-green">
           Senha redefinida! Entre com a nova senha.
         </div>
       )}

@@ -61,8 +61,8 @@ function ServerList() {
             <div className="flex items-center gap-2">
               {s.status === "online" && (
                 <span className="flex items-center gap-2">
-                  <span className="h-2 w-2 rounded-full bg-[color:var(--l2-green)] shadow-[0_0_8px_rgb(var(--l2-green))]" />
-                  <span className="font-display text-xs font-semibold uppercase tracking-wider text-[color:var(--l2-green)]">
+                  <span className="h-2 w-2 rounded-full bg-l2-green shadow-[0_0_8px_rgb(var(--l2-green))]" />
+                  <span className="font-display text-xs font-semibold uppercase tracking-wider text-l2-green">
                     {s.statusText}
                   </span>
                 </span>

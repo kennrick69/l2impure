@@ -9,7 +9,7 @@ type Props = {
  */
 export function EmailCheckAlert({ email }: Props) {
   return (
-    <div className="rounded-xl border border-[color:var(--l2-border-gold)] bg-[color:var(--l2-gold)]/5 p-5">
+    <div className="rounded-xl border border-[color:var(--l2-border-gold)] bg-l2-gold/5 p-5">
       <div className="mb-3 flex items-center gap-2">
         <span className="text-xl">📬</span>
         <h3 className="font-display text-sm font-semibold uppercase tracking-wider text-[color:var(--l2-text-gold)]">

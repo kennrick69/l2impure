@@ -95,7 +95,7 @@ export function UserDropdown({ email }: { email: string }) {
               type="button"
               onClick={logout}
               disabled={loading}
-              className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-[color:var(--l2-red)] transition hover:bg-[color:var(--l2-red)]/10 disabled:opacity-50"
+              className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-l2-red transition hover:bg-l2-red/10 disabled:opacity-50"
             >
               <span>🚪</span>
               <span>{loading ? "Saindo..." : "Sair"}</span>
