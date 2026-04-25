@@ -1,15 +1,27 @@
 import Link from "next/link";
 import { getSession } from "@/lib/auth";
+import { prisma } from "@/lib/db";
 import { PageTitle } from "@/components/dashboard/Placeholder";
+import { CreateAccountTrigger } from "@/components/dashboard/CreateAccountTrigger";
+
+const MAX_ACCOUNTS = 15;
 
 export default async function DashboardPage() {
   const session = await getSession();
+  // Layout já garante session ≠ null, mas TS precisa do narrowing
+  if (!session) return null;
+
+  const accounts = await prisma.gameAccount.findMany({
+    where: { userId: session.sub },
+    select: { id: true, gameLogin: true, createdAt: true },
+    orderBy: { createdAt: "desc" },
+  });
 
   return (
     <>
       <PageTitle
         title="Página principal"
-        subtitle={`Logado como ${session?.email ?? "—"}`}
+        subtitle={`Logado como ${session.email}`}
       />
 
       <section className="mb-8 grid gap-4 sm:grid-cols-3">
@@ -60,19 +72,79 @@ export default async function DashboardPage() {
           <h3 className="font-display text-sm font-semibold uppercase tracking-wider text-white">
             Contas do Jogo
           </h3>
-          <span className="font-display text-[10px] font-semibold uppercase tracking-[1.5px] text-white/45">
-            (0/15)
-          </span>
+          <CreateAccountTrigger variant="outline">
+            <span>➕</span>
+            <span>
+              Criar{" "}
+              <span className="opacity-60">
+                ({accounts.length}/{MAX_ACCOUNTS})
+              </span>
+            </span>
+          </CreateAccountTrigger>
         </div>
-        <div className="px-6 py-12 text-center">
-          <div className="mb-3 text-4xl opacity-30">⚔️</div>
-          <p className="mb-1 text-sm text-white/65">
-            Você ainda não tem contas de jogo
-          </p>
-          <p className="text-xs text-white/45">
-            A criação de contas será liberada na Fase 3 (bridge VPS).
-          </p>
-        </div>
+
+        {accounts.length === 0 ? (
+          <div className="px-6 py-12 text-center">
+            <div className="mb-3 text-4xl opacity-30">⚔️</div>
+            <p className="mb-1 text-sm text-white/65">
+              Você ainda não tem contas de jogo
+            </p>
+            <p className="mb-5 text-xs text-white/45">
+              Reserve seu nome agora — sincronização com o servidor de jogo
+              na Fase 3 (bridge VPS).
+            </p>
+            <CreateAccountTrigger variant="outline">
+              <span>➕</span>
+              <span>Criar primeira conta</span>
+            </CreateAccountTrigger>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="text-[10px] font-semibold uppercase tracking-wider text-white/45">
+                <tr className="border-b border-white/5">
+                  <th className="px-6 py-3 text-left">#</th>
+                  <th className="px-6 py-3 text-left">Login</th>
+                  <th className="px-6 py-3 text-left">Criada em</th>
+                  <th className="px-6 py-3 text-left">Status</th>
+                  <th className="px-6 py-3 text-right">Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {accounts.map((acc, i) => (
+                  <tr
+                    key={acc.id}
+                    className="border-b border-white/5 last:border-0 hover:bg-white/3"
+                  >
+                    <td className="px-6 py-3 text-white/45">#{i + 1}</td>
+                    <td className="px-6 py-3 font-display font-semibold uppercase text-white">
+                      {acc.gameLogin}
+                    </td>
+                    <td className="px-6 py-3 text-xs text-white/55">
+                      {new Date(acc.createdAt).toLocaleString("pt-BR")}
+                    </td>
+                    <td className="px-6 py-3">
+                      <span className="inline-flex items-center gap-1.5 text-xs text-white/45">
+                        <span className="h-1.5 w-1.5 rounded-full bg-white/20" />
+                        Reservada (sync na Fase 3)
+                      </span>
+                    </td>
+                    <td className="px-6 py-3 text-right">
+                      <button
+                        type="button"
+                        disabled
+                        title="Disponível na Fase 3"
+                        className="text-xs text-white/30"
+                      >
+                        ⋯
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </section>
 
       <section className="flex items-center gap-4 rounded-xl border border-white/5 bg-[color:var(--l2-bg-card)] p-6">
