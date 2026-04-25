@@ -3,8 +3,11 @@
  * Body: { login: string, password: string }
  *
  * Cria conta na tabela `accounts` do L2J:
- *   login (PK varchar 45), password (varchar 45 — SHA1+Base64), accessLevel=0,
- *   lastIP=NULL, lastServer=1
+ *   login (PK varchar 45), password (varchar 255 — SHA1+Base64),
+ *   access_level=0 (default), lastServer=1 (default)
+ *
+ * Schema confirmado em prod (2026-04-25): coluna é `access_level`
+ * (snake_case), não `accessLevel`.
  *
  * Retorna 201 + { ok:true, login } | 409 se login já existe.
  */
@@ -52,7 +55,7 @@ export async function accountRoutes(app: FastifyInstance) {
         }
 
         await pool.query(
-          "INSERT INTO accounts (login, password, accessLevel, lastServer) VALUES (?, ?, 0, 1)",
+          "INSERT INTO accounts (login, password, access_level, lastServer) VALUES (?, ?, 0, 1)",
           [login, hash],
         );
         reply.code(201).send({ ok: true, login });
