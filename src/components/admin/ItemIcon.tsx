@@ -96,7 +96,7 @@ export function ItemIcon({
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={`${BASE_URL}/${itemId}.png`}
+          src={`${BASE_URL}/${itemId}.png?v=2`}
           alt={meta?.name ?? `#${itemId}`}
           width={size}
           height={size}
