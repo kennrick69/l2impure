@@ -16,6 +16,7 @@ import { serverRoutes } from "./routes/server.js";
 import { adminRoutes } from "./routes/admin.js";
 import { adminCharactersRoutes } from "./routes/admin-characters.js";
 import { adminItemsRoutes } from "./routes/admin-items.js";
+import { adminNpcsRoutes } from "./routes/admin-npcs.js";
 
 async function build() {
   const app = Fastify({
@@ -61,6 +62,7 @@ async function build() {
   await app.register(adminRoutes);
   await app.register(adminCharactersRoutes);
   await app.register(adminItemsRoutes);
+  await app.register(adminNpcsRoutes);
 
   app.setNotFoundHandler((_req, reply) => {
     reply.code(404).send({ error: "not found" });
