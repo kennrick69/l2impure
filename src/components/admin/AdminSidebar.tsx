@@ -13,6 +13,7 @@ const NAV = [
   { href: "/admin/game-master", icon: "⚔️", label: "Game master" },
   { href: "/admin/characters", icon: "🧝", label: "Personagens" },
   { href: "/admin/items", icon: "💎", label: "Items (busca)" },
+  { href: "/admin/npcs", icon: "🗿", label: "NPCs" },
 ];
 
 export function AdminSidebar() {

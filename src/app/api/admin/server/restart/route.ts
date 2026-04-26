@@ -3,6 +3,7 @@ import { requireAdmin, AdminError } from "@/lib/admin";
 import { audit } from "@/lib/audit";
 import { clientIp } from "@/lib/rate-limit";
 import { bridge, BridgeError } from "@/lib/bridge";
+import { clearNpcEditsPending } from "@/lib/npc-pending";
 
 export async function POST(req: Request) {
   let admin;
@@ -29,6 +30,14 @@ export async function POST(req: Request) {
       { status: 502 },
     );
   }
+
+  // Restart aplicou XML/HTM edits pendentes — limpa flag
+  clearNpcEditsPending().catch((e) => {
+    console.warn(
+      "[restart] clearNpcEditsPending falhou:",
+      (e as Error).message,
+    );
+  });
 
   await audit({
     userId: admin.userId,

@@ -41,7 +41,7 @@ function signRequest(method: string, path: string, body: string) {
 }
 
 export async function bridgeFetch<T>(
-  method: "GET" | "POST" | "DELETE",
+  method: "GET" | "POST" | "DELETE" | "PATCH" | "PUT",
   path: string,
   body?: Record<string, unknown>,
 ): Promise<T> {
@@ -205,6 +205,61 @@ export type ItemMetadata = {
   material: string | null;
   stackable: boolean;
   price: number;
+};
+
+export type NpcMetadata = {
+  id: number;
+  name: string;
+  title: string;
+  type: string | null;
+  level: number;
+  hp: number;
+  mp: number;
+  exp: number;
+  sp: number;
+  pAtk: number;
+  pDef: number;
+  mAtk: number;
+  mDef: number;
+};
+
+export type NpcSpawn = {
+  npcId: number;
+  x: number;
+  y: number;
+  z: number;
+  heading: number;
+  respawnDelay: number;
+  respawnRand: number;
+  periodOfDay: number;
+};
+export type NpcSpawnsResponse = {
+  npcId: number;
+  count: number;
+  spawns: NpcSpawn[];
+};
+
+export type NpcDialogueFile = { path: string; size: number };
+export type NpcDialoguesResponse = {
+  npcId: number;
+  count: number;
+  files: NpcDialogueFile[];
+};
+export type NpcDialogueRead = {
+  path: string;
+  content: string;
+  size: number;
+  mtime: number;
+};
+
+export type NpcBuylistProduct = { itemId: number; price: number };
+export type NpcBuylist = {
+  buyListId: number;
+  products: NpcBuylistProduct[];
+};
+export type NpcBuylistsResponse = {
+  npcId: number;
+  buylists: NpcBuylist[];
 };
 
 export const bridge = {
@@ -376,6 +431,102 @@ export const bridge = {
     },
     async getItemsMetadata(): Promise<ItemMetadata[]> {
       return bridgeFetch<ItemMetadata[]>("GET", "/admin/items/metadata");
+    },
+    async getNpcsMetadata(): Promise<NpcMetadata[]> {
+      return bridgeFetch<NpcMetadata[]>("GET", "/admin/npcs/metadata");
+    },
+    async getNpcSpawns(npcId: number): Promise<NpcSpawnsResponse> {
+      return bridgeFetch<NpcSpawnsResponse>(
+        "GET",
+        `/admin/npcs/${npcId}/spawns`,
+      );
+    },
+    async addNpcSpawn(
+      npcId: number,
+      data: {
+        x: number;
+        y: number;
+        z: number;
+        heading?: number;
+        respawnDelay?: number;
+        respawnRand?: number;
+        periodOfDay?: number;
+      },
+    ) {
+      return bridgeFetch("POST", `/admin/npcs/${npcId}/spawns`, data);
+    },
+    async moveNpcSpawn(payload: {
+      npcId: number;
+      x: number;
+      y: number;
+      z: number;
+      newX: number;
+      newY: number;
+      newZ: number;
+      heading?: number;
+      respawnDelay?: number;
+    }) {
+      return bridgeFetch("PATCH", "/admin/npcs/spawns", payload);
+    },
+    async deleteNpcSpawn(payload: {
+      npcId: number;
+      x: number;
+      y: number;
+      z: number;
+    }) {
+      return bridgeFetch("DELETE", "/admin/npcs/spawns", payload);
+    },
+    async getNpcDialogues(npcId: number): Promise<NpcDialoguesResponse> {
+      return bridgeFetch<NpcDialoguesResponse>(
+        "GET",
+        `/admin/npcs/${npcId}/dialogues`,
+      );
+    },
+    async readNpcDialogue(filePath: string): Promise<NpcDialogueRead> {
+      return bridgeFetch<NpcDialogueRead>(
+        "GET",
+        `/admin/npcs/dialogue?path=${encodeURIComponent(filePath)}`,
+      );
+    },
+    async writeNpcDialogue(filePath: string, content: string) {
+      return bridgeFetch(
+        "PUT",
+        `/admin/npcs/dialogue?path=${encodeURIComponent(filePath)}`,
+        { content },
+      );
+    },
+    async getNpcBuylists(npcId: number): Promise<NpcBuylistsResponse> {
+      return bridgeFetch<NpcBuylistsResponse>(
+        "GET",
+        `/admin/npcs/${npcId}/buylists`,
+      );
+    },
+    async addBuylistProduct(
+      buyListId: number,
+      itemId: number,
+      price: number,
+    ) {
+      return bridgeFetch(
+        "POST",
+        `/admin/npcs/buylists/${buyListId}/products`,
+        { itemId, price },
+      );
+    },
+    async removeBuylistProduct(buyListId: number, itemId: number) {
+      return bridgeFetch(
+        "DELETE",
+        `/admin/npcs/buylists/${buyListId}/products/${itemId}`,
+      );
+    },
+    async renameNpc(npcId: number, name: string, title: string) {
+      return bridgeFetch<{ ok: true; file: string; restartRequired: true }>(
+        "PATCH",
+        `/admin/npcs/${npcId}`,
+        { name, title },
+      );
+    },
+    async clearNpcCache() {
+      return bridgeFetch("POST", "/admin/npcs/cache/clear", {});
     },
   },
 };
