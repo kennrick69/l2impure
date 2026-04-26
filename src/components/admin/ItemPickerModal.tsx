@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { ItemMetadata } from "@/lib/bridge";
 import { useItemsMetadata } from "@/lib/use-items-metadata";
+import { ItemIcon } from "@/components/admin/ItemIcon";
 
 const GRADES = ["NONE", "D", "C", "B", "A", "S"] as const;
 type Grade = (typeof GRADES)[number];
@@ -176,23 +177,26 @@ export function ItemPickerModal({
                       onSelect(it);
                       onClose();
                     }}
-                    className="flex w-full flex-col gap-1 rounded-md border border-white/5 bg-[color:var(--l2-bg-card)] px-3 py-2 text-left transition hover:border-l2-gold hover:bg-[color:var(--l2-bg-card-hover)]"
+                    className="flex w-full items-center gap-3 rounded-md border border-white/5 bg-[color:var(--l2-bg-card)] px-3 py-2 text-left transition hover:border-l2-gold hover:bg-[color:var(--l2-bg-card-hover)]"
                   >
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="truncate font-display text-sm font-semibold text-white">
-                        {it.name}
-                      </span>
-                      <span className="font-mono text-[10px] tabular-nums text-white/45">
-                        #{it.id}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2 text-[10px] text-white/55">
-                      <span>{it.type}</span>
-                      <span className="rounded bg-white/8 px-1.5 py-0.5 font-display font-semibold uppercase tracking-wider">
-                        {it.grade === "NONE" ? "no-grade" : it.grade}
-                      </span>
-                      {it.slot && <span>{it.slot}</span>}
-                      {it.stackable && <span>· stackable</span>}
+                    <ItemIcon itemId={it.id} item={it} size={36} />
+                    <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="truncate font-display text-sm font-semibold text-white">
+                          {it.name}
+                        </span>
+                        <span className="font-mono text-[10px] tabular-nums text-white/45">
+                          #{it.id}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 text-[10px] text-white/55">
+                        <span>{it.type}</span>
+                        <span className="rounded bg-white/8 px-1.5 py-0.5 font-display font-semibold uppercase tracking-wider">
+                          {it.grade === "NONE" ? "no-grade" : it.grade}
+                        </span>
+                        {it.slot && <span>{it.slot}</span>}
+                        {it.stackable && <span>· stackable</span>}
+                      </div>
                     </div>
                   </button>
                 </li>

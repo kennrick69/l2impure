@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useToast } from "@/components/ui/Toast";
 import { useItemsMetadata, itemName } from "@/lib/use-items-metadata";
 import { ItemPickerModal } from "@/components/admin/ItemPickerModal";
+import { ItemIcon } from "@/components/admin/ItemIcon";
 import type {
   NpcMetadata,
   NpcSpawn,
@@ -677,11 +678,16 @@ function BuylistsTab({ npcId }: { npcId: number }) {
                     className="border-b border-white/5 last:border-0"
                   >
                     <td className="px-6 py-2">
-                      <div className="font-display text-sm text-white">
-                        {itemName(p.itemId)}
-                      </div>
-                      <div className="font-mono text-[10px] text-white/45">
-                        #{p.itemId}
+                      <div className="flex items-center gap-3">
+                        <ItemIcon itemId={p.itemId} size={28} />
+                        <div>
+                          <div className="font-display text-sm text-white">
+                            {itemName(p.itemId)}
+                          </div>
+                          <div className="font-mono text-[10px] text-white/45">
+                            #{p.itemId}
+                          </div>
+                        </div>
                       </div>
                     </td>
                     <td className="px-6 py-2 text-right tabular-nums text-l2-gold">

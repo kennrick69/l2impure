@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useToast } from "@/components/ui/Toast";
 import { useItemsMetadata, getItemFromCache } from "@/lib/use-items-metadata";
 import { ItemPickerModal } from "@/components/admin/ItemPickerModal";
+import { ItemIcon } from "@/components/admin/ItemIcon";
 import type {
   AdminGmItemOwner,
   AdminGmItemOwnersResponse,
@@ -76,8 +77,9 @@ export function ItemSearchPanel() {
               className="w-full rounded-md border border-white/8 bg-[color:var(--l2-bg-input)] px-3 py-2.5 text-left text-sm text-white transition hover:border-l2-gold"
             >
               {picked ? (
-                <span className="flex items-center justify-between gap-2">
-                  <span>
+                <span className="flex items-center gap-2">
+                  <ItemIcon itemId={picked.id} item={picked} size={28} />
+                  <span className="flex-1">
                     <span className="font-display font-semibold">
                       {picked.name}
                     </span>

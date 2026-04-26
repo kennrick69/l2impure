@@ -3,24 +3,42 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useNpcsMetadata } from "@/lib/use-npcs-metadata";
+import { useNpcSpawnsIndex } from "@/lib/use-npc-spawns";
+import {
+  NPC_CATEGORIES,
+  npcMatchesCategory,
+  type NpcCategory,
+} from "@/lib/l2j-npc-categories";
+import { L2J_CITIES, detectCity } from "@/lib/l2j-cities";
 import type { NpcMetadata } from "@/lib/bridge";
 
 const PAGE_SIZE = 100;
 
 export function NpcBrowser() {
   const { npcs, error, loading } = useNpcsMetadata();
+  const { data: spawnsIdx } = useNpcSpawnsIndex();
   const [search, setSearch] = useState("");
-  const [type, setType] = useState<string>("all");
+  const [category, setCategory] = useState<NpcCategory>("all");
+  const [city, setCity] = useState<string>("");
   const [levelMin, setLevelMin] = useState("");
   const [levelMax, setLevelMax] = useState("");
   const [page, setPage] = useState(0);
 
-  const types = useMemo(() => {
-    if (!npcs) return [];
-    const set = new Set<string>();
-    for (const n of npcs) if (n.type) set.add(n.type);
-    return Array.from(set).sort();
-  }, [npcs]);
+  // Mapa NPCID → cidade detectada (primeiro spawn que casa um range)
+  const cityByNpc = useMemo(() => {
+    if (!spawnsIdx) return new Map<number, string>();
+    const m = new Map<number, string>();
+    for (const [idStr, spawns] of Object.entries(spawnsIdx)) {
+      for (const s of spawns) {
+        const c = detectCity(s.x, s.y);
+        if (c) {
+          m.set(Number(idStr), c);
+          break;
+        }
+      }
+    }
+    return m;
+  }, [spawnsIdx]);
 
   const filtered = useMemo(() => {
     if (!npcs) return [];
@@ -37,12 +55,13 @@ export function NpcBrowser() {
           if (!haystack.includes(term)) return false;
         }
       }
-      if (type !== "all" && n.type !== type) return false;
+      if (!npcMatchesCategory(n, category)) return false;
       if (lMin !== null && n.level < lMin) return false;
       if (lMax !== null && n.level > lMax) return false;
+      if (city && cityByNpc.get(n.id) !== city) return false;
       return true;
     });
-  }, [npcs, search, type, levelMin, levelMax]);
+  }, [npcs, search, category, city, levelMin, levelMax, cityByNpc]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const safePage = Math.min(page, totalPages - 1);
@@ -51,7 +70,7 @@ export function NpcBrowser() {
   return (
     <>
       <section className="mb-4 rounded-xl border border-white/5 bg-[color:var(--l2-bg-card)] p-5">
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
           <Field label="Buscar nome ou ID">
             <input
               type="text"
@@ -64,19 +83,35 @@ export function NpcBrowser() {
               className="text-input"
             />
           </Field>
-          <Field label="Tipo">
+          <Field label="Categoria">
             <select
-              value={type}
+              value={category}
               onChange={(e) => {
-                setType(e.target.value);
+                setCategory(e.target.value as NpcCategory);
                 setPage(0);
               }}
               className="text-input"
             >
-              <option value="all">Todos</option>
-              {types.map((t) => (
-                <option key={t} value={t}>
-                  {t}
+              {NPC_CATEGORIES.map((c) => (
+                <option key={c.key} value={c.key}>
+                  {c.label}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field label="Cidade">
+            <select
+              value={city}
+              onChange={(e) => {
+                setCity(e.target.value);
+                setPage(0);
+              }}
+              className="text-input"
+            >
+              <option value="">Todas</option>
+              {L2J_CITIES.map((c) => (
+                <option key={c.name} value={c.name}>
+                  {c.name}
                 </option>
               ))}
             </select>
@@ -155,8 +190,8 @@ export function NpcBrowser() {
                   <th className="px-6 py-2 text-left">Nome</th>
                   <th className="px-6 py-2 text-left">Título</th>
                   <th className="px-6 py-2 text-left">Tipo</th>
+                  <th className="px-6 py-2 text-left">Cidade</th>
                   <th className="px-6 py-2 text-right">Lv</th>
-                  <th className="px-6 py-2 text-right">HP</th>
                 </tr>
               </thead>
               <tbody>
@@ -182,11 +217,11 @@ export function NpcBrowser() {
                     <td className="px-6 py-2 text-xs text-white/65">
                       {n.type ?? "—"}
                     </td>
+                    <td className="px-6 py-2 text-xs text-white/65">
+                      {cityByNpc.get(n.id) ?? <span className="text-white/30">—</span>}
+                    </td>
                     <td className="px-6 py-2 text-right font-display font-bold text-l2-gold">
                       {n.level}
-                    </td>
-                    <td className="px-6 py-2 text-right tabular-nums text-white/65">
-                      {Math.round(n.hp).toLocaleString("pt-BR")}
                     </td>
                   </tr>
                 ))}

@@ -528,5 +528,10 @@ export const bridge = {
     async clearNpcCache() {
       return bridgeFetch("POST", "/admin/npcs/cache/clear", {});
     },
+    async getAllNpcSpawns(): Promise<{
+      byNpc: Record<string, { x: number; y: number }[]>;
+    }> {
+      return bridgeFetch("GET", "/admin/npcs/all-spawns");
+    },
   },
 };

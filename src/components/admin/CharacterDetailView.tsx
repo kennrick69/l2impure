@@ -9,6 +9,7 @@ import {
   itemGrade,
 } from "@/lib/use-items-metadata";
 import { ItemPickerModal } from "@/components/admin/ItemPickerModal";
+import { ItemIcon } from "@/components/admin/ItemIcon";
 import type {
   AdminGmCharFull,
   AdminGmInventoryItem,
@@ -344,8 +345,9 @@ function InventoryTab({
               className="w-full rounded-md border border-white/8 bg-[color:var(--l2-bg-input)] px-3 py-2.5 text-left text-sm text-white transition hover:border-l2-gold"
             >
               {picked ? (
-                <span className="flex items-center justify-between gap-2">
-                  <span>
+                <span className="flex items-center gap-2">
+                  <ItemIcon itemId={picked.id} item={picked} size={28} />
+                  <span className="flex-1">
                     <span className="font-display font-semibold">
                       {picked.name}
                     </span>
@@ -445,11 +447,16 @@ function InventoryTab({
                         className="border-b border-white/5 last:border-0 hover:bg-white/3"
                       >
                         <td className="px-6 py-2">
-                          <div className="font-display text-sm text-white">
-                            {itemName(it.itemId)}
-                          </div>
-                          <div className="font-mono text-[10px] text-white/45">
-                            #{it.itemId}
+                          <div className="flex items-center gap-3">
+                            <ItemIcon itemId={it.itemId} size={32} />
+                            <div>
+                              <div className="font-display text-sm text-white">
+                                {itemName(it.itemId)}
+                              </div>
+                              <div className="font-mono text-[10px] text-white/45">
+                                #{it.itemId}
+                              </div>
+                            </div>
                           </div>
                         </td>
                         <td className="px-6 py-2 text-xs text-white/65">

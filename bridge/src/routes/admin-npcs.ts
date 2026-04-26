@@ -150,6 +150,46 @@ export async function adminNpcsRoutes(app: FastifyInstance) {
     },
   );
 
+  /**
+   * GET /admin/npcs/all-spawns
+   * Retorna { byNpc: { [npcId]: [{x,y}, ...] } } pra cliente fazer
+   * lookup rápido de cidade-do-NPC sem N round-trips. Cache 5min em RAM.
+   */
+  let allSpawnsCache: string | null = null;
+  let allSpawnsCacheAt = 0;
+  const ALL_SPAWNS_TTL = 5 * 60 * 1000;
+
+  app.get(
+    "/admin/npcs/all-spawns",
+    { preHandler: authenticate },
+    async (req, reply) => {
+      const now = Date.now();
+      if (!allSpawnsCache || now - allSpawnsCacheAt > ALL_SPAWNS_TTL) {
+        try {
+          const [rows] = await pool.query<RowDataPacket[]>(
+            "SELECT npc_templateid, locx, locy FROM spawnlist",
+          );
+          const byNpc: Record<string, { x: number; y: number }[]> = {};
+          for (const r of rows) {
+            const id = String(r.npc_templateid);
+            if (!byNpc[id]) byNpc[id] = [];
+            byNpc[id]!.push({ x: r.locx as number, y: r.locy as number });
+          }
+          allSpawnsCache = JSON.stringify({ byNpc });
+          allSpawnsCacheAt = now;
+        } catch (e) {
+          req.log.error({ err: e }, "[/admin/npcs/all-spawns] failed");
+          reply.code(500).send({ error: "internal error" });
+          return;
+        }
+      }
+      reply
+        .header("Content-Type", "application/json")
+        .header("Cache-Control", "private, max-age=300")
+        .send(allSpawnsCache);
+    },
+  );
+
   /** GET /admin/npcs/:id/spawns */
   app.get<{ Params: { id: string } }>(
     "/admin/npcs/:id/spawns",
