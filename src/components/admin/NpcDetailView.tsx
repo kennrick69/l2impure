@@ -589,6 +589,49 @@ function BuylistsTab({ npcId }: { npcId: number }) {
     }
   }
 
+  async function editPrice(
+    buyListId: number,
+    itemId: number,
+    currentPrice: number,
+  ) {
+    const input = prompt(
+      `Novo preço (atual: ${currentPrice.toLocaleString("pt-BR")} adena):`,
+      String(currentPrice),
+    );
+    if (input === null) return;
+    const price = Number(input.replace(/\./g, "").replace(",", "."));
+    if (!Number.isFinite(price) || price < 0) {
+      show("Preço inválido", "error");
+      return;
+    }
+    setBusy(true);
+    try {
+      const r = await fetch(
+        `/api/admin/npcs/buylists/${buyListId}/products`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ itemId, price }),
+        },
+      );
+      const j = (await r.json().catch(() => ({}))) as {
+        error?: string;
+        code?: string;
+      };
+      if (!r.ok) {
+        if (j.code === "pin_required") show("PIN GM expirado", "info");
+        else show(j.error ?? "Falha", "error");
+        return;
+      }
+      show(`Preço atualizado pra ${price.toLocaleString("pt-BR")}`, "success");
+      load();
+    } catch {
+      show("Erro de rede", "error");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   if (loading) {
     return <p className="text-sm text-white/55">Carregando…</p>;
   }
@@ -694,14 +737,26 @@ function BuylistsTab({ npcId }: { npcId: number }) {
                       {p.price.toLocaleString("pt-BR")}
                     </td>
                     <td className="px-6 py-2 text-right">
-                      <button
-                        type="button"
-                        onClick={() => removeProduct(bl.buyListId, p.itemId)}
-                        disabled={busy}
-                        className="rounded border border-l2-red/40 px-2 py-1 font-display text-[10px] font-semibold uppercase tracking-wider text-l2-red hover:bg-l2-red/10 disabled:opacity-40"
-                      >
-                        Remover
-                      </button>
+                      <div className="flex justify-end gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            editPrice(bl.buyListId, p.itemId, p.price)
+                          }
+                          disabled={busy}
+                          className="rounded border border-white/10 px-2 py-1 font-display text-[10px] font-semibold uppercase tracking-wider text-white/75 transition hover:bg-white/5 hover:text-white disabled:opacity-40"
+                        >
+                          Preço
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => removeProduct(bl.buyListId, p.itemId)}
+                          disabled={busy}
+                          className="rounded border border-l2-red/40 px-2 py-1 font-display text-[10px] font-semibold uppercase tracking-wider text-l2-red hover:bg-l2-red/10 disabled:opacity-40"
+                        >
+                          Remover
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}

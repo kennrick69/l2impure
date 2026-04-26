@@ -510,6 +510,59 @@ export async function adminNpcsRoutes(app: FastifyInstance) {
     },
   );
 
+  /** PATCH /admin/npcs/buylists/:buyListId/products/:itemId — muda price */
+  app.patch<{ Params: { buyListId: string; itemId: string } }>(
+    "/admin/npcs/buylists/:buyListId/products/:itemId",
+    { preHandler: authenticate },
+    async (req, reply) => {
+      const buyListId = Number(req.params.buyListId);
+      const itemId = Number(req.params.itemId);
+      const body = (req.body ?? {}) as { price?: number };
+      const price = Number(body.price);
+      if (
+        !Number.isFinite(buyListId) ||
+        buyListId <= 0 ||
+        !Number.isFinite(itemId) ||
+        itemId <= 0 ||
+        !Number.isFinite(price) ||
+        price < 0 ||
+        price > 2_000_000_000
+      ) {
+        reply.code(400).send({ error: "params inválidos" });
+        return;
+      }
+      try {
+        let xml = await readFile(BUYLIST_PATH, "utf8");
+        const blockRe = new RegExp(
+          `(<buyList\\s+id="${buyListId}"\\s+npcId="\\d+"\\s*>)([\\s\\S]*?)(<\\/buyList>)`,
+        );
+        const m = blockRe.exec(xml);
+        if (!m) {
+          reply.code(404).send({ error: "buyList not found" });
+          return;
+        }
+        const open = m[1] ?? "";
+        const inner = m[2] ?? "";
+        const close = m[3] ?? "";
+        const productRe = new RegExp(
+          `(<product\\s+id="${itemId}"\\s+price=")\\d+("\\s*\\/?>)`,
+        );
+        if (!productRe.test(inner)) {
+          reply.code(404).send({ error: "product not in buyList" });
+          return;
+        }
+        const newInner = inner.replace(productRe, `$1${price}$2`);
+        await backupFile(BUYLIST_PATH);
+        xml = xml.replace(blockRe, open + newInner + close);
+        await writeFile(BUYLIST_PATH, xml, "utf8");
+        reply.send({ ok: true, restartRequired: true });
+      } catch (e) {
+        req.log.error({ err: e }, "[PATCH buylist product price] failed");
+        reply.code(500).send({ error: "internal error" });
+      }
+    },
+  );
+
   /** DELETE /admin/npcs/buylists/:buyListId/products/:itemId */
   app.delete<{ Params: { buyListId: string; itemId: string } }>(
     "/admin/npcs/buylists/:buyListId/products/:itemId",

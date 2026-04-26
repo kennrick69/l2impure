@@ -518,6 +518,17 @@ export const bridge = {
         `/admin/npcs/buylists/${buyListId}/products/${itemId}`,
       );
     },
+    async updateBuylistProductPrice(
+      buyListId: number,
+      itemId: number,
+      price: number,
+    ) {
+      return bridgeFetch(
+        "PATCH",
+        `/admin/npcs/buylists/${buyListId}/products/${itemId}`,
+        { price },
+      );
+    },
     async renameNpc(npcId: number, name: string, title: string) {
       return bridgeFetch<{ ok: true; file: string; restartRequired: true }>(
         "PATCH",

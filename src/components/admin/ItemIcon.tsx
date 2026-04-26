@@ -13,7 +13,12 @@ import { getItemFromCache } from "@/lib/use-items-metadata";
  *   NEXT_PUBLIC_ITEM_ICON_BASE_URL=https://seu-cdn/icons
  * (a URL completa do PNG vira `${baseUrl}/${itemId}.png`).
  */
-const BASE_URL = process.env.NEXT_PUBLIC_ITEM_ICON_BASE_URL;
+// Railway às vezes preserva aspas no valor — strippar pra robustez.
+// Também remove barra final pra evitar "//id.png".
+const RAW = process.env.NEXT_PUBLIC_ITEM_ICON_BASE_URL;
+const BASE_URL = RAW
+  ? RAW.replace(/^["'](.+)["']$/, "$1").replace(/\/+$/, "")
+  : undefined;
 
 function pickEmoji(meta: ItemMetadata | null | undefined): string {
   if (!meta) return "📦";
