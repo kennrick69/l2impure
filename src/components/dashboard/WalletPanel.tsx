@@ -16,6 +16,7 @@ type Tx = {
   type: string;
   description: string | null;
   createdAt: string;
+  cancellable?: boolean;
 };
 
 export function WalletPanel({
@@ -30,6 +31,33 @@ export function WalletPanel({
   const searchParams = useSearchParams();
   const [amount, setAmount] = useState<string>("10");
   const [busy, setBusy] = useState(false);
+  const [cancelling, setCancelling] = useState<number | null>(null);
+
+  async function cancelTx(txId: number) {
+    if (
+      !confirm(
+        "Cancelar essa transação pendente? Você não foi até o checkout do MP.",
+      )
+    )
+      return;
+    setCancelling(txId);
+    try {
+      const res = await fetch(`/api/wallet/transactions/${txId}/cancel`, {
+        method: "POST",
+      });
+      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) {
+        show(data.error ?? "Falha ao cancelar", "error");
+        return;
+      }
+      show("Transação cancelada", "success");
+      router.refresh();
+    } catch {
+      show("Erro de rede", "error");
+    } finally {
+      setCancelling(null);
+    }
+  }
 
   // Toast quando voltar do MP
   useEffect(() => {
@@ -198,6 +226,7 @@ export function WalletPanel({
                   <th className="px-6 py-3 text-right">Valor</th>
                   <th className="px-6 py-3 text-right">Coins</th>
                   <th className="px-6 py-3 text-left">Status</th>
+                  <th className="px-6 py-3 text-right">Ações</th>
                 </tr>
               </thead>
               <tbody>
@@ -221,6 +250,18 @@ export function WalletPanel({
                     </td>
                     <td className="px-6 py-3">
                       <StatusBadge status={t.status} />
+                    </td>
+                    <td className="px-6 py-3 text-right">
+                      {t.cancellable && (
+                        <button
+                          type="button"
+                          onClick={() => cancelTx(t.id)}
+                          disabled={cancelling === t.id}
+                          className="rounded border border-white/10 px-2 py-1 font-display text-[10px] font-semibold uppercase tracking-wider text-white/65 transition hover:bg-white/5 hover:text-white disabled:opacity-40"
+                        >
+                          {cancelling === t.id ? "..." : "Cancelar"}
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))}
