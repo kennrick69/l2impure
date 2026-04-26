@@ -71,6 +71,8 @@ export async function iconsRoutes(app: FastifyInstance) {
         reply
           .header("Content-Type", "image/png")
           .header("Cache-Control", "public, max-age=86400, immutable")
+          .header("Cross-Origin-Resource-Policy", "cross-origin")
+          .header("Access-Control-Allow-Origin", "*")
           .send(buf);
       } catch (e) {
         req.log.error({ err: e }, "[/icons/items] read failed");

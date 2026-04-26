@@ -48,7 +48,13 @@ async function build() {
     },
   );
 
-  await app.register(helmet, { contentSecurityPolicy: false });
+  // CORP=cross-origin: necessário pra <img src> de l2impure.com poder
+  // embedar /icons/items/*.png. Bridge já é protegida por HMAC nos
+  // endpoints sensíveis, sem risco de leak por embed.
+  await app.register(helmet, {
+    contentSecurityPolicy: false,
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+  });
   await app.register(rateLimit, {
     max: 60,
     timeWindow: "1 minute",
