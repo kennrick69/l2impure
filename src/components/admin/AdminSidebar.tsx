@@ -14,6 +14,7 @@ const NAV = [
   { href: "/admin/characters", icon: "🧝", label: "Personagens" },
   { href: "/admin/items", icon: "💎", label: "Items (busca)" },
   { href: "/admin/npcs", icon: "🗿", label: "NPCs" },
+  { href: "/admin/wallet", icon: "💰", label: "Carteira" },
 ];
 
 export function AdminSidebar() {

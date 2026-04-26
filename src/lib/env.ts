@@ -59,6 +59,12 @@ const ServerEnv = z.object({
   BRIDGE_API_KEY: z.string().optional(),
   BRIDGE_HMAC_SECRET: z.string().optional(),
 
+  // Mercado Pago (recarga de coins no /wallet)
+  MP_ACCESS_TOKEN: z.string().optional(),
+  MP_PUBLIC_KEY: z.string().optional(),
+  MP_WEBHOOK_URL: z.string().optional(),
+  MP_WEBHOOK_SECRET: z.string().optional(),
+
   // Rate limits (todos opcionais — defaults em rate-limit.ts)
   RATE_LIMIT_LOGIN_MAX: z.string().optional(),
   RATE_LIMIT_LOGIN_WINDOW: z.string().optional(),

@@ -26,13 +26,14 @@ model User {
   createdAt     DateTime  @default(now()) @map("created_at")
   updatedAt     DateTime  @default(now()) @updatedAt @map("updated_at")
 
-  refreshTokens      RefreshToken[]
-  verificationTokens VerificationToken[]
-  gameAccounts       GameAccount[]
-  auditLogs          AuditLog[]
-  referralsGiven     Referral[]    @relation("UserReferrals")
-  referralReceived   Referral?     @relation("UserReferralBy")
-  announcements      Announcement[]
+  refreshTokens       RefreshToken[]
+  verificationTokens  VerificationToken[]
+  gameAccounts        GameAccount[]
+  auditLogs           AuditLog[]
+  referralsGiven      Referral[]    @relation("UserReferrals")
+  referralReceived    Referral?     @relation("UserReferralBy")
+  announcements       Announcement[]
+  walletTransactions  WalletTransaction[]
 
   @@map("users")
 }
@@ -175,6 +176,31 @@ model PromoRedemption {
   @@unique([userId, promoCodeId])
   @@index([userId])
   @@map("promo_redemptions")
+}
+
+/// Transações da carteira de coins — recarga via Mercado Pago, créditos
+/// admin, bônus de referral, resgates de promo. amount em BRL (Decimal),
+/// coins é a quantidade creditada (positiva) ou debitada (negativa).
+model WalletTransaction {
+  id             Int       @id @default(autoincrement())
+  userId         Int       @map("user_id")
+  amount         Decimal   @db.Decimal(10, 2)
+  coins          Int
+  status         String    @default("pending") @db.VarChar(20)
+  mpPaymentId    String?   @map("mp_payment_id") @db.VarChar(64)
+  mpPreferenceId String?   @map("mp_preference_id") @db.VarChar(64)
+  type           String    @db.VarChar(20)
+  description    String?   @db.VarChar(255)
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @default(now()) @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@index([mpPaymentId])
+  @@index([createdAt])
+  @@map("wallet_transactions")
 }
 
 /// Audit log — registra ações sensíveis (login, criar conta de jogo, reset HWID, etc)
