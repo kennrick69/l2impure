@@ -5,7 +5,13 @@ import { useCreateAccountModal } from "./CreateAccountModal";
 import { UserDropdown } from "./UserDropdown";
 import { NotificationsButton } from "./NotificationsButton";
 
-export function DashboardHeader({ email }: { email: string }) {
+export function DashboardHeader({
+  email,
+  isAdmin,
+}: {
+  email: string;
+  isAdmin: boolean;
+}) {
   const { open } = useCreateAccountModal();
 
   return (
@@ -34,7 +40,7 @@ export function DashboardHeader({ email }: { email: string }) {
       {/* Direita: notificações + avatar */}
       <div className="flex items-center gap-2">
         <NotificationsButton />
-        <UserDropdown email={email} />
+        <UserDropdown email={email} isAdmin={isAdmin} />
       </div>
     </header>
   );

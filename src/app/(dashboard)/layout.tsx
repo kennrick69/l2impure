@@ -51,6 +51,18 @@ export default async function DashboardLayout({
     );
   }
 
+  // Detecta role pra mostrar atalho "Painel admin" no UserDropdown
+  let isAdmin = false;
+  try {
+    const u = await prisma.user.findUnique({
+      where: { id: session.sub },
+      select: { role: true },
+    });
+    isAdmin = u?.role === "admin";
+  } catch {
+    /* fail-soft */
+  }
+
   // Se o usuário foi indicado e a indicação está pendente, tenta
   // convergir aqui (o trigger é "indicado loga no dashboard"). Não
   // bloqueia o layout — failure é silenciosa.
@@ -73,7 +85,7 @@ export default async function DashboardLayout({
     <ToastProvider>
       <CreateAccountModalProvider>
         <div className="flex min-h-screen flex-col bg-[color:var(--l2-bg-primary)]">
-          <DashboardHeader email={session.email} />
+          <DashboardHeader email={session.email} isAdmin={isAdmin} />
           <div className="flex flex-1 flex-col lg:flex-row">
             <Sidebar serverStatus={serverStatus} />
             <main className="flex-1 px-6 py-8 lg:px-10 lg:py-10">

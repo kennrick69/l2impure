@@ -4,7 +4,13 @@ import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-export function UserDropdown({ email }: { email: string }) {
+export function UserDropdown({
+  email,
+  isAdmin = false,
+}: {
+  email: string;
+  isAdmin?: boolean;
+}) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -71,6 +77,16 @@ export function UserDropdown({ email }: { email: string }) {
             </div>
             <div className="mt-1 truncate text-xs text-white/85">{email}</div>
           </div>
+          {isAdmin && (
+            <Link
+              href="/admin/dashboard"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-3 border-b border-white/5 px-4 py-2.5 text-sm text-l2-red transition hover:bg-l2-red/10"
+            >
+              <span>🛡️</span>
+              <span>Painel admin</span>
+            </Link>
+          )}
           <Link
             href="/settings"
             onClick={() => setOpen(false)}
