@@ -19,7 +19,7 @@ export function Header() {
   return (
     <>
       <header
-        className="l2-header fixed inset-x-0 top-0 z-40 h-[240px] md:h-[320px]"
+        className="l2-header fixed inset-x-0 top-0 z-40 h-[160px] md:h-[214px]"
         data-scrolled={scrolled ? "true" : "false"}
       >
         <div className="l2-container flex h-full items-center gap-6">
@@ -28,7 +28,7 @@ export function Header() {
             <img
               src="/images/logo.png"
               alt="L2 Impure"
-              className="h-[200px] w-auto select-none md:h-[280px]"
+              className="h-[134px] w-auto select-none md:h-[186px]"
               draggable={false}
             />
           </Link>
@@ -127,7 +127,7 @@ export function Header() {
               <img
                 src="/images/logo.png"
                 alt="L2 Impure"
-                className="h-[180px] w-auto"
+                className="h-[120px] w-auto"
               />
             </Link>
             <button

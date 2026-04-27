@@ -21,7 +21,7 @@ export default async function AdminLayout({
               <img
                 src="/images/logo.png"
                 alt="L2 Impure"
-                className="h-[104px] w-auto"
+                className="h-[70px] w-auto"
               />
             </Link>
             <span className="rounded-md bg-l2-red/15 px-2.5 py-1 font-display text-[10px] font-bold uppercase tracking-[1.5px] text-l2-red">
