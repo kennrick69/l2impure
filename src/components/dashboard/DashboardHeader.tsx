@@ -23,7 +23,7 @@ export function DashboardHeader({
           <img
             src="/images/logo.png"
             alt="L2 Impure"
-            className="h-9 w-auto"
+            className="h-[52px] w-auto"
           />
         </Link>
         <button

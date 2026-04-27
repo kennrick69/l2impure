@@ -11,7 +11,7 @@ export function Footer() {
               <img
                 src="/images/logo.png"
                 alt="L2 Impure"
-                className="h-16 w-auto"
+                className="h-[90px] w-auto"
               />
             </div>
             <p className="max-w-sm text-sm text-white/60">

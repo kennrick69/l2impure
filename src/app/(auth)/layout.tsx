@@ -15,7 +15,7 @@ export default function AuthLayout({
             <img
               src="/images/logo.png"
               alt="L2 Impure"
-              className="h-12 w-auto"
+              className="h-[68px] w-auto"
             />
           </Link>
           <div className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center">
