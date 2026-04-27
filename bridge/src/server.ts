@@ -18,6 +18,7 @@ import { adminCharactersRoutes } from "./routes/admin-characters.js";
 import { adminItemsRoutes } from "./routes/admin-items.js";
 import { adminNpcsRoutes } from "./routes/admin-npcs.js";
 import { iconsRoutes } from "./routes/icons.js";
+import { voteRoutes } from "./routes/vote.js";
 
 async function build() {
   const app = Fastify({
@@ -48,6 +49,24 @@ async function build() {
     },
   );
 
+  // Form-urlencoded: usado pelo callback do L2Top.CO (POST com userid=X&voted=1)
+  app.addContentTypeParser(
+    "application/x-www-form-urlencoded",
+    { parseAs: "string" },
+    (req, body, done) => {
+      const raw = body as string;
+      (req as typeof req & { rawBody?: string }).rawBody = raw;
+      try {
+        const params = new URLSearchParams(raw);
+        const obj: Record<string, string> = {};
+        for (const [k, v] of params) obj[k] = v;
+        done(null, obj);
+      } catch (err) {
+        done(err as Error, undefined);
+      }
+    },
+  );
+
   // CORP=cross-origin: necessário pra <img src> de l2impure.com poder
   // embedar /icons/items/*.png. Bridge já é protegida por HMAC nos
   // endpoints sensíveis, sem risco de leak por embed.
@@ -71,6 +90,7 @@ async function build() {
   await app.register(adminItemsRoutes);
   await app.register(adminNpcsRoutes);
   await app.register(iconsRoutes);
+  await app.register(voteRoutes);
 
   app.setNotFoundHandler((_req, reply) => {
     reply.code(404).send({ error: "not found" });
