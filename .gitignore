@@ -27,3 +27,6 @@ Thumbs.db
 # logs
 *.log
 npm-debug.log*
+
+# Vote properties contains HMAC_SECRET
+server/impure-classes/vote.properties
