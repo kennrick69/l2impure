@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
+import { HopZoneBanner } from "@/components/HopZoneBanner";
 
 type DownloadCard = {
   label: string;
@@ -189,6 +190,7 @@ export default function DownloadPage() {
         </section>
       </main>
       <Footer />
+      <HopZoneBanner />
     </>
   );
 }

@@ -6,6 +6,7 @@ import { FeaturesSection } from "@/components/FeaturesSection";
 import { StatisticsSection } from "@/components/StatisticsSection";
 import { JoinSection } from "@/components/JoinSection";
 import { Footer } from "@/components/Footer";
+import { HopZoneBanner } from "@/components/HopZoneBanner";
 import { PlayModalProvider } from "@/components/PlayModal";
 
 export default function Home() {
@@ -21,6 +22,7 @@ export default function Home() {
         <JoinSection />
       </main>
       <Footer />
+      <HopZoneBanner />
     </PlayModalProvider>
   );
 }
