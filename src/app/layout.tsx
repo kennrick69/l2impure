@@ -46,7 +46,8 @@ export const metadata: Metadata = {
     "L2 Impure",
   ],
   alternates: { canonical: "/" },
-  icons: { icon: "/images/logo.png" },
+  // Ícones via file conventions do App Router:
+  // src/app/{favicon.ico,icon.png,apple-icon.png} + manifest.ts
   robots: { index: true, follow: true },
   openGraph: {
     title: "L2 Impure – Interlude x10 com Sistema de Híbridos",

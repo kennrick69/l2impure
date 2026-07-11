@@ -40,24 +40,54 @@ function signRequest(method: string, path: string, body: string) {
   };
 }
 
+/**
+ * Timeouts agressivos: a bridge fica numa VPS atrás de Cloudflare
+ * Tunnel — se ela travar, o site NÃO pode travar junto. Reads devem
+ * responder rápido (têm cache + stale fallback via `cached()`);
+ * writes ganham mais folga.
+ */
+const DEFAULT_READ_TIMEOUT_MS = 4000;
+const DEFAULT_WRITE_TIMEOUT_MS = 12000;
+
 export async function bridgeFetch<T>(
   method: "GET" | "POST" | "DELETE" | "PATCH" | "PUT",
   path: string,
   body?: Record<string, unknown>,
+  opts?: { timeoutMs?: number },
 ): Promise<T> {
   if (!BRIDGE_URL) {
     throw new BridgeError("BRIDGE_URL não configurada", 503);
   }
+  const timeoutMs =
+    opts?.timeoutMs ??
+    (method === "GET" ? DEFAULT_READ_TIMEOUT_MS : DEFAULT_WRITE_TIMEOUT_MS);
   const bodyStr = body ? JSON.stringify(body) : "";
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     ...signRequest(method, path, bodyStr),
   };
-  const res = await fetch(`${BRIDGE_URL}${path}`, {
-    method,
-    headers,
-    body: method !== "GET" && bodyStr ? bodyStr : undefined,
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${BRIDGE_URL}${path}`, {
+      method,
+      headers,
+      body: method !== "GET" && bodyStr ? bodyStr : undefined,
+      signal: AbortSignal.timeout(timeoutMs),
+    });
+  } catch (e) {
+    const err = e as Error;
+    if (err.name === "TimeoutError" || err.name === "AbortError") {
+      throw new BridgeError(
+        `Bridge ${method} ${path} timeout após ${timeoutMs}ms`,
+        504,
+      );
+    }
+    // Erro de rede (ECONNREFUSED, DNS, tunnel fora, etc)
+    throw new BridgeError(
+      `Bridge ${method} ${path} inacessível: ${err.message}`,
+      502,
+    );
+  }
   if (!res.ok) {
     const text = await res.text().catch(() => "");
     throw new BridgeError(
@@ -314,10 +344,12 @@ export const bridge = {
     );
   },
   async restartGameServer() {
+    // Restart roda script na VPS — pode demorar bem mais que um write comum
     return bridgeFetch<{ ok: true; stdout?: string; stderr?: string }>(
       "POST",
       "/server/restart",
       {},
+      { timeoutMs: 60000 },
     );
   },
   gm: {

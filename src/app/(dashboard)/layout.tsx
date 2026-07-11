@@ -5,9 +5,8 @@ import { Sidebar } from "@/components/dashboard/Sidebar";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { CreateAccountModalProvider } from "@/components/dashboard/CreateAccountModal";
 import { ToastProvider } from "@/components/ui/Toast";
-import { bridge, type ServerStatus } from "@/lib/bridge";
+import { getServerStatus } from "@/lib/server-status";
 import { checkAndConvertReferral } from "@/lib/referral-conversion";
-import { getSetting, SETTINGS } from "@/lib/settings";
 
 /**
  * Shell do painel: header full-width sticky topo, sidebar 280px à esquerda,
@@ -24,32 +23,10 @@ export default async function DashboardLayout({
   }
 
   // Status do servidor de jogo — fail soft: se a bridge cair, sidebar
-  // mostra "Indisponível" em vez de quebrar o layout. bridge.status()
-  // tem cache Redis 30s, então a maioria dos renders é hit.
-  let serverStatus: ServerStatus | null = null;
-  try {
-    serverStatus = await bridge.status();
-    // Override admin: se PG.settings tem player_count_offset, soma ao
-    // playersRaw em vez de usar o offset hardcoded da bridge .env.
-    const override = await getSetting<number | null>(
-      SETTINGS.playerCountOffset,
-      null,
-    );
-    if (
-      typeof override === "number" &&
-      typeof serverStatus.playersRaw === "number"
-    ) {
-      serverStatus = {
-        ...serverStatus,
-        players: serverStatus.playersRaw + override,
-      };
-    }
-  } catch (e) {
-    console.warn(
-      "[dashboard layout] bridge.status() falhou:",
-      (e as Error).message,
-    );
-  }
+  // mostra "Indisponível" em vez de quebrar o layout. getServerStatus()
+  // tem cache Redis 30s + snapshot stale 24h + override admin do
+  // player count (lógica centralizada em src/lib/server-status.ts).
+  const serverStatus = await getServerStatus();
 
   // Detecta role pra mostrar atalho "Painel admin" no UserDropdown
   let isAdmin = false;

@@ -154,10 +154,44 @@ export async function POST(req: Request) {
     }
   }
 
-  const account = await prisma.gameAccount.create({
-    data: { userId: session.sub, gameLogin: body.gameLogin },
-    select: { id: true, gameLogin: true, createdAt: true },
-  });
+  // Vincula no PG. Se falhar DEPOIS da bridge ter criado no L2J,
+  // desfaz na bridge (rollback compensatório) — senão fica uma conta
+  // órfã no jogo que o painel não enxerga e o login trava pra sempre
+  // com "já reservado".
+  let account: { id: number; gameLogin: string; createdAt: Date };
+  try {
+    account = await prisma.gameAccount.create({
+      data: { userId: session.sub, gameLogin: body.gameLogin },
+      select: { id: true, gameLogin: true, createdAt: true },
+    });
+  } catch (e) {
+    console.error("[/api/game/accounts] PG create falhou após bridge OK:", e);
+    if (bridgeConfigured) {
+      try {
+        // Seguro: a conta acabou de ser criada por NÓS (bridge retornou
+        // 201 acima), então não existe char nem dono anterior.
+        await bridge.deleteAccount(body.gameLogin);
+      } catch (delErr) {
+        console.error(
+          `[/api/game/accounts] rollback na bridge falhou — conta órfã no L2J: ${body.gameLogin}`,
+          delErr,
+        );
+      }
+    }
+    await audit({
+      userId: session.sub,
+      action: "create_game_account_pg_fail",
+      ipAddress: ip,
+      details: { gameLogin: body.gameLogin },
+    });
+    return NextResponse.json(
+      {
+        error:
+          "Erro ao vincular a conta ao painel. Nada foi criado — tente novamente.",
+      },
+      { status: 500 },
+    );
+  }
 
   await audit({
     userId: session.sub,
