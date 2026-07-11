@@ -6,12 +6,21 @@
  *        → valida HMAC(userid:hopzone, HMAC_SECRET) → grava em vote_pending
  *   POST /vote/callback/l2topco  body: userid=X&userip=Y&voted=1
  *        → valida IP whitelist (env L2TOP_CO_WHITELIST_IPS) → grava → responde "OK" texto
+ *   GET  /vote/callback/mmotop?userid=X&code=Y
+ *        → valida code == MD5(MMOTOP_SECRET + userid) → grava
+ *   GET  /vote/callback/l2servera?userId=X&hash=H
+ *        → valida hash == SHA256(L2SERVERA_SECRET + userId) → grava
+ *   POST /vote/callback/gtop100  (pingback oficial GTop100)
+ *        → valida pingbackkey == GTOP100_PINGBACK_KEY; charId vem do
+ *          pingUsername (vote URL: ?vote=1&pingUsername=<charId>);
+ *          Successful == 0 → voto válido. Aceita form-urlencoded e o
+ *          formato JSON {siteid, pingbackkey, Common:[{pb_name, success}]}.
  *   GET  /vote/check?site=X&charId=Y&ts=Z&sig=H
  *        → game server consulta voto pendente; sig=HMAC(querystring, HMAC_SECRET)
  *        → marca claimed=1 + popula vote_cooldown
  *   GET  /vote/history/:charId  (autenticado — pra painel)
  */
-import { createHmac, timingSafeEqual } from "node:crypto";
+import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 import type { FastifyInstance } from "fastify";
 import { pool } from "../db.js";
 import { env } from "../env.js";
@@ -32,6 +41,12 @@ const L2TOP_CO_WHITELIST = (process.env.L2TOP_CO_WHITELIST_IPS || "")
   .split(",")
   .map((s) => s.trim())
   .filter(Boolean);
+
+// Secrets por site — opcionais no boot (bridge sobe sem eles); callback do
+// site correspondente responde 503 not_configured até serem setados no .env.
+const MMOTOP_SECRET = process.env.MMOTOP_SECRET || "";
+const L2SERVERA_SECRET = process.env.L2SERVERA_SECRET || "";
+const GTOP100_PINGBACK_KEY = process.env.GTOP100_PINGBACK_KEY || "";
 
 function hmacHex(data: string): string {
   return createHmac("sha256", env.HMAC_SECRET).update(data).digest("hex");
@@ -185,6 +200,179 @@ export async function voteRoutes(app: FastifyInstance) {
       reply.code(500).send({ error: "db_error" });
     }
   });
+
+  // Helper comum dos callbacks novos: valida charId + site ativo + insere.
+  // Retorna [httpStatus, body] — caller decide o content-type da resposta.
+  async function acceptVote(
+    site: string,
+    rawCharId: string,
+    ip: string,
+    logPayload: string,
+  ): Promise<{ status: number; body: Record<string, unknown> }> {
+    const charId = parseInt(rawCharId, 10);
+    if (!Number.isFinite(charId) || charId <= 0) {
+      await logCallback(site, logPayload, ip, "invalid_userid");
+      return { status: 400, body: { error: "invalid_userid" } };
+    }
+    if (await siteDisabled(site)) {
+      await logCallback(site, logPayload, ip, "site_disabled");
+      return { status: 403, body: { error: "site_disabled" } };
+    }
+    await pool.query(
+      "INSERT INTO vote_pending (site, char_id, ip, claimed) VALUES (?, ?, ?, 0)",
+      [site, charId, ip],
+    );
+    await logCallback(site, logPayload, ip, "ok");
+    return { status: 200, body: { ok: true } };
+  }
+
+  // ===== MMOTOP — GET callback =====
+  // Vote URL cadastrada no mmotop aponta pra cá com ?userid=<charId>&code=<md5>
+  // code = MD5(MMOTOP_SECRET + userid). Secret cadastrado no painel mmotop.
+  app.get<{ Querystring: { userid?: string; code?: string } }>(
+    "/vote/callback/mmotop",
+    async (req, reply) => {
+      const { userid, code } = req.query;
+      const ip =
+        (req.headers["cf-connecting-ip"] as string | undefined) ?? req.ip;
+      const logPayload = JSON.stringify(req.query);
+
+      if (!MMOTOP_SECRET) {
+        await logCallback("mmotop", logPayload, ip, "not_configured");
+        reply.code(503).send({ error: "not_configured" });
+        return;
+      }
+      if (!userid || !code) {
+        await logCallback("mmotop", logPayload, ip, "missing_params");
+        reply.code(400).send({ error: "missing_params" });
+        return;
+      }
+      const expected = createHash("md5")
+        .update(`${MMOTOP_SECRET}${userid}`)
+        .digest("hex");
+      if (!safeEq(code.toLowerCase(), expected)) {
+        await logCallback("mmotop", logPayload, ip, "invalid_code");
+        req.log.warn({ userid }, "[vote] invalid mmotop code");
+        reply.code(403).send({ error: "invalid_code" });
+        return;
+      }
+      try {
+        const r = await acceptVote("mmotop", userid, ip, logPayload);
+        reply.code(r.status).send(r.body);
+      } catch (e) {
+        req.log.error({ err: e }, "[vote] mmotop insert failed");
+        reply.code(500).send({ error: "db_error" });
+      }
+    },
+  );
+
+  // ===== L2SERVERA — GET callback =====
+  // ?userId=<charId>&hash=<sha256>, hash = SHA256(L2SERVERA_SECRET + userId)
+  app.get<{ Querystring: { userId?: string; hash?: string } }>(
+    "/vote/callback/l2servera",
+    async (req, reply) => {
+      const { userId, hash } = req.query;
+      const ip =
+        (req.headers["cf-connecting-ip"] as string | undefined) ?? req.ip;
+      const logPayload = JSON.stringify(req.query);
+
+      if (!L2SERVERA_SECRET) {
+        await logCallback("l2servera", logPayload, ip, "not_configured");
+        reply.code(503).send({ error: "not_configured" });
+        return;
+      }
+      if (!userId || !hash) {
+        await logCallback("l2servera", logPayload, ip, "missing_params");
+        reply.code(400).send({ error: "missing_params" });
+        return;
+      }
+      const expected = createHash("sha256")
+        .update(`${L2SERVERA_SECRET}${userId}`)
+        .digest("hex");
+      if (!safeEq(hash.toLowerCase(), expected)) {
+        await logCallback("l2servera", logPayload, ip, "invalid_hash");
+        req.log.warn({ userId }, "[vote] invalid l2servera hash");
+        reply.code(403).send({ error: "invalid_hash" });
+        return;
+      }
+      try {
+        const r = await acceptVote("l2servera", userId, ip, logPayload);
+        reply.code(r.status).send(r.body);
+      } catch (e) {
+        req.log.error({ err: e }, "[vote] l2servera insert failed");
+        reply.code(500).send({ error: "db_error" });
+      }
+    },
+  );
+
+  // ===== GTOP100 — POST pingback =====
+  // Contrato oficial (gtop100.com/test/pingback):
+  //   form: VoterIP, Successful (0 = voto contou), Reason, pingUsername,
+  //         pingbackkey (secret configurado no painel GTop100)
+  //   json: { siteid, pingbackkey, Common: [{ ip, success, reason, pb_name }] }
+  // pingUsername/pb_name carrega o charId (vote URL: ?vote=1&pingUsername=ID).
+  // NOTA: a doc atual do GTop100 valida por pingbackkey; o antigo
+  // user_vote_check.php (dupla verificação) não consta mais na doc — a
+  // autenticação aqui é o pingbackkey (shared secret, mesma força do resto).
+  app.post<{ Body: Record<string, unknown> }>(
+    "/vote/callback/gtop100",
+    async (req, reply) => {
+      const body = (req.body || {}) as Record<string, unknown>;
+      const ip =
+        (req.headers["cf-connecting-ip"] as string | undefined) ?? req.ip;
+      const logPayload = JSON.stringify(body).slice(0, 2000);
+
+      if (!GTOP100_PINGBACK_KEY) {
+        await logCallback("gtop100", logPayload, ip, "not_configured");
+        reply.code(503).send({ error: "not_configured" });
+        return;
+      }
+
+      const key = typeof body.pingbackkey === "string" ? body.pingbackkey : "";
+      if (!key || !safeEq(key, GTOP100_PINGBACK_KEY)) {
+        await logCallback("gtop100", logPayload, ip, "invalid_pingbackkey");
+        req.log.warn("[vote] gtop100 pingbackkey inválido");
+        reply.code(403).send({ error: "invalid_pingbackkey" });
+        return;
+      }
+
+      // Normaliza os dois formatos pra uma lista de {charId, success, voterIp}
+      type Entry = { rawCharId: string; success: boolean; voterIp: string };
+      const entries: Entry[] = [];
+      if (Array.isArray(body.Common)) {
+        for (const item of body.Common as Array<Record<string, unknown>>) {
+          if (!item || typeof item !== "object") continue;
+          entries.push({
+            rawCharId: String(item.pb_name ?? ""),
+            success: Number(item.success ?? -1) === 0,
+            voterIp: typeof item.ip === "string" ? item.ip : ip,
+          });
+        }
+      } else {
+        entries.push({
+          rawCharId: String(body.pingUsername ?? ""),
+          success: Number(body.Successful ?? -1) === 0,
+          voterIp: typeof body.VoterIP === "string" ? body.VoterIP : ip,
+        });
+      }
+
+      let accepted = 0;
+      try {
+        for (const e of entries) {
+          if (!e.success) {
+            await logCallback("gtop100", logPayload, ip, "vote_not_successful");
+            continue;
+          }
+          const r = await acceptVote("gtop100", e.rawCharId, e.voterIp, logPayload);
+          if (r.status === 200) accepted++;
+        }
+        reply.type("text/plain").send(accepted > 0 ? "OK" : "NO_VALID_VOTES");
+      } catch (e) {
+        req.log.error({ err: e }, "[vote] gtop100 insert failed");
+        reply.code(500).send({ error: "db_error" });
+      }
+    },
+  );
 
   // ===== Game server consulta voto pendente =====
   app.get<{

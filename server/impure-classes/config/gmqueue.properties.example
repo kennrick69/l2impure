@@ -1,0 +1,20 @@
+# GM Command Queue — config OPCIONAL (./config/gmqueue.properties no gameserver)
+# Sem este arquivo o poller usa: enabled=true, bridge local, secret do vote.properties.
+
+# Liga/desliga o poller (default: True)
+GmQueueEnabled = True
+
+# URL da bridge. Default http://127.0.0.1:8080 (bridge roda na mesma VPS —
+# evita round-trip pelo Cloudflare). Use https://bridge.l2impure.com se a
+# bridge sair da VPS um dia.
+GmQueueBridgeUrl = http://127.0.0.1:8080
+
+# HMAC secret. Se vazio, cai no VoteHmacSecret do vote.properties
+# (que já é o mesmo HMAC_SECRET da bridge).
+GmQueueHmacSecret =
+
+# Intervalo de poll em segundos (default 5, mínimo 2)
+GmQueuePollSeconds = 5
+
+# Máximo de comandos por poll (default 10, máx 50)
+GmQueueLimit = 10
