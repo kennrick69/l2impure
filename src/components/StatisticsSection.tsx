@@ -21,6 +21,29 @@ function dotColor(c?: TopRow["clanDot"]) {
 }
 
 function StatsCard({ card }: { card: TopCard }) {
+  if (card.rows.length === 0) {
+    return (
+      <div className="flex flex-col items-start rounded-xl border border-white/5 bg-[color:var(--l2-bg-card)] px-6 py-6">
+        <h3 className="mb-4 font-display text-sm font-bold uppercase tracking-[2px] text-[color:var(--l2-text-gold)]">
+          {card.title}
+        </h3>
+        <p className="text-sm leading-relaxed text-white/60">
+          O servidor ainda não abriu — este ranking começa zerado pra todo
+          mundo no dia do launch.
+        </p>
+        <p className="mt-3 text-sm font-semibold text-white/85">
+          Os primeiros nomes desta tabela entram pra história do Impure.
+          Pode ser o seu.
+        </p>
+        <Link
+          href="/register"
+          className="mt-5 font-display text-xs font-semibold uppercase tracking-wider text-[color:var(--l2-text-gold)] underline underline-offset-4 hover:no-underline"
+        >
+          Criar conta de Fundador →
+        </Link>
+      </div>
+    );
+  }
   return (
     <div className="rounded-xl border border-white/5 bg-[color:var(--l2-bg-card)] px-6 py-6">
       <h3 className="mb-5 font-display text-sm font-bold uppercase tracking-[2px] text-[color:var(--l2-text-gold)]">

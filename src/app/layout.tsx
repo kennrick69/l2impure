@@ -23,20 +23,96 @@ const RECAPTCHA_DISABLED =
 const RECAPTCHA_ENTERPRISE =
   process.env.NEXT_PUBLIC_RECAPTCHA_ENTERPRISE === "true";
 
+const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://l2impure.com";
+
 export const metadata: Metadata = {
-  title:
-    "L2 Impure – Servidor Brasileiro de Lineage 2 Interlude x10",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "L2 Impure – Lineage 2 Interlude x10 com Sistema de Híbridos",
+    template: "%s | L2 Impure",
+  },
   description:
-    "L2 Impure — Servidor brasileiro de Lineage 2 Interlude x10 com Auto-Farm, Olympiad e Eventos 24/7.",
+    "O único servidor de Lineage 2 do mundo onde você funde 2 classes em 1 personagem. Interlude x10 brasileiro com Auto-Farm justo, Olympiad Dupla e zero pay-to-win. Launch em outubro de 2026.",
+  keywords: [
+    "Lineage 2",
+    "L2",
+    "servidor privado",
+    "Interlude",
+    "x10",
+    "mid rate",
+    "servidor brasileiro",
+    "sistema de híbridos",
+    "L2 Impure",
+  ],
+  alternates: { canonical: "/" },
   icons: { icon: "/images/logo.png" },
+  robots: { index: true, follow: true },
   openGraph: {
-    title: "L2 Impure – Interlude x10",
+    title: "L2 Impure – Interlude x10 com Sistema de Híbridos",
     description:
-      "Servidor brasileiro de Lineage 2 Interlude x10. Auto-Farm, Olympiad, Eventos 24/7.",
+      "Funda 2 classes em 1 personagem — único no mundo. Interlude x10 BR, Auto-Farm justo, sem pay-to-win. Launch em outubro de 2026.",
     siteName: "L2 Impure",
     locale: "pt_BR",
     type: "website",
+    url: SITE_URL,
+    images: [
+      {
+        url: "/images/og.png",
+        width: 1200,
+        height: 630,
+        alt: "L2 Impure — Interlude x10 com Sistema de Híbridos",
+      },
+    ],
   },
+  twitter: {
+    card: "summary_large_image",
+    title: "L2 Impure – Interlude x10 com Sistema de Híbridos",
+    description:
+      "O único L2 do mundo onde você funde 2 classes em 1 personagem. Interlude x10 BR, sem pay-to-win.",
+    images: ["/images/og.png"],
+  },
+};
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": `${SITE_URL}/#org`,
+      name: "L2 Impure",
+      url: SITE_URL,
+      logo: `${SITE_URL}/images/logo.png`,
+      email: "admin@l2impure.com",
+      sameAs: ["https://discord.gg/pbGXNRuWVX"],
+    },
+    {
+      "@type": "WebSite",
+      "@id": `${SITE_URL}/#website`,
+      name: "L2 Impure",
+      url: SITE_URL,
+      inLanguage: "pt-BR",
+      publisher: { "@id": `${SITE_URL}/#org` },
+    },
+    {
+      "@type": "VideoGame",
+      name: "L2 Impure — Lineage 2 Interlude x10",
+      url: SITE_URL,
+      description:
+        "Servidor brasileiro de Lineage 2 Interlude x10 com Sistema de Híbridos: fusão de 2 classes em 1 personagem, exclusivo mundial.",
+      playMode: "MultiPlayer",
+      applicationCategory: "Game",
+      gamePlatform: "PC",
+      inLanguage: "pt-BR",
+      offers: {
+        "@type": "Offer",
+        price: "0",
+        priceCurrency: "BRL",
+        availability: "https://schema.org/PreOrder",
+      },
+      publisher: { "@id": `${SITE_URL}/#org` },
+    },
+  ],
 };
 
 export default function RootLayout({
@@ -55,6 +131,10 @@ export default function RootLayout({
       className={`${oswald.variable} ${openSans.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-[color:var(--l2-bg-primary)] text-white">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
         {children}
         {recaptchaSrc && !RECAPTCHA_DISABLED && (
           <Script

@@ -1,4 +1,4 @@
-import { ArrowUpRightIcon, DiscordIcon, TelegramIcon } from "./icons";
+import { ArrowUpRightIcon, DiscordIcon } from "./icons";
 import { serverCards, newsItems } from "@/lib/l2impure-data";
 import { prisma } from "@/lib/db";
 
@@ -120,12 +120,13 @@ async function NewsCard() {
             L2IMPURE.COM - Servidor Brasileiro de Lineage 2 Interlude
           </span>
           <a
-            href="#"
+            href="https://discord.gg/pbGXNRuWVX"
             target="_blank"
             rel="noopener noreferrer"
+            aria-label="Discord L2 Impure"
             className="text-white/50 transition hover:text-white"
           >
-            <TelegramIcon className="h-4 w-4" />
+            <DiscordIcon className="h-4 w-4" />
           </a>
         </div>
         <ul className="flex flex-col gap-3">

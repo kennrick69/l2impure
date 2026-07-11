@@ -8,12 +8,14 @@ type DownloadCard = {
   badge?: "recommended" | "torrent" | "patch";
   size: string;
   description: string;
-  href: string;
+  /** null = ainda não hospedado → card mostra "disponível no beta" */
+  href: string | null;
   mirrors?: { label: string; href: string }[];
 };
 
-// Substituir URLs reais (mirrors, magnet) quando os arquivos estiverem hospedados.
-// Para edit rápido: alterar este array.
+// Substituir por URLs reais (mirrors, magnet) quando os arquivos estiverem
+// hospedados (R2/Drive/MEGA + torrent). href: null renderiza o estado
+// "disponível no beta" com CTA de registro.
 const DOWNLOADS: DownloadCard[] = [
   {
     label: "Cliente Interlude — Pack Completo",
@@ -21,11 +23,7 @@ const DOWNLOADS: DownloadCard[] = [
     size: "~5.1 GB",
     description:
       "Cliente completo já com todos os arquivos do servidor. Ideal pra quem nunca jogou Interlude antes.",
-    href: "#",
-    mirrors: [
-      { label: "Mirror 1 (Mediafire)", href: "#" },
-      { label: "Mirror 2 (Google Drive)", href: "#" },
-    ],
+    href: null,
   },
   {
     label: "Patch L2 Impure",
@@ -33,8 +31,7 @@ const DOWNLOADS: DownloadCard[] = [
     size: "~120 MB",
     description:
       "Apenas os arquivos modificados — copie sobre um cliente Interlude oficial existente.",
-    href: "#",
-    mirrors: [{ label: "Mirror direto", href: "#" }],
+    href: null,
   },
   {
     label: "Torrent (magnet)",
@@ -42,7 +39,7 @@ const DOWNLOADS: DownloadCard[] = [
     size: "~5.1 GB",
     description:
       "Mais rápido se vários estão baixando. Use qBittorrent ou Transmission.",
-    href: "#",
+    href: null,
   },
 ];
 
@@ -102,6 +99,21 @@ export default function DownloadPage() {
                 Cliente Interlude com o patch L2 Impure já aplicado. Escolha
                 a opção que combina com sua conexão.
               </p>
+              <div className="mt-6 rounded-xl border border-l2-gold/30 bg-l2-gold/5 p-5">
+                <p className="font-display text-sm font-bold uppercase tracking-wider text-l2-gold">
+                  ⏳ Client disponível no beta aberto
+                </p>
+                <p className="mt-2 text-sm leading-relaxed text-white/75">
+                  O download é liberado junto com o beta aberto, semanas antes
+                  do launch de outubro.{" "}
+                  <Link href="/register" className="underline text-l2-gold">
+                    Crie sua conta grátis
+                  </Link>{" "}
+                  pra ser avisado por email no dia — e já garantir o título
+                  permanente de Fundador. Todo arquivo será publicado com
+                  checksum SHA-256 pra você conferir a integridade.
+                </p>
+              </div>
             </div>
 
             {/* Cards de download */}
@@ -228,18 +240,25 @@ function DownloadCardView({ card }: { card: DownloadCard }) {
         {card.label}
       </h3>
       <p className="mt-2 text-sm text-white/65">{card.description}</p>
-      <a
-        href={card.href}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-md px-5 py-2.5 font-display text-xs font-bold uppercase tracking-wider text-black transition hover:opacity-90"
-        style={{ background: "var(--l2-gold-gradient)" }}
-      >
-        <span>⬇</span>
-        <span>
-          {card.badge === "torrent" ? "Abrir magnet" : "Baixar agora"}
+      {card.href ? (
+        <a
+          href={card.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-md px-5 py-2.5 font-display text-xs font-bold uppercase tracking-wider text-black transition hover:opacity-90"
+          style={{ background: "var(--l2-gold-gradient)" }}
+        >
+          <span>⬇</span>
+          <span>
+            {card.badge === "torrent" ? "Abrir magnet" : "Baixar agora"}
+          </span>
+        </a>
+      ) : (
+        <span className="mt-5 inline-flex w-full cursor-default items-center justify-center gap-2 rounded-md border border-white/15 px-5 py-2.5 font-display text-xs font-bold uppercase tracking-wider text-white/50">
+          <span>⏳</span>
+          <span>Disponível no beta aberto</span>
         </span>
-      </a>
+      )}
       {card.mirrors && card.mirrors.length > 0 && (
         <div className="mt-4 border-t border-white/5 pt-4">
           <div className="mb-2 font-display text-[10px] font-semibold uppercase tracking-wider text-white/45">

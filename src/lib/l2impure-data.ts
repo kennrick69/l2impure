@@ -11,9 +11,10 @@ import type {
 
 export const siteConfig = {
   name: "L2 Impure",
-  tagline: "Servidor brasileiro de Lineage 2 Interlude",
+  tagline:
+    "O único servidor de Lineage 2 do mundo com Sistema de Híbridos — Interlude x10, brasileiro, sem pay-to-win",
   description:
-    "Servidor Interlude x10 com Auto-Farm, Olympiad e Eventos 24/7.",
+    "O único Lineage 2 do mundo onde você funde 2 classes em 1 personagem. Interlude x10 BR com Auto-Farm justo, Olympiad Dupla e eventos 24/7.",
   copyright: "© 2026 L2 Impure. Este servidor não é afiliado à NCSoft.",
   discordUrl: "https://discord.gg/pbGXNRuWVX",
 };
@@ -22,26 +23,27 @@ export const navItems: NavItem[] = [
   {
     label: "Sobre o Servidor",
     dropdown: [
-      { label: "Interlude x10 [NOVO]", href: "#sobre-x10" },
-      { label: "Rates e Features", href: "#features" },
+      { label: "Sistema de Híbridos [ÚNICO]", href: "/hibridos" },
+      { label: "Rates e Features", href: "/#features" },
+      { label: "Roadmap até o Launch", href: "/roadmap" },
+      { label: "Regras", href: "/regras" },
+      { label: "Sobre / Manifesto", href: "/sobre" },
     ],
   },
   {
     label: "Comunidade",
     dropdown: [
-      { label: "Fórum", href: "#", external: true },
-      { label: "Telegram", href: "#", external: true },
       {
         label: "Discord",
         href: "https://discord.gg/pbGXNRuWVX",
         external: true,
       },
-      { label: "Instagram", href: "#", external: true },
-      { label: "YouTube", href: "#", external: true },
+      { label: "FAQ", href: "/faq" },
+      { label: "Suporte", href: "/support" },
     ],
   },
+  { label: "Híbridos", href: "/hibridos" },
   { label: "Download", href: "/download" },
-  { label: "Promoções", href: "#promocoes" },
   { label: "Doações", href: "/dashboard" },
 ];
 
@@ -53,13 +55,14 @@ export const languages: Language[] = [
 
 export const heroContent = {
   title: "INTERLUDE X10",
-  subtitle: "EM BREVE",
+  subtitle: "SISTEMA DE HÍBRIDOS",
   features: [
-    "⚔️ BETA ABERTO — DATA A DEFINIR",
-    "🔥 AUTO-FARM, OLYMPIAD, TORNEIOS 1V1",
+    "🧬 FUNDA 2 CLASSES EM 1 PERSONAGEM — ÚNICO NO MUNDO",
+    "⚔️ LANÇAMENTO: OUTUBRO DE 2026 · PRÉ-REGISTRO ABERTO",
+    "🔥 AUTO-FARM JUSTO · OLYMPIAD DUPLA · SEM PAY-TO-WIN",
   ],
   ctaTitle: "JOGAR DE GRAÇA",
-  ctaSubtitle: "ARQUIVOS E REGISTRO",
+  ctaSubtitle: "GARANTA O TÍTULO DE FUNDADOR",
 };
 
 export const serverCards: ServerCard[] = [
@@ -84,163 +87,140 @@ export const serverCards: ServerCard[] = [
 
 export const newsItems: NewsItem[] = [
   {
-    icon: "🔥",
-    html: "<strong>L2IMPURE.COM</strong> – Servidor brasileiro de Lineage 2 Interlude x10 – Em Breve!",
+    icon: "🧬",
+    html: '<strong>SISTEMA DE HÍBRIDOS</strong> — o único L2 do mundo onde você funde 2 classes em 1 personagem. <a href="/hibridos" class="underline text-[color:var(--l2-text-gold)]">Entenda como funciona</a>.',
+  },
+  {
+    icon: "🏅",
+    html: "<strong>FUNDADORES:</strong> toda conta criada antes do launch ganha título permanente exclusivo. Nunca mais disponível depois.",
   },
   {
     icon: "⚔️",
-    html: "Beta aberto em breve — registre sua conta e fique pronto pro lançamento.",
+    html: 'Lançamento previsto pra <strong>outubro de 2026</strong> — acompanhe o <a href="/roadmap" class="underline text-[color:var(--l2-text-gold)]">roadmap público</a>.',
   },
-  { icon: "💎", html: "Auto-Farm integrado direto no cliente." },
-  { icon: "🏆", html: "Olympiad clássica com torneios 1v1 semanais." },
-  { icon: "🎮", html: "Eventos 24/7 — DeathMatch, TvT e CTF automáticos." },
+  { icon: "💎", html: "Auto-Farm integrado no cliente — farm justo e igual pra todos, de graça." },
+  { icon: "🏆", html: "Olympiad Dupla: competição Normal e Híbrida separadas." },
   {
-    icon: "😊",
-    html: 'Confira as informações e <a href="#" class="underline text-[color:var(--l2-text-gold)]">junte-se à comunidade!</a>',
+    icon: "🦄",
+    html: 'Confira as informações e <a href="https://discord.gg/pbGXNRuWVX" target="_blank" rel="noopener noreferrer" class="underline text-[color:var(--l2-text-gold)]">junte-se à comunidade no Discord!</a>',
   },
 ];
 
 export const featureCards: FeatureCard[] = [
   {
-    icon: "⚔️",
-    title: "Rates x10",
-    description: "XP, SP, Drop e Adena x10. Spoil x10. Raids x5.",
+    icon: "🧬",
+    title: "Sistema de Híbridos",
+    description:
+      "Combine 2 personagens level 78 num Híbrido com as skills das duas classes. Único no mundo — e o primeiro Híbrido é grátis.",
     highlight: true,
   },
   {
+    icon: "⚔️",
+    title: "Rates x10",
+    description: "XP, SP, Drop e Adena x10. Spoil x10. Raids x5.",
+  },
+  {
     icon: "🤖",
-    title: "Auto-Farm",
-    description: "Sistema de farm automático integrado no cliente.",
+    title: "Auto-Farm Justo",
+    description:
+      "Farm automático integrado no cliente, grátis pra todos. Aqui ninguém precisa de bot — e bot de verdade é ban permanente.",
   },
   {
     icon: "🏆",
-    title: "Olympiad",
-    description: "Torneios 1v1 semanais com prêmios in-game.",
+    title: "Olympiad Dupla",
+    description:
+      "Duas Olympiads separadas: a Normal (classes clássicas) e a Híbrida. Torneios 1v1 semanais com prêmios in-game.",
   },
   {
     icon: "🎮",
-    title: "Eventos 24/7",
-    description: "DeathMatch, TvT, CTF e muito mais!",
-  },
-  {
-    icon: "🔄",
-    title: "Rebirth System",
-    description: "Level 81 → Rebirth com +3 stats. Máximo 3x!",
+    title: "Eventos 24/7 + Rebirth",
+    description:
+      "DeathMatch, TvT e CTF automáticos. No endgame, Rebirth no level 81 com +3 stats (máximo 3x).",
   },
   {
     icon: "🇧🇷",
-    title: "Comunidade BR",
-    description: "Suporte em português, Discord ativo e staff brasileira.",
+    title: "BR de verdade, sem P2W",
+    description:
+      "Ping ~30ms, staff brasileira presente e loja só de cosméticos. Poder aqui não se compra — se conquista.",
   },
 ];
 
+// Pré-launch: rows vazias fazem o StatisticsSection renderizar o estado
+// "seja o primeiro nome aqui". Após o launch, plugar nos rankings reais
+// da bridge (GET /rankings/pvp|pk|clans).
 export const statisticsServers: StatisticsServer[] = [
   {
     id: "x10-new",
     label: "INTERLUDE X10 (NOVO)",
     cards: [
-      {
-        title: "TOP-5 CLÃS",
-        valueLabel: "Reputação",
-        rows: [
-          { rank: 1, name: "Freedom", value: 3475 },
-          { rank: 2, name: "Syndicate", clanDot: "blue", value: 1350 },
-          { rank: 3, name: "Warriors", value: 1250 },
-          { rank: 4, name: "DEFAYUMOS", clanDot: "purple", value: 365 },
-          { rank: 5, name: "PERECHIN", value: 230 },
-        ],
-      },
-      {
-        title: "TOP-5 PVP",
-        valueLabel: "PVP",
-        rows: [
-          { rank: 1, name: "DenteL", clanDot: "blue", value: 145 },
-          { rank: 2, name: "(*)", value: 137 },
-          { rank: 3, name: "4EPTOBKA", value: 132 },
-          { rank: 4, name: "KPAKEH", clanDot: "red", value: 119 },
-          { rank: 5, name: "#host", clanDot: "purple", value: 118 },
-        ],
-      },
-      {
-        title: "TOP-5 PK",
-        valueLabel: "PK",
-        rows: [
-          { rank: 1, name: "4EPTOBKA", value: 24 },
-          { rank: 2, name: "#@cxz@#d", value: 21 },
-          { rank: 3, name: "YavUZ", value: 21 },
-          { rank: 4, name: "Hy6oTPAX", value: 16 },
-          { rank: 5, name: "durable", value: 15 },
-        ],
-      },
+      { title: "TOP-5 CLÃS", valueLabel: "Reputação", rows: [] },
+      { title: "TOP-5 PVP", valueLabel: "PVP", rows: [] },
+      { title: "TOP-5 PK", valueLabel: "PK", rows: [] },
     ],
   },
 ];
 
 export const joinSection = {
-  subtitle: "FAÇA PARTE",
+  subtitle: "SEJA FUNDADOR",
   title: "DA L2 IMPURE",
-  text: "Todos os dias, milhares de jogadores em todo o mundo jogam sua classe favorita do Lineage 2 no L2 Impure - sozinhos, em um grupo ou com um clã. Junte-se a eles para obter uma tonelada de emoções do jogo.",
-  cta: "COMECE A JOGAR",
+  text: "O servidor abre em outubro — e quem chegar antes entra pra história. Toda conta criada antes do launch ganha o título permanente de Fundador, exclusivo e nunca mais disponível. Crie sua conta, entre no Discord e garanta seu lugar no dia 1.",
+  cta: "CRIAR CONTA GRÁTIS",
 };
 
 export const footerColumns: FooterColumn[] = [
   {
     heading: "Servidor",
     links: [
-      { label: "Sobre", href: "#" },
+      { label: "Sobre / Manifesto", href: "/sobre" },
+      { label: "Sistema de Híbridos", href: "/hibridos" },
+      { label: "Roadmap", href: "/roadmap" },
       { label: "Download", href: "/download" },
-      { label: "Regras", href: "#" },
+      { label: "Regras", href: "/regras" },
     ],
   },
   {
     heading: "Comunidade",
     links: [
       { label: "Discord", href: "https://discord.gg/pbGXNRuWVX" },
-      { label: "Fórum", href: "#" },
-      { label: "Instagram", href: "#" },
+      { label: "Criar conta", href: "/register" },
+      { label: "Rankings", href: "/rankings" },
     ],
   },
   {
     heading: "Suporte",
     links: [
-      { label: "FAQ", href: "#" },
-      { label: "Contato", href: "#" },
-      { label: "Tickets", href: "#" },
+      { label: "FAQ", href: "/faq" },
+      { label: "Contato", href: "mailto:admin@l2impure.com" },
+      { label: "Tickets (Discord)", href: "https://discord.gg/pbGXNRuWVX" },
     ],
   },
 ];
 
 export const footerLegal = [
-  { label: "Termos de Serviço", href: "#" },
-  { label: "Política de Privacidade", href: "#" },
+  { label: "Termos de Serviço", href: "/termos" },
+  { label: "Política de Privacidade", href: "/privacidade" },
 ];
 
+// Client ainda não hospedado — todos os blocos levam pra página /download,
+// que explica o status e captura o registro. Quando os mirrors existirem,
+// voltar a apontar os links diretos aqui.
 export const downloadBlocks: DownloadBlock[] = [
   {
-    title: "ATUALIZADOR",
-    subtitle: "AUTO-BAIXAR",
-    links: [
-      { label: "DO SITE", href: "#", icon: "📁" },
-      { label: "DE GOOGLE", href: "#", icon: "☁️" },
-      { label: "DE MEGA", href: "#", icon: "📦" },
-    ],
-  },
-  {
     title: "CLIENTE",
-    subtitle: "CLIENTE + PATCH",
-    links: [
-      { label: "DO SITE", href: "#", icon: "📁" },
-      { label: "DE GOOGLE", href: "#", icon: "☁️" },
-      { label: "DE MEGA", href: "#", icon: "📦" },
-    ],
+    subtitle: "DISPONÍVEL NO BETA",
+    links: [{ label: "VER PÁGINA DE DOWNLOAD", href: "/download", icon: "📁" }],
   },
   {
     title: "PATCH",
-    subtitle: "MOVER PARA CLIENTE",
+    subtitle: "DISPONÍVEL NO BETA",
+    links: [{ label: "VER PÁGINA DE DOWNLOAD", href: "/download", icon: "📦" }],
+  },
+  {
+    title: "SEJA AVISADO",
+    subtitle: "REGISTRE-SE GRÁTIS",
     links: [
-      { label: "DO SITE", href: "#", icon: "📁" },
-      { label: "DE GOOGLE", href: "#", icon: "☁️" },
-      { label: "DE MEGA", href: "#", icon: "📦" },
+      { label: "CRIAR CONTA", href: "/register", icon: "🏅" },
+      { label: "ENTRAR NO DISCORD", href: "https://discord.gg/pbGXNRuWVX", icon: "🦄" },
     ],
   },
 ];
