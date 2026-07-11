@@ -16,6 +16,17 @@ import type { FastifyInstance } from "fastify";
 import { pool } from "../db.js";
 import { env } from "../env.js";
 import { authenticate } from "../auth.js";
+import { getVoteSiteConfig } from "../vote-config.js";
+
+/**
+ * true = site desabilitado no painel admin → callback deve ser recusado.
+ * Config desconhecida (site fora do ar / slug não cadastrado) = fail-open,
+ * ver vote-config.ts.
+ */
+async function siteDisabled(slug: string): Promise<boolean> {
+  const cfg = await getVoteSiteConfig(slug);
+  return cfg !== null && !cfg.active;
+}
 
 const L2TOP_CO_WHITELIST = (process.env.L2TOP_CO_WHITELIST_IPS || "")
   .split(",")
@@ -88,6 +99,19 @@ export async function voteRoutes(app: FastifyInstance) {
         return;
       }
 
+      // Painel admin controla ativação (tabela vote_sites no site)
+      if (await siteDisabled("hopzone")) {
+        await logCallback(
+          "hopzone",
+          JSON.stringify(req.query),
+          ip,
+          "site_disabled",
+        );
+        req.log.warn({ charId }, "[vote] hopzone desativado no painel admin");
+        reply.code(403).send({ error: "site_disabled" });
+        return;
+      }
+
       try {
         await pool.query(
           "INSERT INTO vote_pending (site, char_id, ip, claimed) VALUES (?, ?, ?, 0)",
@@ -138,6 +162,14 @@ export async function voteRoutes(app: FastifyInstance) {
     const voted = body.voted ? parseInt(body.voted, 10) : 0;
     if (!Number.isFinite(charId) || voted !== 1) {
       reply.code(400).send({ error: "invalid_payload" });
+      return;
+    }
+
+    // Painel admin controla ativação (tabela vote_sites no site)
+    if (await siteDisabled("l2topco")) {
+      await logCallback("l2topco", JSON.stringify(body), ip, "site_disabled");
+      req.log.warn({ charId }, "[vote] l2topco desativado no painel admin");
+      reply.code(403).send({ error: "site_disabled" });
       return;
     }
 

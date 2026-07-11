@@ -16,6 +16,7 @@
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate deploy",
+    "db:seed:vote-sites": "node scripts/seed-vote-sites.mjs",
     "db:studio": "prisma studio"
   },
   "dependencies": {

@@ -34,6 +34,12 @@ const Schema = z.object({
   // Marketing offset somado ao COUNT real de players em /status.
   // Permite valores negativos (esconder bots, etc). Default 0 = sem offset.
   PLAYER_COUNT_OFFSET: z.coerce.number().int().default(0),
+
+  // Vote sites — config lida do site (tabela vote_sites no Postgres)
+  // via GET {SITE_BASE_URL}/api/vote-sites/{slug}. Ver vote-config.ts.
+  SITE_BASE_URL: z.string().default("https://www.l2impure.com"),
+  VOTE_CONFIG_TTL_MS: z.coerce.number().int().positive().default(300000),
+  VOTE_CONFIG_FETCH_TIMEOUT_MS: z.coerce.number().int().positive().default(5000),
 });
 
 const parsed = Schema.safeParse(process.env);
