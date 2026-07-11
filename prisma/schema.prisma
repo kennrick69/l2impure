@@ -219,3 +219,26 @@ model AuditLog {
   @@index([action])
   @@map("audit_log")
 }
+
+/// Sites de voto (rankings) — HopZone, L2Top.CO, MMOTop, etc.
+/// Editável pelo admin em /admin/marketing/vote-sites, consumido pela
+/// bridge via GET /api/vote-sites/[slug] (cache 5min). JOs liga/desliga
+/// cada ranking e cadastra o server ID sem mexer em código nem restart.
+model VoteSite {
+  id                Int      @id @default(autoincrement())
+  slug              String   @unique @db.VarChar(32)
+  displayName       String   @map("display_name") @db.VarChar(64)
+  serverId          String?  @map("server_id") @db.VarChar(64)
+  callbackUrl       String   @map("callback_url") @db.VarChar(255)
+  callbackMethod    String   @default("GET") @map("callback_method") @db.VarChar(8)
+  active            Boolean  @default(false)
+  cooldownHours     Int      @default(12) @map("cooldown_hours")
+  rewardCoins       Int      @default(1) @map("reward_coins")
+  rewardDescription String?  @map("reward_description") @db.VarChar(255)
+  notes             String?
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@index([active])
+  @@map("vote_sites")
+}

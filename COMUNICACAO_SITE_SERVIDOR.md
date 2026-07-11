@@ -113,28 +113,65 @@ serviço externo, precisa de conta do JOs).*
 
 ## 6. Riscos residuais / pendências
 
-1. **CRÍTICO — MySQL 3306 aberto pra internet na VPS** (verificado
-   2026-07-10: conexão TCP aceita de fora). A bridge usa localhost; quem
-   precisa disso é só a **API legada** (`l2impure-api-production.up.railway.app`),
-   que o site atual NÃO usa mais. Plano: desligar a API legada no
-   Railway → `ufw deny 3306` (ou iptables) na VPS. L2J DBs expostos são
-   alvo de bruteforce constante no nicho.
-2. **API legada v1.2.0 viva em paralelo** — responde stats reais e tem
-   rotas de auth próprias (tabela `web_accounts`). Superfície de ataque
-   e fonte de dado divergente. Descomissionar.
-3. **Offset de players** (ver §4) — decisão de produto antes do launch.
-4. **Porta 2106 (login) e 9014 abertas** — 2106 é necessária pro
-   cliente do jogo; 9014 conferir o que é e fechar se não for do jogo.
+> Atualizado 2026-07-11 (rodada de QA interno via SSH na VPS).
+
+1. ~~CRÍTICO — MySQL 3306 aberto pra internet~~ **FECHADO 2026-07-11**:
+   `bind-address = 127.0.0.1` em `/etc/mysql/mysql.conf.d/mysqld.cnf`
+   (backup `.bak-20260711`) **e** regra `ufw allow 3306` removida
+   (backup `/root/iptables.pre-fw-20260711.bak`). Validado de fora:
+   conexão TCP a 76.13.170.153:3306 não completa. Detalhe importante:
+   `mysql.user` não tem NENHUM user com host `%` — ou seja, nem a API
+   legada conseguia usar 3306 remoto com credencial válida.
+2. **API legada v1.2.0 ainda no ar no Railway** (zumbi) — responde 200
+   na raiz, mas o MySQL dela ficou inacessível com o item 1 (era o único
+   caminho). Desligar o serviço no Railway quando tiver login (limpeza,
+   não urgência de segurança).
+3. **Offset de players = 55** (ver §4; `PLAYER_COUNT_OFFSET=55` no
+   `.env` da bridge, `playersRaw:0` real) — decisão de produto antes do
+   launch, segue com o JOs.
+4. ~~Porta 9014 conferir~~ **IDENTIFICADA E FECHADA 2026-07-11**: 9014 é
+   o canal loginserver ← gameserver (registro de GS). O gameserver
+   conecta via `127.0.0.1:9014` (LoginHost no server.properties), então
+   o acesso público foi removido do ufw. Validado: gameserver
+   re-registra ("Registered as server: [1] Bartz") com a porta fechada
+   pra fora. Públicas restantes: só 22, 2106, 7777.
 5. **Real-time de verdade (SSE/WebSocket)** — hoje é polling/cache 30s.
    Suficiente pré-launch; se quiser CCU ao vivo pós-launch, adicionar
    SSE lendo o mesmo `getPublicServerStatus()`.
-6. **Secrets vazados em chat (2026-04-25)** — JWT_SECRET etc. ainda
-   pendentes de rotação — `bash scripts/rotate-secrets.sh` (30s) +
-   SMTP/reCAPTCHA manuais (ver o próprio script).
+6. **Secrets vazados em chat (2026-04-25)** — pendentes de rotação;
+   exige Railway CLI logado (não disponível pro agente). 30s do JOs:
+   `bash scripts/rotate-secrets.sh` + SMTP/reCAPTCHA manuais.
 7. **`chars` total no `/api/status`** — exigiria endpoint novo na bridge
    (`SELECT COUNT(*) FROM characters`). Hoje o endpoint expõe `contas`
    (PG) + `players` online; total de chars fica pra quando a bridge
    ganhar release nova.
+
+### 6.1 Incidentes encontrados e corrigidos no QA de 2026-07-11
+
+- **GameServer travado há semanas** (JVM não respondia nem a jstack,
+  accept-queue de 7777 lotada — site mostrava `online:false`). Reiniciado
+  via systemd; boot atual com **0 SEVERE** e 7777 aceitando conexão.
+- **Auth do MySQL quebrada pros L2J**: `root@localhost` é `auth_socket`
+  (só socket unix) e o user `l2jserver` do loginserver **não existia**.
+  Login/game viviam de conexões antigas de pool; qualquer reconexão
+  falhava com Access denied. Fix: user `l2jserver`@localhost/127.0.0.1
+  criado (`mysql_native_password`, senha a mesma do
+  `login/config/loginserver.properties`), `GRANT ALL ON l2jdb.*`;
+  gameserver apontado pro mesmo user (fim do `root` sem senha no
+  server.properties, backup `.bak-20260711`). Ambos reiniciados, boot
+  limpo, contas/chars legíveis.
+- **Deploy acidental de bridge antiga** (14:33 UTC, build a partir do
+  `src/` desatualizado da VPS): rotas vote/rankings/admin/icons sumiram
+  de produção (404). Restaurado com build do fonte canônico
+  (`bridge/` deste repo, 14 rotas registradas); dist quebrado preservado
+  em `/root/l2j-bridge/dist.broken-20260711/`. **Regra: NUNCA buildar da
+  VPS; sempre buildar do repo e subir o dist.**
+- **Forja de voto L2Top.CO possível**: `L2TOP_CO_WHITELIST_IPS` não
+  existia no `.env` da bridge → whitelist vazia → callback aceitava
+  qualquer IP (validado: POST forjado retornou "OK" e gravou
+  vote_pending). Fix: whitelist placeholder-bloqueante (`127.0.0.2`) —
+  agora tudo responde 403. **Quando o JOs cadastrar no l2top.co, trocar
+  pelo IP de callback real que eles informarem no painel.**
 
 ## 7. Latência medida (2026-07-10, de WSL BR, 5 amostras)
 

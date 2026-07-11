@@ -53,8 +53,11 @@ check "GET bridge /health" "200" "$CODE"
 # 7. Callbacks de voto respondem com semântica certa (sem 500)
 CODE=$(curl -s -o /dev/null -w "%{http_code}" -m 15 "https://bridge.l2impure.com/vote/callback/hopzone")
 check "vote hopzone sem params (espera 400)" "400" "$CODE"
+# Whitelist de IP roda ANTES da validação de payload → IP não-whitelisted = 403.
+# (Quando o JOs cadastrar no l2top.co e colocar o IP real na whitelist, callbacks
+#  legítimos passam; qualquer outro IP continua 403 — este check continua válido.)
 CODE=$(curl -s -o /dev/null -w "%{http_code}" -m 15 -X POST -H "Content-Type: application/x-www-form-urlencoded" -d "" "https://bridge.l2impure.com/vote/callback/l2topco")
-check "vote l2topco payload inválido (espera 400)" "400" "$CODE"
+check "vote l2topco IP não-whitelisted (espera 403)" "403" "$CODE"
 
 echo ""
 if [ "$FAIL" = "0" ]; then
