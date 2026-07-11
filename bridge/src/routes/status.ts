@@ -66,9 +66,12 @@ export async function statusRoutes(app: FastifyInstance) {
       );
 
       const online = gameServerReachable && loginServerReachable && dbOk;
+      // Offset de marketing só se aplica com servidor ONLINE. Servidor
+      // caído com "55 online" é detectado por qualquer jogador em minutos
+      // e queima a credibilidade do projeto (risco #1 do relatório).
       reply.send({
         online,
-        players: players + env.PLAYER_COUNT_OFFSET,
+        players: online ? players + env.PLAYER_COUNT_OFFSET : 0,
         playersRaw: players,
         dbOk,
         gameServerReachable,

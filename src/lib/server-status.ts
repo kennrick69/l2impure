@@ -27,6 +27,7 @@ export async function getServerStatus(): Promise<ServerStatus | null> {
       null,
     );
     if (
+      status.online &&
       typeof override === "number" &&
       typeof status.playersRaw === "number"
     ) {
@@ -70,11 +71,17 @@ export async function getPublicServerStatus(): Promise<PublicServerStatus> {
   const ts = typeof status.timestamp === "number" ? status.timestamp : null;
   const ageSeconds =
     ts !== null ? Math.max(0, Math.round((Date.now() - ts) / 1000)) : null;
+  const stale = ageSeconds !== null ? ageSeconds > STALE_AFTER_SECONDS : false;
+  // Snapshot stale = bridge inalcançável há >90s. Não dá pra afirmar que
+  // o servidor está online com dado velho — pro público, stale = offline.
+  // Offline (real ou stale) NUNCA mostra players > 0 (bug do "55 online
+  // com servidor desligado").
+  const online = status.online && !stale;
   return {
-    online: status.online,
-    players: status.players,
+    online,
+    players: online ? status.players : 0,
     timestamp: ts,
     ageSeconds,
-    stale: ageSeconds !== null ? ageSeconds > STALE_AFTER_SECONDS : false,
+    stale,
   };
 }
