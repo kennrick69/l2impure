@@ -30,3 +30,6 @@ npm-debug.log*
 
 # Vote properties contains HMAC_SECRET
 server/impure-classes/vote.properties
+
+# secrets pendentes de colar no Railway (nunca commitar)
+SECRETS_ROTACAO.md
