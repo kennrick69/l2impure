@@ -71,8 +71,9 @@ export const serverCards: ServerCard[] = [
     name: "INTERLUDE (NOVO)",
     description: "Servidor brasileiro",
     status: "coming-soon",
-    statusText: "EM BREVE",
+    statusText: "OUTUBRO 2026",
     accent: "gold",
+    href: "/roadmap",
   },
   {
     rate: "DISCORD",

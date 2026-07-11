@@ -27,9 +27,9 @@ function ServerList() {
         {serverCards.map((s) => (
           <a
             key={s.name}
-            href={s.href || "#"}
-            target={s.href ? "_blank" : undefined}
-            rel={s.href ? "noopener noreferrer" : undefined}
+            href={s.href || "/roadmap"}
+            target={s.href?.startsWith("http") ? "_blank" : undefined}
+            rel={s.href?.startsWith("http") ? "noopener noreferrer" : undefined}
             className={`group flex items-center justify-between gap-4 rounded-xl border bg-[color:var(--l2-bg-card)] px-5 py-4 transition hover:bg-[color:var(--l2-bg-card-hover)] ${
               s.accent === "gold"
                 ? "border-[color:var(--l2-border-gold)]"
