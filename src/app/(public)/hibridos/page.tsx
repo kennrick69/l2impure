@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ContentPage, ContentCard } from "@/components/ContentPage";
 
 export const metadata: Metadata = {
-  title: "Sistema de Híbridos — o único no mundo | L2 Impure",
+  title: "Sistema de Híbridos — o único no mundo",
   description:
     "Funda 2 personagens level 78 num Híbrido com as skills das duas classes. Nenhum outro servidor de Lineage 2 no mundo tem isso. Entenda como funciona.",
   alternates: { canonical: "/hibridos" },

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ContentPage, ContentCard } from "@/components/ContentPage";
 
 export const metadata: Metadata = {
-  title: "Termos de Serviço | L2 Impure",
+  title: "Termos de Serviço",
   description:
     "Termos de uso do L2 Impure: conta, conduta, doações, disponibilidade do serviço e propriedade intelectual.",
   alternates: { canonical: "/termos" },

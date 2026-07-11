@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ContentPage, ContentCard } from "@/components/ContentPage";
 
 export const metadata: Metadata = {
-  title: "Roadmap até o Launch | L2 Impure",
+  title: "Roadmap até o Launch",
   description:
     "Roadmap público do L2 Impure: Sistema de Híbridos, beta fechado, beta aberto e launch previsto pra outubro de 2026. Acompanhe cada marco.",
   alternates: { canonical: "/roadmap" },

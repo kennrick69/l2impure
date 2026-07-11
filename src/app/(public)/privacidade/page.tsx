@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { ContentPage, ContentCard } from "@/components/ContentPage";
 
 export const metadata: Metadata = {
-  title: "Política de Privacidade | L2 Impure",
+  title: "Política de Privacidade",
   description:
     "Como o L2 Impure trata seus dados: o que coletamos, pra que usamos, com quem (não) compartilhamos e seus direitos sob a LGPD.",
   alternates: { canonical: "/privacidade" },

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { ContentPage, ContentCard } from "@/components/ContentPage";
 
 export const metadata: Metadata = {
-  title: "Regras do Servidor | L2 Impure",
+  title: "Regras do Servidor",
   description:
     "Regras públicas do L2 Impure: política anti-bot, conduta de staff, rates como contrato e o que dá ban. Curtas, claras e iguais pra todo mundo.",
   alternates: { canonical: "/regras" },

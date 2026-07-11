@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ContentPage, ContentCard } from "@/components/ContentPage";
 
 export const metadata: Metadata = {
-  title: "Sobre o L2 Impure — Manifesto | L2 Impure",
+  title: "Sobre o L2 Impure — Manifesto",
   description:
     "Quem faz o L2 Impure, por que ele existe e as promessas invioláveis: retail Interlude + Híbridos opcionais, sem P2W, staff transparente e infraestrutura séria.",
   alternates: { canonical: "/sobre" },

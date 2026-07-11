@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ContentPage, ContentCard } from "@/components/ContentPage";
 
 export const metadata: Metadata = {
-  title: "FAQ — Perguntas Frequentes | L2 Impure",
+  title: "FAQ — Perguntas Frequentes",
   description:
     "Chronicle, rates, Sistema de Híbridos, política de wipe, anti-bot e cash shop: as respostas diretas que todo jogador de Lineage 2 quer antes de entrar.",
   alternates: { canonical: "/faq" },
