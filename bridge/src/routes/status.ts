@@ -66,13 +66,14 @@ export async function statusRoutes(app: FastifyInstance) {
       );
 
       const online = gameServerReachable && loginServerReachable && dbOk;
-      // Offset de marketing só se aplica com servidor ONLINE. Servidor
-      // caído com "55 online" é detectado por qualquer jogador em minutos
-      // e queima a credibilidade do projeto (risco #1 do relatório).
+      // PLAYER_COUNT_OFFSET é fake progressivo de marketing pré-launch —
+      // sempre somado, mesmo com servidor offline ou com query falhando.
+      // Decisão explícita do dono (2026-07-11). Ver RELATORIO_FINAL_100_v2.md.
+      const rawPlayers = typeof players === "number" ? players : 0;
       reply.send({
         online,
-        players: online ? players + env.PLAYER_COUNT_OFFSET : 0,
-        playersRaw: players,
+        players: rawPlayers + env.PLAYER_COUNT_OFFSET,
+        playersRaw: rawPlayers,
         dbOk,
         gameServerReachable,
         loginServerReachable,

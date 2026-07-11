@@ -59,10 +59,14 @@ export type PublicServerStatus = {
  */
 export async function getPublicServerStatus(): Promise<PublicServerStatus> {
   const status = await getServerStatus();
+  // Fake progressivo de marketing pré-launch (decisão do dono, 2026-07-11).
+  // Sempre mostra players ≥ FAKE_MIN mesmo com bridge inalcançável ou servidor
+  // caído — o número serve pra atrair curiosidade, não pra representar CCU real.
+  const FAKE_MIN = 55;
   if (!status) {
     return {
       online: false,
-      players: 0,
+      players: FAKE_MIN,
       timestamp: null,
       ageSeconds: null,
       stale: true,
@@ -72,14 +76,11 @@ export async function getPublicServerStatus(): Promise<PublicServerStatus> {
   const ageSeconds =
     ts !== null ? Math.max(0, Math.round((Date.now() - ts) / 1000)) : null;
   const stale = ageSeconds !== null ? ageSeconds > STALE_AFTER_SECONDS : false;
-  // Snapshot stale = bridge inalcançável há >90s. Não dá pra afirmar que
-  // o servidor está online com dado velho — pro público, stale = offline.
-  // Offline (real ou stale) NUNCA mostra players > 0 (bug do "55 online
-  // com servidor desligado").
   const online = status.online && !stale;
+  const rawPlayers = typeof status.players === "number" ? status.players : 0;
   return {
     online,
-    players: online ? status.players : 0,
+    players: Math.max(rawPlayers, FAKE_MIN),
     timestamp: ts,
     ageSeconds,
     stale,
