@@ -119,6 +119,15 @@ cd /root/l2j-bridge && pm2 restart l2impure-bridge --update-env
 #               Vote URL (no site) = link gtop100 + "?vote=1&pingUsername=<charId>"
 ```
 
+## Smoke pós-deploy (commit ffb5ead, Railway)
+
+- `GET /api/vote-sites/mmotop` → `{"slug":"mmotop","active":false,...}` ✅
+- `GET /api/status` → `{online:true, players:55, contas:5}` ✅ (fake 55 intacto)
+- home 200, `/admin/gm-console` 307 (redirect login — esperado sem sessão) ✅
+- Bridge health 200, regressão HopZone/L2Top.CO OK
+
+**Nota migration:** `20260711100000_vote_sites_callbacks_ready` só faz UPDATE das notes (cosmética, zero risco de schema). Não tenho DATABASE_URL local pra confirmar aplicação — se as notes dos 3 sites não aparecerem atualizadas no painel, rodar uma vez: `railway run npm run db:migrate` (ou o fluxo usual de migrations do Railway).
+
 ## Pendências (nenhuma P0)
 
 - **P2** Ativação dos 3 rankings novos = tarefa comercial do JOs (secrets só existem após cadastro).
