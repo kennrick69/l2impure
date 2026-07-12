@@ -40,6 +40,40 @@ export const GM_COMMAND_DEFS = {
       })
       .strict(),
   },
+  announcement_broadcast: {
+    label: "Anúncio (site + in-game)",
+    description:
+      "Publica no site E faz shout in-game (o insert em announcements é feito pelo site; o gameserver só faz o shout)",
+    schema: z
+      .object({
+        title: z.string().trim().min(1).max(80),
+        message: z.string().trim().min(1).max(500),
+        persistOnSite: z.boolean().default(true),
+      })
+      .strict(),
+  },
+  ban_account: {
+    label: "Banir conta",
+    description:
+      "Desconecta sessão ativa + seta access_level negativo na accounts (bloqueia login)",
+    schema: z
+      .object({
+        accountLogin: z.string().trim().min(3).max(48),
+        reason: z.string().trim().min(1).max(200),
+        // até 10 anos; omitido = permanente
+        durationHours: z.coerce.number().int().min(1).max(87600).optional(),
+      })
+      .strict(),
+  },
+  unban_account: {
+    label: "Desbanir conta",
+    description: "Restaura access_level = 0 (volta a poder logar)",
+    schema: z
+      .object({
+        accountLogin: z.string().trim().min(3).max(48),
+      })
+      .strict(),
+  },
 } as const;
 
 export type GmCommandType = keyof typeof GM_COMMAND_DEFS;

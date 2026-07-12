@@ -15,6 +15,8 @@ const NAV_GROUPS = [
       { href: "/admin/announcements", icon: "📣", label: "Anúncios" },
       { href: "/admin/game-master", icon: "⚔️", label: "Game master" },
       { href: "/admin/gm-console", icon: "🕹️", label: "Console GM (fila)" },
+      { href: "/admin/moderation/bans", icon: "🚫", label: "Moderação/Bans" },
+      { href: "/admin/scheduled-broadcasts", icon: "⏰", label: "Broadcasts agendados" },
       { href: "/admin/online", icon: "🟢", label: "Jogadores online" },
       { href: "/admin/events/config", icon: "📅", label: "Eventos (config)" },
       { href: "/admin/characters", icon: "🧝", label: "Personagens" },

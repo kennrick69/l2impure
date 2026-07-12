@@ -5,6 +5,9 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -21,6 +24,7 @@ import javax.crypto.spec.SecretKeySpec;
 
 import net.sf.l2j.commons.config.ExProperties;
 import net.sf.l2j.commons.logging.CLogger;
+import net.sf.l2j.commons.pool.ConnectionPool;
 import net.sf.l2j.gameserver.data.ItemTable;
 import net.sf.l2j.gameserver.model.World;
 import net.sf.l2j.gameserver.model.actor.Player;
@@ -48,6 +52,9 @@ public final class GmCommandPoller implements Runnable {
 
     private static final int MAX_GIVE_COUNT = 1_000_000;
     private static final int MAX_BROADCAST_LEN = 500;
+    /** Convenção aCis pra ban permanente de conta (access_level negativo = login bloqueado). */
+    private static final int BAN_ACCESS_LEVEL = -100;
+    private static final long MAX_BAN_HOURS = 87_600; // 10 anos
 
     private String _bridgeUrl = "http://127.0.0.1:8080";
     private String _secret = "";
@@ -177,13 +184,14 @@ public final class GmCommandPoller implements Runnable {
             final long id = asLong(cmd.get("id"), -1);
             final String type = asString(cmd.get("type"));
             final Object payload = cmd.get("payload");
+            final String requestedBy = asString(cmd.get("requestedBy"));
             if (id <= 0 || type == null)
                 continue;
 
             boolean ok;
             String message;
             try {
-                final String[] result = execute(type, payload instanceof Map ? (Map<?, ?>) payload : null);
+                final String[] result = execute(type, payload instanceof Map ? (Map<?, ?>) payload : null, requestedBy);
                 ok = "1".equals(result[0]);
                 message = result[1];
             } catch (Throwable t) {
@@ -196,7 +204,7 @@ public final class GmCommandPoller implements Runnable {
     }
 
     /** @return [0]="1"|"0" (ok), [1]=mensagem */
-    private String[] execute(String type, Map<?, ?> payload) {
+    private String[] execute(String type, Map<?, ?> payload, String requestedBy) {
         switch (type) {
             case "broadcast": {
                 String msg = payload == null ? null : asString(payload.get("message"));
@@ -243,9 +251,146 @@ public final class GmCommandPoller implements Runnable {
                 LOGGER.info("GmCommandPoller: gave " + count + "x item " + itemId + " to " + player.getName());
                 return okMsg(count + "x item " + itemId + " entregue a " + player.getName());
             }
+            case "announcement_broadcast": {
+                if (payload == null)
+                    return fail("announcement_broadcast: payload vazio");
+                final String title = asString(payload.get("title"));
+                final String message = asString(payload.get("message"));
+                if (title == null || title.isBlank())
+                    return fail("announcement_broadcast: payload.title vazio");
+                if (message == null || message.isBlank())
+                    return fail("announcement_broadcast: payload.message vazio");
+                String full = title.trim() + ": " + message.trim();
+                if (full.length() > MAX_BROADCAST_LEN)
+                    full = full.substring(0, MAX_BROADCAST_LEN);
+                World.announceToOnlinePlayers(full);
+                final int online = World.getInstance().getPlayers().size();
+                LOGGER.info("GmCommandPoller: announcement broadcast (" + online + " online): " + full);
+                return okMsg("anúncio shoutado in-game (" + online + " players online)");
+            }
+            case "ban_account":
+                return banAccount(payload, requestedBy);
+            case "unban_account":
+                return unbanAccount(payload, requestedBy);
             default:
                 return fail("tipo desconhecido: " + type);
         }
+    }
+
+    /**
+     * Bane uma conta: (1) kicka toda sessão ativa da conta, (2) seta
+     * access_level negativo em accounts (login server passa a recusar o
+     * login), (3) grava histórico em account_bans (expires_at NULL =
+     * permanente; senão o auto-expire do scheduler da bridge desbane).
+     */
+    private String[] banAccount(Map<?, ?> payload, String requestedBy) {
+        if (payload == null)
+            return fail("ban_account: payload vazio");
+        final String rawLogin = asString(payload.get("accountLogin"));
+        final String reason = asString(payload.get("reason"));
+        final long durationHours = asLong(payload.get("durationHours"), 0);
+        if (rawLogin == null || rawLogin.isBlank())
+            return fail("ban_account: payload.accountLogin vazio");
+        if (reason == null || reason.isBlank())
+            return fail("ban_account: payload.reason vazio");
+        if (durationHours < 0 || durationHours > MAX_BAN_HOURS)
+            return fail("ban_account: durationHours fora de 1.." + MAX_BAN_HOURS);
+        final String login = rawLogin.trim();
+        final String bannedBy = requestedBy == null || requestedBy.isBlank() ? "painel-admin" : requestedBy;
+
+        // 1. Kick de toda sessão ativa da conta (char online cai na hora)
+        int kicked = 0;
+        for (Player p : World.getInstance().getPlayers()) {
+            try {
+                if (p != null && login.equalsIgnoreCase(p.getAccountName())) {
+                    p.sendMessage("Sua conta foi banida: " + reason.trim());
+                    p.logout(false);
+                    kicked++;
+                }
+            } catch (Exception e) {
+                LOGGER.warn("GmCommandPoller: ban_account kick failed for a player of " + login + ": " + e.getMessage());
+            }
+        }
+
+        // 2. Bloqueia o login + 3. histórico
+        try (Connection con = ConnectionPool.getConnection()) {
+            int updated;
+            try (PreparedStatement ps = con.prepareStatement(
+                "UPDATE accounts SET access_level = ?, lastServer = -1 WHERE login = ?")) {
+                ps.setInt(1, BAN_ACCESS_LEVEL);
+                ps.setString(2, login);
+                updated = ps.executeUpdate();
+            }
+            if (updated == 0)
+                return fail("ban_account: conta '" + login + "' não existe");
+
+            final String insertSql = durationHours > 0
+                ? "INSERT INTO account_bans (account_login, reason, banned_by, expires_at) VALUES (?, ?, ?, DATE_ADD(NOW(), INTERVAL ? HOUR))"
+                : "INSERT INTO account_bans (account_login, reason, banned_by, expires_at) VALUES (?, ?, ?, NULL)";
+            try (PreparedStatement ps = con.prepareStatement(insertSql)) {
+                ps.setString(1, login);
+                ps.setString(2, reason.trim());
+                ps.setString(3, bannedBy);
+                if (durationHours > 0)
+                    ps.setLong(4, durationHours);
+                ps.executeUpdate();
+            }
+        } catch (Exception e) {
+            LOGGER.error("GmCommandPoller: ban_account SQL failed for " + login, e);
+            return fail("ban_account: erro SQL — " + e.getMessage());
+        }
+
+        final String scope = durationHours > 0 ? durationHours + "h" : "permanente";
+        LOGGER.info("GmCommandPoller: banned account " + login + " (" + scope + ", by " + bannedBy + ", kicked " + kicked + " session(s))");
+        return okMsg("conta " + login + " banida (" + scope + "), " + kicked + " sessão(ões) derrubada(s)");
+    }
+
+    /**
+     * Desbane: restaura access_level = 0 / lastServer = 1 e fecha os
+     * registros abertos em account_bans. Guard access_level < 0 evita
+     * zerar access_level positivo de GM por engano.
+     */
+    private String[] unbanAccount(Map<?, ?> payload, String requestedBy) {
+        if (payload == null)
+            return fail("unban_account: payload vazio");
+        final String rawLogin = asString(payload.get("accountLogin"));
+        if (rawLogin == null || rawLogin.isBlank())
+            return fail("unban_account: payload.accountLogin vazio");
+        final String login = rawLogin.trim();
+        final String unbannedBy = requestedBy == null || requestedBy.isBlank() ? "painel-admin" : requestedBy;
+
+        try (Connection con = ConnectionPool.getConnection()) {
+            int updated;
+            try (PreparedStatement ps = con.prepareStatement(
+                "UPDATE accounts SET access_level = 0, lastServer = 1 WHERE login = ? AND access_level < 0")) {
+                ps.setString(1, login);
+                updated = ps.executeUpdate();
+            }
+            if (updated == 0) {
+                // não estava banida OU não existe — distinguir pra mensagem
+                try (PreparedStatement ps = con.prepareStatement(
+                    "SELECT access_level FROM accounts WHERE login = ?")) {
+                    ps.setString(1, login);
+                    try (ResultSet rs = ps.executeQuery()) {
+                        if (!rs.next())
+                            return fail("unban_account: conta '" + login + "' não existe");
+                        return fail("unban_account: conta '" + login + "' não está banida (access_level=" + rs.getInt(1) + ")");
+                    }
+                }
+            }
+            try (PreparedStatement ps = con.prepareStatement(
+                "UPDATE account_bans SET unbanned_at = NOW(), unbanned_by = ? WHERE account_login = ? AND unbanned_at IS NULL")) {
+                ps.setString(1, unbannedBy);
+                ps.setString(2, login);
+                ps.executeUpdate();
+            }
+        } catch (Exception e) {
+            LOGGER.error("GmCommandPoller: unban_account SQL failed for " + login, e);
+            return fail("unban_account: erro SQL — " + e.getMessage());
+        }
+
+        LOGGER.info("GmCommandPoller: unbanned account " + login + " (by " + unbannedBy + ")");
+        return okMsg("conta " + login + " desbanida — já pode logar");
     }
 
     private static String[] okMsg(String msg) {

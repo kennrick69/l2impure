@@ -9,6 +9,7 @@ export function CreateAnnouncementForm() {
   const { show } = useToast();
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [shoutInGame, setShoutInGame] = useState(false);
   const [busy, setBusy] = useState(false);
 
   async function onSubmit(e: FormEvent) {
@@ -26,9 +27,54 @@ export function CreateAnnouncementForm() {
         show(data.error ?? "Falha", "error");
         return;
       }
-      show("Anúncio publicado", "success");
+
+      // Shout in-game: enfileira announcement_broadcast na fila GM DEPOIS
+      // de salvar no site. Exige PIN GM desbloqueado (mesmo gate do Console
+      // GM) — se estiver travado, o anúncio já foi salvo e avisamos.
+      if (shoutInGame) {
+        try {
+          const gmRes = await fetch("/api/admin/gm-commands", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              type: "announcement_broadcast",
+              payload: {
+                title: title.trim().slice(0, 80),
+                message: content.trim().slice(0, 500),
+                persistOnSite: true,
+              },
+            }),
+          });
+          const gmData = (await gmRes.json().catch(() => ({}))) as {
+            error?: string;
+            code?: string;
+          };
+          if (!gmRes.ok) {
+            show(
+              gmData.code === "pin_required"
+                ? "[!] Anúncio salvo no site, mas o shout in-game NÃO foi enviado — desbloqueie o PIN GM (Console GM) e reenvie por lá"
+                : `[!] Anúncio salvo no site, mas o shout in-game falhou: ${gmData.error ?? "erro"}`,
+              "error",
+            );
+          } else {
+            show(
+              "[OK] Anúncio publicado no site + shout in-game enfileirado",
+              "success",
+            );
+          }
+        } catch {
+          show(
+            "[!] Anúncio salvo no site, mas o shout in-game falhou (rede)",
+            "error",
+          );
+        }
+      } else {
+        show("Anúncio publicado", "success");
+      }
+
       setTitle("");
       setContent("");
+      setShoutInGame(false);
       router.refresh();
     } catch {
       show("Erro de rede", "error");
@@ -56,6 +102,21 @@ export function CreateAnnouncementForm() {
         required
         className="resize-y rounded-md border border-white/8 bg-[color:var(--l2-bg-input)] px-3 py-2 text-sm text-white focus:border-l2-gold focus:outline-none"
       />
+      <label className="flex cursor-pointer items-start gap-2 text-xs text-white/75">
+        <input
+          type="checkbox"
+          checked={shoutInGame}
+          onChange={(e) => setShoutInGame(e.target.checked)}
+          className="mt-0.5 h-4 w-4 accent-[#c0392b]"
+        />
+        <span>
+          Também fazer shout in-game (jogadores online veem)
+          <span className="block text-[10px] text-white/45">
+            Se o servidor estiver online, os jogadores recebem imediatamente.
+            Requer PIN GM desbloqueado (o mesmo do Console GM).
+          </span>
+        </span>
+      </label>
       <div>
         <button
           type="submit"

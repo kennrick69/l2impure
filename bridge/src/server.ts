@@ -22,6 +22,9 @@ import { voteRoutes } from "./routes/vote.js";
 import { gmCommandRoutes } from "./routes/gm-commands.js";
 import { gameserverConfigRoutes } from "./routes/gameserver-config.js";
 import { playersRoutes } from "./routes/players.js";
+import { accountBanRoutes } from "./routes/account-bans.js";
+import { scheduledCommandRoutes } from "./routes/scheduled-commands.js";
+import { scheduler } from "./scheduler.js";
 
 async function build() {
   const app = Fastify({
@@ -97,6 +100,8 @@ async function build() {
   await app.register(gmCommandRoutes);
   await app.register(gameserverConfigRoutes);
   await app.register(playersRoutes);
+  await app.register(accountBanRoutes);
+  await app.register(scheduledCommandRoutes);
 
   app.setNotFoundHandler((_req, reply) => {
     reply.code(404).send({ error: "not found" });
@@ -118,10 +123,14 @@ async function start() {
 
   await app.listen({ host: env.HOST, port: env.PORT });
 
+  // Scheduler: dispara scheduled_gm_commands + auto-expire de bans (tick 30s)
+  scheduler.start(app.log);
+
   // Graceful shutdown
   const shutdown = async (signal: string) => {
     app.log.info(`[shutdown] sinal ${signal} recebido`);
     try {
+      scheduler.stop();
       await app.close();
       await pool.end();
     } catch (e) {

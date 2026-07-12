@@ -229,6 +229,9 @@ export async function gmCommandRoutes(app: FastifyInstance) {
             type: r.type,
             payload: parseJsonCol(r.payload),
             priority: r.priority,
+            // aditivo (2026-07-12): ban_account usa como banned_by no
+            // histórico account_bans. Poller antigo ignora sem quebrar.
+            requestedBy: r.requested_by,
           })),
         });
       } catch (e) {
