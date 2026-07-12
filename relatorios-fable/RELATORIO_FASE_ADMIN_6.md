@@ -101,7 +101,7 @@ patch dormente até ligar no painel.
 | Restart gameserver | 21:47 UTC com **0 players online** (checado imediatamente antes) — boot limpo: `GmCommandPoller: started` + `Registered as server: [1] Bartz`. Fake players :55 intacto (offset do site, não tocado) |
 | Bridge VPS | `dist.bak-fase6-20260712_214721` → rsync → `pm2 restart` → `/health` ok; whitelist nova confirmada no `dist` |
 | Migration | `20260712150000_add_welcome_bosses_configs` — INSERT welcome + 9 bosses (`ON CONFLICT DO NOTHING`) + UPDATE sevensigns (`alwaysActive` no config/fileMapping, com guard) — Railway aplica no pre-deploy |
-| Site Railway | push `arq-definitiva` (commit desta fase) |
+| Site Railway | push `18b0ad7` → deploy Railway **success** 21:52 UTC (GitHub deployment status "Success - www.l2impure.com"); `GET /api/admin/events` → 401 (rota viva); home 200; `l2j-game`/`l2j-login` active; bridge online |
 
 **Rollbacks:**
 - Java: `cp /root/l2j-server/gameserver/libs/l2jserver.jar.backup-fase6-20260712_214634 /root/l2j-server/gameserver/libs/l2jserver.jar && systemctl restart l2j-game`
