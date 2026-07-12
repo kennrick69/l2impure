@@ -129,10 +129,37 @@ Nota subjetiva: **6/10 → 9/10** no fluxo de pagamento. O que falta pro 10:
 re-encryption automática na rotação de JWT_SECRET (P1) e secret manager
 dedicado (overkill hoje).
 
-## 6. Verificação
+## 6. Verificação — smoke test em produção (12/07 04:52 BRT)
 
-(preenchido pós-deploy — ver seção 7)
+| Endpoint | Comportamento esperado | Resultado |
+|---|---|---|
+| `/admin/settings/secrets` | 307 (redirect login sem sessão) | ✅ 307 |
+| `/api/admin/secrets` GET | 401 sem session | ✅ 401 |
+| `/api/admin/secrets/mp.webhook_secret` PATCH | 401 sem session | ✅ 401 |
+| `/api/wallet/webhook` POST forjado | 200 com `ignored: signature` (secret env presente, assinatura HMAC bloqueia) | ✅ 200 `{ignored:"signature"}` — coins NÃO creditados |
+| `/api/wallet/create-preference` | 401 sem session | ✅ 401 |
+| `/api/status` (fake 55 preservado) | `{online:true, players:55}` | ✅ `{online:true,players:55,contas:5}` |
 
-## 7. Deploy e smoke test
+**Descoberta operacional:** `MP_WEBHOOK_SECRET` já tinha algum valor setado no Railway
+(placeholder ou teste antigo). Consequência: `hasWebhookSecret()` retorna true e o
+503 fail-closed não dispara — MAS a validação HMAC bloqueia forjas mesmo assim
+(retorna 200 `ignored: signature` sem creditar coin). Comportamento seguro.
 
-(preenchido pós-deploy)
+Quando JOs configurar o secret real via painel `/admin/settings/secrets`, o DB
+sobrescreve o env (prioridade DB → env fallback) e a assinatura passa a ser
+validada com a chave certa.
+
+## 7. Deploy e commit
+
+- Commit `337ec81` (Fase Admin 4) pushed em `arq-definitiva` 12/07 04:50 BRT
+- Railway aplicou migration Prisma e re-deployou o site (100s)
+- Bridge não precisou de deploy (mudança 100% site + DB)
+
+## 8. Estado do launch — atualizado
+
+- **Score de segurança:** ~9.0/10 (era 8.0 antes desta fase). +1.0 por causa dos 3 CVE fixados.
+- **Painel de secrets:** operacional; JOs troca credenciais sem tocar em Railway.
+- **Bloqueador único de wallet real:** `mp.webhook_secret` precisar ser configurado
+  no painel (2 minutos quando JOs voltar). Enquanto não configurar, o webhook aceita
+  qualquer POST forjado mas sem creditar coin — não gera dupe.
+
