@@ -292,6 +292,28 @@ export type NpcBuylistsResponse = {
   buylists: NpcBuylist[];
 };
 
+export type OnlinePlayer = {
+  charId: number;
+  name: string;
+  level: number;
+  classId: number;
+  className: string;
+  x: number;
+  y: number;
+  z: number;
+  onlinetime: number;
+  lastAccess: number;
+  account: string;
+  clanName: string | null;
+};
+export type OnlinePlayersResponse = {
+  players: OnlinePlayer[];
+  total: number;
+  limit: number;
+  offset: number;
+  timestamp: number;
+};
+
 export const bridge = {
   async status(): Promise<ServerStatus> {
     return cached("server:status", 30, () =>
@@ -375,6 +397,20 @@ export const bridge = {
         stderr?: string;
       }>("POST", "/config/reload-events", { appliedBy }, { timeoutMs: 60000 });
     },
+  },
+  /** Jogadores in-game agora (admin /admin/online). Sem cache — tempo real. */
+  async onlinePlayers(
+    query: Record<string, string | number | undefined>,
+  ): Promise<OnlinePlayersResponse> {
+    const qs = new URLSearchParams();
+    for (const [k, v] of Object.entries(query)) {
+      if (v !== undefined && v !== null && v !== "") qs.append(k, String(v));
+    }
+    const suffix = qs.toString() ? `?${qs.toString()}` : "";
+    return bridgeFetch<OnlinePlayersResponse>(
+      "GET",
+      `/players/online${suffix}`,
+    );
   },
   gm: {
     async searchCharacters(name: string): Promise<AdminGmSearchResponse> {

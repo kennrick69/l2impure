@@ -5,13 +5,16 @@ import { rateLimit, clientIp } from "@/lib/rate-limit";
 import { performWalletRefund } from "@/lib/wallet-refund";
 
 /**
- * POST /api/admin/wallet/refund  {transactionId}
+ * POST /api/admin/wallet-history/[txId]/refund
  *
- * Endpoint legado do painel /admin/wallet — mesma lógica idempotente
- * de src/lib/wallet-refund.ts (Fase 5Y). Agora também exige PIN GM:
- * refund mexe em dinheiro real, mesma régua da fila GM.
+ * Refund MP + débito de coins, idempotente (2º disparo → already-refunded,
+ * sem débito dobrado). Exige sessão GM desbloqueada por PIN — mexe em
+ * dinheiro real. Lógica em src/lib/wallet-refund.ts.
  */
-export async function POST(req: Request) {
+export async function POST(
+  req: Request,
+  { params }: { params: Promise<{ txId: string }> },
+) {
   let admin;
   try {
     admin = await requireAdmin();
@@ -37,15 +40,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Muitas requisições" }, { status: 429 });
   }
 
-  const body = (await req.json().catch(() => ({}))) as {
-    transactionId?: number;
-  };
-  const txId = Number(body.transactionId);
+  const { txId: rawId } = await params;
+  const txId = Number(rawId);
   if (!Number.isFinite(txId) || txId <= 0) {
-    return NextResponse.json(
-      { error: "transactionId inválido" },
-      { status: 400 },
-    );
+    return NextResponse.json({ error: "txId inválido" }, { status: 400 });
   }
 
   const result = await performWalletRefund({
