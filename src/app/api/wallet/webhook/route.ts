@@ -44,29 +44,25 @@ export async function POST(req: Request) {
   const url = new URL(req.url);
   const paymentId = extractPaymentId(body, url);
 
-  // CVE #2 — sem webhook secret configurado, QUALQUER POST forjado passaria
-  // pela validação permissiva. Fail-closed: 503 até o admin configurar
-  // mp.webhook_secret no painel /admin/settings/secrets. MP reagenda a
-  // notificação, então nenhum pagamento se perde — só fica pendente.
-  if (!(await mp.hasWebhookSecret())) {
-    console.warn(
-      "[wallet/webhook] mp.webhook_secret NÃO configurado — recusando webhook (503). " +
-        "Configure em /admin/settings/secrets antes de aceitar pagamentos.",
-    );
-    return NextResponse.json(
-      { error: "webhook-secret-not-configured" },
-      { status: 503 },
-    );
-  }
-
-  // Validação de assinatura — só rejeita se secret está configurado e bate negativo
-  const sigCheck = await mp.validateWebhookSignature(req.headers, paymentId);
-  if (!sigCheck.valid) {
-    console.warn(
-      `[wallet/webhook] assinatura inválida (${sigCheck.reason}), payment=${paymentId}`,
-    );
-    // Ainda assim retorna 200 — MP não precisa saber se rejeitamos
-    return NextResponse.json({ received: true, ignored: "signature" });
+  // CVE #2 revisto (12/07): algumas contas MP não têm webhook secret
+  // disponível no dashboard (confirmado pelo dono). Sem HMAC, o sistema
+  // ainda tem 3 defesas fortes:
+  //   1. Bridge chama mp.getPayment(id) — MP API autenticada retorna o
+  //      payment REAL; atacante não controla o retorno
+  //   2. external_reference = "wallet-{userId}-{txId}" — atacante não
+  //      consegue forjar esse valor sem criar preferência legítima
+  //   3. CVE #1 fix (valor pago vs cobrado) + CVE #3 fix (UNIQUE payment_id)
+  // Se um dia o dono configurar o secret via painel, a validação abaixo
+  // passa a rodar por cima — defesa em camadas, opt-in.
+  if (await mp.hasWebhookSecret()) {
+    const sigCheck = await mp.validateWebhookSignature(req.headers, paymentId);
+    if (!sigCheck.valid) {
+      console.warn(
+        `[wallet/webhook] assinatura inválida (${sigCheck.reason}), payment=${paymentId}`,
+      );
+      // 200 pra MP não reagendar; coin não é creditado pois retornamos aqui
+      return NextResponse.json({ received: true, ignored: "signature" });
+    }
   }
 
   if (!paymentId) {
