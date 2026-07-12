@@ -101,6 +101,14 @@ Olympiad, Seven Signs e Kill the Boss não têm key de on/off no aCis → card m
 4. **Campos fora do painel** (spawns, cores de time, listas de skill do tournament etc.) continuam só no arquivo — decisão de escopo; são raros de mudar e perigosos de validar genericamente.
 5. **Acúmulo de `.bak-*`** em `config/` — inofensivo pro aCis (carrega arquivos nomeados), mas vale uma limpeza ocasional.
 
+## Smoke pós-deploy Railway (commit `e280763`)
+
+- `GET https://www.l2impure.com/api/admin/events` → **401 `{"error":"Não autenticado"}`** = rota nova no ar. Como o Railway roda `prisma migrate deploy` no pre-deploy e o deploy concluiu, a migration + seed dos 10 eventos estão aplicados no Postgres.
+- `GET /admin/events/config` → **307** (redirect pro login sem sessão — esperado).
+- Bridge: `POST /config/apply` e `/config/reload-events` sem headers → **401** (HMAC obrigatório confirmado), gameserver intocado (uptime contínuo desde 22:24 UTC).
+
 ## Coordenação com Fable B (task #4)
 
-Não toquei em: `.env` da bridge (só leitura pro smoke test HMAC), `.gitignore`, `api/wallet/*`, config SSH do systemd, patches Java do LoginServer, `l2j-login.service`, fake players offset. Hashes da bridge conferidos antes do deploy (local == VPS, sem trabalho dele em risco).
+Não toquei em: `.env` da bridge (só leitura pro smoke test HMAC), `.gitignore`, `api/wallet/*`, config SSH do systemd, patches Java do LoginServer, `l2j-login.service`, fake players offset.
+
+**Handoff executado:** o commit `adb2bdc` dele (fix anti-dupe no `/vote/check`) estava no repo mas **não deployado** na bridge da VPS — ele deixou escrito no RELATORIO_3B que esperava a Fase A landar pra não mandar meu `server.ts` pela metade. Como a Fase A landou nesta sessão, completei o combinado: `scp bridge/src/routes/vote.ts` → rebuild → `pm2 restart`. Bridge da VPS agora = HEAD do repo (md5 conferido: `vote.ts` 11788c…, `server.ts` 69fc37…), com backup `dist.bak-eventcfg-*` e `dist.bak-<ts>` antes de cada rebuild. Fix anti-dupe confirmado no `dist/routes/vote.js` (guarda `affectedRows`).
