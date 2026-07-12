@@ -242,3 +242,23 @@ model VoteSite {
   @@index([active])
   @@map("vote_sites")
 }
+
+/// Config de evento do gameserver editável pelo painel admin.
+/// `config` guarda os valores dos campos (unidades do próprio
+/// .properties); `fileMapping` traduz campo → key do properties.
+/// A UI/validação por campo vive em src/lib/event-config-catalog.ts.
+/// Horários são interpretados em BRT (JVM roda com
+/// -Duser.timezone=America/Sao_Paulo — Fase Admin 3A).
+model EventConfig {
+  id            Int       @id @default(autoincrement())
+  slug          String    @unique @db.VarChar(48)
+  displayName   String    @map("display_name") @db.VarChar(64)
+  enabled       Boolean   @default(false)
+  config        Json
+  fileTarget    String    @map("file_target") @db.VarChar(96)
+  fileMapping   Json      @map("file_mapping")
+  lastAppliedAt DateTime? @map("last_applied_at")
+  updatedAt     DateTime  @default(now()) @updatedAt @map("updated_at")
+
+  @@map("event_configs")
+}

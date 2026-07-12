@@ -20,6 +20,7 @@ import { adminNpcsRoutes } from "./routes/admin-npcs.js";
 import { iconsRoutes } from "./routes/icons.js";
 import { voteRoutes } from "./routes/vote.js";
 import { gmCommandRoutes } from "./routes/gm-commands.js";
+import { gameserverConfigRoutes } from "./routes/gameserver-config.js";
 
 async function build() {
   const app = Fastify({
@@ -93,6 +94,7 @@ async function build() {
   await app.register(iconsRoutes);
   await app.register(voteRoutes);
   await app.register(gmCommandRoutes);
+  await app.register(gameserverConfigRoutes);
 
   app.setNotFoundHandler((_req, reply) => {
     reply.code(404).send({ error: "not found" });

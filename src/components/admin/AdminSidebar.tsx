@@ -15,6 +15,7 @@ const NAV_GROUPS = [
       { href: "/admin/announcements", icon: "📣", label: "Anúncios" },
       { href: "/admin/game-master", icon: "⚔️", label: "Game master" },
       { href: "/admin/gm-console", icon: "🕹️", label: "Console GM (fila)" },
+      { href: "/admin/events/config", icon: "📅", label: "Eventos (config)" },
       { href: "/admin/characters", icon: "🧝", label: "Personagens" },
       { href: "/admin/items", icon: "💎", label: "Items (busca)" },
       { href: "/admin/npcs", icon: "🗿", label: "NPCs" },

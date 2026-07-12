@@ -352,6 +352,30 @@ export const bridge = {
       { timeoutMs: 60000 },
     );
   },
+  config: {
+    /**
+     * Aplica mudanças num .properties do gameserver (whitelist na bridge).
+     * changes já vem no formato literal do properties (chave aCis → valor).
+     */
+    async apply(file: string, changes: Record<string, string>, appliedBy: string) {
+      return bridgeFetch<{
+        ok: true;
+        file: string;
+        backup_path: string;
+        changed_keys: string[];
+        restart_required: true;
+      }>("POST", "/config/apply", { file, changes, appliedBy }, { timeoutMs: 15000 });
+    },
+    /** Restart do l2j-game via systemd — jogadores caem ~30-60s. */
+    async reloadEvents(appliedBy: string) {
+      return bridgeFetch<{
+        ok: true;
+        restart_method: string;
+        stdout?: string;
+        stderr?: string;
+      }>("POST", "/config/reload-events", { appliedBy }, { timeoutMs: 60000 });
+    },
+  },
   gm: {
     async searchCharacters(name: string): Promise<AdminGmSearchResponse> {
       return bridgeFetch<AdminGmSearchResponse>(
