@@ -85,6 +85,20 @@ Data: 2026-07-12 · Branch: `arq-definitiva` · Fable Y (paralelo ao Fable X, es
 - Bridge VPS: build ok, pm2 online, `/health` ok, `GET /players/online` HMAC → 200.
 - `next build` local não roda (WSL 3.8GB RAM — mesmo caso das fases anteriores); validação final no build do Railway + smoke em produção (seção abaixo, preenchida pós-deploy).
 
-## Smoke pós-deploy (produção)
+## Smoke pós-deploy (produção, 2026-07-12, commit 38bbbc8 no Railway)
 
-Ver seção ✅ no reporte final da sessão (rotas admin → 307 pra login sem sessão; APIs → 401 sem auth).
+```
+/admin/online              -> 307   (redirect login, igual /admin/dashboard)
+/admin/wallet/history      -> 307
+/admin/audit-logs          -> 307
+/api/admin/online          -> 401   (sem sessão)
+/api/admin/audit-logs      -> 401
+/api/admin/audit-logs/actions -> 401
+/api/admin/wallet-history  -> 401
+POST /api/admin/wallet-history/1/refund -> 401
+POST /api/admin/wallet/refund (legado)  -> 401
+/ (home, regressão)        -> 200
+/api/server/status         -> {"online":true,"players":55,...}  [fake players intocado]
+```
+
+Bridge VPS: `GET /players/online?limit=5` HMAC → `200 {"players":[],"total":0,...}` (teste real assinado na VPS; 0 online no momento). pm2 `l2impure-bridge` online, `/health` ok, backup `dist.bak-*` criado antes do build.
