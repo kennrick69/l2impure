@@ -44,6 +44,9 @@ const ALLOWED_FILES = new Set([
   "events/pcBangEvent.properties",
   "events/pvpEvent.properties",
   "events/tournament.properties",
+  // Fase Admin 6 — welcome message (custom) + epic boss respawn (npcs)
+  "custom.properties",
+  "npcs.properties",
 ]);
 
 const KEY_RE = /^[A-Za-z][A-Za-z0-9_]{0,63}$/;

@@ -9,6 +9,7 @@ import {
   EVENT_CATALOG,
   validateEventConfig,
   toPropertiesValue,
+  expandMultilineChanges,
 } from "@/lib/event-config-catalog";
 
 /**
@@ -80,8 +81,14 @@ export async function PATCH(
 
   // Monta as mudanças pro properties via fileMapping do banco
   const mapping = current.fileMapping as Record<string, string>;
+  const fieldTypes = new Map(def.fields.map((f) => [f.key, f.type]));
   const changes: Record<string, string> = {};
   for (const [field, value] of Object.entries(normalized)) {
+    // multiline (welcome): "a\nb" vira Line1..Line5 via mapping `${field}N`
+    if (fieldTypes.get(field) === "multiline") {
+      expandMultilineChanges(field, String(value), mapping, changes);
+      continue;
+    }
     const propKey = mapping[field];
     if (propKey) changes[propKey] = toPropertiesValue(value);
   }

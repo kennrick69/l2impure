@@ -15,7 +15,9 @@ export type EventFieldType =
   | "bool"     // toggle True/False
   | "timeList" // "HH:MM,HH:MM,..." — horários BRT
   | "rewardList" // "itemId,qtd" ou "itemId-qtd", múltiplos com ";"
-  | "text";    // string livre validada por pattern
+  | "text"     // string livre validada por pattern (obrigatória)
+  | "cron"     // pattern cron de 5 campos ("30 20 * * *") OU vazio
+  | "multiline"; // textarea; vira WellcomeMessageLine1..5 (Fase Admin 6)
 
 export type EventFieldDef = {
   key: string;
@@ -26,10 +28,14 @@ export type EventFieldDef = {
   help?: string;
 };
 
+export type EventCategory = "login" | "events" | "epic_bosses";
+
 export type EventDef = {
   slug: string;
   /** false = o evento não tem key de liga/desliga no properties (sempre on) */
   hasEnabledToggle: boolean;
+  /** agrupamento visual no painel (default "events") */
+  category?: EventCategory;
   description: string;
   fields: EventFieldDef[];
 };
@@ -38,6 +44,52 @@ export const TIME_LIST_RE =
   /^([01]\d|2[0-3]):[0-5]\d(,([01]\d|2[0-3]):[0-5]\d)*$/;
 export const REWARD_LIST_RE =
   /^\d{1,9}[,-]\d{1,9}(;\d{1,9}[,-]\d{1,9})*$/;
+/** 5 campos cron (min hora dia-mês mês dia-semana), dígitos/*,-/ apenas. */
+export const CRON_RE =
+  /^[\d*,/-]{1,16}(\s+[\d*,/-]{1,16}){4}$/;
+/** Linha do welcome: sem control chars, sem backslash (properties-safe). */
+// eslint-disable-next-line no-control-regex
+export const WELCOME_LINE_RE = /^[^\\\x00-\x1f\x7f]{0,500}$/;
+export const WELCOME_MAX_LINES = 5;
+
+/** Fábrica dos cards de epic boss — todos seguem o mesmo shape do aCis. */
+function bossDef(slug: string, name: string, hasCron: boolean): EventDef {
+  const fields: EventFieldDef[] = [
+    {
+      key: "intervalHours",
+      label: "Respawn (horas após a morte)",
+      type: "int",
+      min: 1,
+      max: 8760,
+      help: `${name}SpawnInterval — base fixa em horas`,
+    },
+    {
+      key: "randomHours",
+      label: "Variação aleatória (± horas)",
+      type: "int",
+      min: 0,
+      max: 8760,
+      help: "somada ao intervalo base de forma aleatória",
+    },
+  ];
+  if (hasCron) {
+    fields.push({
+      key: "cronPattern",
+      label: "Cron fixo (opcional — min hora dia-mês mês dia-semana)",
+      type: "cron",
+      help: "ex: 30 20 * * * = todo dia às 20:30 BRT; 30 20 * * 4,6 = qui e sáb. Preenchido IGNORA o intervalo. Vazio = usa intervalo.",
+    });
+  }
+  return {
+    slug,
+    hasEnabledToggle: false,
+    category: "epic_bosses",
+    description: hasCron
+      ? `Respawn do ${name}. Modo intervalo (horas + variação) ou modo cron (horário fixo BRT — preencher o campo cron desativa o intervalo).`
+      : `Respawn do ${name}. Só modo intervalo — o aCis não tem key de cron pra este boss.`,
+    fields,
+  };
+}
 
 export const EVENT_CATALOG: Record<string, EventDef> = {
   olympiad: {
@@ -59,8 +111,9 @@ export const EVENT_CATALOG: Record<string, EventDef> = {
     slug: "sevensigns",
     hasEnabledToggle: false,
     description:
-      "Seven Signs & Festival of Darkness. Ciclos internos ficam no default do aCis.",
+      "Seven Signs & Festival of Darkness. 'Sempre ativo' congela o ciclo no período de Competição (coleta de seal stones + Festival rodando o tempo todo, ignorando o calendário semanal). Desligado = calendário normal do servidor.",
     fields: [
+      { key: "alwaysActive", label: "Sempre ativo (ignora o calendário semanal)", type: "bool" },
       { key: "festivalMinPlayers", label: "Mín. players no Festival", type: "int", min: 1, max: 9 },
       { key: "castleForDawn", label: "Dawn exige castelo/taxa", type: "bool" },
       { key: "castleForDusk", label: "Dusk bloqueia donos de castelo", type: "bool" },
@@ -161,10 +214,41 @@ export const EVENT_CATALOG: Record<string, EventDef> = {
       { key: "dualChance", label: "Chance de ponto dobrado (%)", type: "int", min: 0, max: 100 },
     ],
   },
+  welcome: {
+    slug: "welcome",
+    hasEnabledToggle: true,
+    category: "login",
+    description:
+      "Mensagem do servidor no chat quando o jogador loga. Até 5 linhas (uma por linha do editor). %player% vira o nome do jogador. Se todas as linhas ficarem vazias, o servidor usa a mensagem padrão antiga (custom.properties legado).",
+    fields: [
+      {
+        key: "serverName",
+        label: "Remetente (nome que aparece no chat)",
+        type: "text",
+        help: "WellcomeMessageServerName — ex: L2 Impure",
+      },
+      {
+        key: "lines",
+        label: "Mensagem (até 5 linhas, 500 chars por linha)",
+        type: "multiline",
+        help: "Uma linha do editor = uma mensagem no chat. %player% = nome do jogador.",
+      },
+    ],
+  },
+  "boss.queenant": bossDef("boss.queenant", "Queen Ant", true),
+  "boss.antharas": bossDef("boss.antharas", "Antharas", true),
+  "boss.baium": bossDef("boss.baium", "Baium", true),
+  "boss.core": bossDef("boss.core", "Core", true),
+  "boss.orfen": bossDef("boss.orfen", "Orfen", true),
+  "boss.zaken": bossDef("boss.zaken", "Zaken", true),
+  "boss.valakas": bossDef("boss.valakas", "Valakas", true),
+  "boss.frintezza": bossDef("boss.frintezza", "Frintezza", false),
+  "boss.sailren": bossDef("boss.sailren", "Sailren", false),
 };
 
 /** Ordem de exibição no painel. */
 export const EVENT_ORDER = [
+  "welcome",
   "olympiad",
   "tvt",
   "ctf",
@@ -175,7 +259,24 @@ export const EVENT_ORDER = [
   "partyfarm",
   "pcbang",
   "sevensigns",
+  "boss.queenant",
+  "boss.core",
+  "boss.orfen",
+  "boss.zaken",
+  "boss.baium",
+  "boss.antharas",
+  "boss.valakas",
+  "boss.frintezza",
+  "boss.sailren",
 ];
+
+/** Ordem e rótulo das seções do painel. */
+export const CATEGORY_ORDER: EventCategory[] = ["login", "events", "epic_bosses"];
+export const CATEGORY_LABELS: Record<EventCategory, string> = {
+  login: "Login / Boas-vindas",
+  events: "Eventos",
+  epic_bosses: "Epic Bosses — Respawn",
+};
 
 const TEXT_SAFE_RE = /^[\w .,;:\-]{1,512}$/;
 
@@ -250,9 +351,64 @@ export function validateEventConfig(
         }
         break;
       }
+      case "cron": {
+        const s = String(raw).trim().replace(/\s+/g, " ");
+        if (s !== "" && !CRON_RE.test(s)) {
+          errors.push({
+            key: field.key,
+            message: "vazio OU 5 campos cron (ex: 30 20 * * *)",
+          });
+        } else {
+          normalized[field.key] = s;
+        }
+        break;
+      }
+      case "multiline": {
+        // Normaliza CRLF, corta linhas vazias no fim, valida cada linha.
+        const lines = String(raw)
+          .replace(/\r\n?/g, "\n")
+          .split("\n")
+          .map((l) => l.trim());
+        while (lines.length > 0 && lines[lines.length - 1] === "") lines.pop();
+        if (lines.length > WELCOME_MAX_LINES) {
+          errors.push({
+            key: field.key,
+            message: `máximo de ${WELCOME_MAX_LINES} linhas`,
+          });
+          break;
+        }
+        const bad = lines.findIndex((l) => !WELCOME_LINE_RE.test(l));
+        if (bad >= 0) {
+          errors.push({
+            key: field.key,
+            message: `linha ${bad + 1} inválida (máx 500 chars, sem barra invertida)`,
+          });
+        } else {
+          normalized[field.key] = lines.join("\n");
+        }
+        break;
+      }
     }
   }
   return { errors, normalized };
+}
+
+/**
+ * Expande um campo multiline no formato do .properties: o valor "a\nb"
+ * vira { [mapping[key+"1"]]: "a", [mapping[key+"2"]]: "b", ... } até
+ * WELCOME_MAX_LINES — linhas não usadas são gravadas vazias (limpa resto).
+ */
+export function expandMultilineChanges(
+  fieldKey: string,
+  value: string,
+  mapping: Record<string, string>,
+  changes: Record<string, string>,
+): void {
+  const lines = value === "" ? [] : value.split("\n");
+  for (let i = 1; i <= WELCOME_MAX_LINES; i++) {
+    const propKey = mapping[`${fieldKey}${i}`];
+    if (propKey) changes[propKey] = lines[i - 1] ?? "";
+  }
 }
 
 /**

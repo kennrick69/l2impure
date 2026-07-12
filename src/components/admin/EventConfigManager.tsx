@@ -4,6 +4,9 @@ import { useState } from "react";
 import { useToast } from "@/components/ui/Toast";
 import {
   EVENT_CATALOG,
+  CATEGORY_ORDER,
+  CATEGORY_LABELS,
+  type EventCategory,
   type EventFieldDef,
 } from "@/lib/event-config-catalog";
 
@@ -63,6 +66,26 @@ function FieldInput({
         <span className="relative h-5 w-9 shrink-0 rounded-full bg-white/15 transition peer-checked:bg-l2-green/70 after:absolute after:left-0.5 after:top-0.5 after:h-4 after:w-4 after:rounded-full after:bg-white after:transition peer-checked:after:translate-x-4" />
         <span className="text-xs text-white/70">{field.label}</span>
       </label>
+    );
+  }
+  if (field.type === "multiline") {
+    return (
+      <div className="sm:col-span-2 lg:col-span-3">
+        <label className={labelCls} htmlFor={id}>
+          {field.label}
+        </label>
+        <textarea
+          id={id}
+          rows={5}
+          className={`${inputCls} resize-y font-mono`}
+          value={String(value ?? "")}
+          placeholder={"Bem-vindo ao L2 Impure, %player%!\nVote e ganhe premios!"}
+          onChange={(e) => onChange(e.target.value)}
+        />
+        {field.help ? (
+          <div className="mt-1 text-[11px] text-white/35">{field.help}</div>
+        ) : null}
+      </div>
     );
   }
   if (field.type === "int") {
@@ -204,9 +227,18 @@ export function EventConfigManager({
               Eventos ativos
             </div>
             <div className="font-display text-2xl font-bold text-white">
-              {events.filter((e) => e.enabled).length}{" "}
+              {
+                events.filter(
+                  (e) => EVENT_CATALOG[e.slug]?.hasEnabledToggle && e.enabled,
+                ).length
+              }{" "}
               <span className="text-base font-semibold text-white/40">
-                de {events.length}
+                de{" "}
+                {
+                  events.filter((e) => EVENT_CATALOG[e.slug]?.hasEnabledToggle)
+                    .length
+                }{" "}
+                com on/off
               </span>
             </div>
           </div>
@@ -268,10 +300,28 @@ export function EventConfigManager({
         ) : null}
       </section>
 
-      {/* Cards por evento (accordion) */}
-      {events.map((evt) => {
+      {/* Cards por evento (accordion), agrupados por categoria */}
+      {CATEGORY_ORDER.map((cat: EventCategory) => {
+        const group = events.filter(
+          (e) => (EVENT_CATALOG[e.slug]?.category ?? "events") === cat,
+        );
+        if (group.length === 0) return null;
+        return (
+          <div key={cat} className="flex flex-col gap-4">
+            <h2 className="mt-2 font-display text-sm font-bold uppercase tracking-widest text-white/50">
+              {CATEGORY_LABELS[cat]}
+            </h2>
+            {group.map((evt) => renderCard(evt))}
+          </div>
+        );
+      })}
+    </div>
+  );
+
+  function renderCard(evt: EventConfigDto) {
         const def = EVENT_CATALOG[evt.slug];
         if (!def) return null;
+        const isBoss = def.category === "epic_bosses";
         const draft = drafts[evt.slug] ?? toDraft(evt);
         const dirty = isDirty(draft, evt);
         const busy = saving === evt.slug;
@@ -297,19 +347,21 @@ export function EventConfigManager({
               <code className="rounded bg-black/30 px-2 py-0.5 text-[11px] text-white/45">
                 {evt.fileTarget}
               </code>
-              <span
-                className={`rounded-md px-2 py-0.5 font-display text-[10px] font-bold uppercase tracking-wider ${
-                  evt.enabled
-                    ? "bg-l2-green/15 text-l2-green"
-                    : "bg-white/10 text-white/45"
-                }`}
-              >
-                {def.hasEnabledToggle
-                  ? evt.enabled
-                    ? "Ativo"
-                    : "Inativo"
-                  : "Sempre ativo"}
-              </span>
+              {isBoss ? null : (
+                <span
+                  className={`rounded-md px-2 py-0.5 font-display text-[10px] font-bold uppercase tracking-wider ${
+                    evt.enabled
+                      ? "bg-l2-green/15 text-l2-green"
+                      : "bg-white/10 text-white/45"
+                  }`}
+                >
+                  {def.hasEnabledToggle
+                    ? evt.enabled
+                      ? "Ativo"
+                      : "Inativo"
+                    : "Sempre ativo"}
+                </span>
+              )}
               {dirty ? (
                 <span className="rounded-md bg-l2-gold/15 px-2 py-0.5 font-display text-[10px] font-bold uppercase tracking-wider text-l2-gold">
                   Não aplicado
@@ -362,7 +414,9 @@ export function EventConfigManager({
                     </label>
                   ) : (
                     <span className="text-[11px] text-white/35">
-                      Este evento não tem chave de on/off no aCis.
+                      {isBoss
+                        ? "Vale pra PRÓXIMA morte do boss — respawn já agendado não muda."
+                        : "Este evento não tem chave de on/off no aCis."}
                     </span>
                   )}
                   <button
@@ -378,7 +432,5 @@ export function EventConfigManager({
             ) : null}
           </section>
         );
-      })}
-    </div>
-  );
+  }
 }

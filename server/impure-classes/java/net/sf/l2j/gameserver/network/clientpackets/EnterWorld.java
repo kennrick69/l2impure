@@ -412,8 +412,17 @@ extends L2GameClientPacket {
             player.useMagic(skill, false, false);
         }
         if (Config.WELLCOME_MESSAGE_ACTIVE) {
-            player.sendPacket((L2GameServerPacket)new CreatureSay(0, 2, "Have Fun and Nice Stay on ", Config.WELLCOME_SERVER_NAME));
-            player.sendPacket((L2GameServerPacket)new CreatureSay(0, 2, player.getName(), Config.WELLCOME_SERVER_SECOND_MESSAGE));
+            // L2 Impure (Fase Admin 6): linhas custom editáveis no painel admin
+            // (WellcomeMessageLine1..5 em custom.properties). Vazio = legado.
+            java.util.List<String> welcomeLines = net.sf.l2j.gameserver.custom.WelcomeMessageData.getLines();
+            if (welcomeLines.isEmpty()) {
+                player.sendPacket((L2GameServerPacket)new CreatureSay(0, 2, "Have Fun and Nice Stay on ", Config.WELLCOME_SERVER_NAME));
+                player.sendPacket((L2GameServerPacket)new CreatureSay(0, 2, player.getName(), Config.WELLCOME_SERVER_SECOND_MESSAGE));
+            } else {
+                for (String welcomeLine : welcomeLines) {
+                    player.sendPacket((L2GameServerPacket)new CreatureSay(0, 2, Config.WELLCOME_SERVER_NAME, welcomeLine.replace("%player%", player.getName())));
+                }
+            }
         }
         net.sf.l2j.gameserver.model.vote.VoteManager.getInstance().onEnterWorld(player);
         player.sendPacket((L2GameServerPacket)ActionFailed.STATIC_PACKET);
