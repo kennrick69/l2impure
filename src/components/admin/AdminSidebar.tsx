@@ -20,6 +20,7 @@ const NAV_GROUPS = [
       { href: "/admin/items", icon: "💎", label: "Items (busca)" },
       { href: "/admin/npcs", icon: "🗿", label: "NPCs" },
       { href: "/admin/wallet", icon: "💰", label: "Carteira" },
+      { href: "/admin/settings/secrets", icon: "🔐", label: "Secrets" },
     ],
   },
   {

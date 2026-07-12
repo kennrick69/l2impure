@@ -1,11 +1,16 @@
 /**
  * MercadoPago — adaptado da integração homologada da IMP Locadora.
- * fetch() nativo, sem SDK npm. Singleton lê credenciais de env vars.
+ * fetch() nativo, sem SDK npm.
+ *
+ * Credenciais (Fase Admin 4): lidas via getSecret() — painel
+ * /admin/settings/secrets (DB, criptografado) tem prioridade; env vars
+ * MP_* são fallback. Por isso os getters são async.
  *
  * Escopo L2 Impure: só Checkout Pro (PIX/cartão/boleto via redirect),
  * consulta de pagamento, refund, validação de assinatura webhook.
  */
 import { createHmac } from "node:crypto";
+import { getSecret } from "@/lib/secrets";
 
 const MP_BASE = "https://api.mercadopago.com";
 
@@ -37,26 +42,40 @@ export type MpPayment = {
 };
 
 class MercadoPagoService {
-  get accessToken(): string | null {
-    return process.env.MP_ACCESS_TOKEN ?? null;
+  accessToken(): Promise<string | null> {
+    return getSecret("mp.access_token", "MP_ACCESS_TOKEN");
   }
-  get publicKey(): string | null {
-    return process.env.MP_PUBLIC_KEY ?? null;
+  publicKey(): Promise<string | null> {
+    return getSecret("mp.public_key", "MP_PUBLIC_KEY");
   }
-  get webhookUrl(): string | null {
-    return process.env.MP_WEBHOOK_URL ?? null;
+  webhookUrl(): Promise<string | null> {
+    return getSecret("mp.webhook_url", "MP_WEBHOOK_URL");
   }
-  get webhookSecret(): string | null {
-    return process.env.MP_WEBHOOK_SECRET ?? null;
-  }
-
-  isConfigured(): boolean {
-    return Boolean(this.accessToken);
+  webhookSecret(): Promise<string | null> {
+    return getSecret("mp.webhook_secret", "MP_WEBHOOK_SECRET");
   }
 
-  private headers(idempotencyKey?: string): Record<string, string> {
+  async isConfigured(): Promise<boolean> {
+    return Boolean(await this.accessToken());
+  }
+
+  /** CVE #2: webhook exige secret configurado (503 se vazio). */
+  async hasWebhookSecret(): Promise<boolean> {
+    return Boolean(await this.webhookSecret());
+  }
+
+  private async headers(
+    idempotencyKey?: string,
+  ): Promise<Record<string, string>> {
+    const token = await this.accessToken();
+    if (!token) {
+      throw new MercadoPagoError(
+        "MP access token não configurado (painel /admin/settings/secrets ou MP_ACCESS_TOKEN)",
+        503,
+      );
+    }
     const h: Record<string, string> = {
-      Authorization: `Bearer ${this.accessToken}`,
+      Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
     };
     if (idempotencyKey) h["X-Idempotency-Key"] = idempotencyKey;
@@ -69,12 +88,9 @@ class MercadoPagoService {
     body?: unknown,
     idempotencyKey?: string,
   ): Promise<T> {
-    if (!this.isConfigured()) {
-      throw new MercadoPagoError("MP_ACCESS_TOKEN não configurado", 503);
-    }
     const res = await fetch(MP_BASE + path, {
       method,
-      headers: this.headers(idempotencyKey),
+      headers: await this.headers(idempotencyKey),
       body: body ? JSON.stringify(body) : undefined,
     });
     const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
@@ -116,7 +132,7 @@ class MercadoPagoService {
       back_urls: opts.backUrls,
       auto_return: "approved",
       external_reference: opts.externalReference,
-      notification_url: this.webhookUrl ?? undefined,
+      notification_url: (await this.webhookUrl()) ?? undefined,
       statement_descriptor: "L2 IMPURE",
     };
     const data = await this.request<{
@@ -166,14 +182,16 @@ class MercadoPagoService {
    *   id:{paymentId};request-id:{requestId};ts:{ts};
    * HMAC-SHA256 com MP_WEBHOOK_SECRET, comparado a v1 do header x-signature.
    *
-   * Retorna true se válido OU se webhookSecret não está configurado
-   * (modo permissivo — recomendamos configurar em prod).
+   * CVE #2: sem secret configurado o webhook nem chega aqui (503 na
+   * rota). O retorno permissivo abaixo fica só como defesa em camada —
+   * qualquer caller novo deve gate-ar com hasWebhookSecret() antes.
    */
-  validateWebhookSignature(
+  async validateWebhookSignature(
     headers: Headers,
     paymentId: string | null,
-  ): { valid: boolean; reason?: string } {
-    if (!this.webhookSecret) {
+  ): Promise<{ valid: boolean; reason?: string }> {
+    const secret = await this.webhookSecret();
+    if (!secret) {
       return { valid: true, reason: "no-secret-configured" };
     }
     if (!paymentId) return { valid: false, reason: "no-payment-id" };
@@ -187,7 +205,7 @@ class MercadoPagoService {
     const v1 = v1Match[1];
     if (!ts || !v1) return { valid: false, reason: "bad-signature-format" };
     const manifest = `id:${paymentId};request-id:${requestId};ts:${ts};`;
-    const expected = createHmac("sha256", this.webhookSecret)
+    const expected = createHmac("sha256", secret)
       .update(manifest)
       .digest("hex");
     return expected === v1

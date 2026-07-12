@@ -25,7 +25,7 @@ export async function POST(req: Request) {
     throw e;
   }
 
-  if (!mp.isConfigured()) {
+  if (!(await mp.isConfigured())) {
     return NextResponse.json(
       { error: "Mercado Pago não está configurado nesse ambiente" },
       { status: 503 },

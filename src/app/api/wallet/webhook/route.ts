@@ -10,8 +10,11 @@ import { audit } from "@/lib/audit";
  * body { action: "payment.created/updated", data: {id} } e query string
  * (?id=X&topic=payment OR ?data.id=X&type=payment).
  *
- * Sempre responde 200 (mesmo em erro) pra MP não ficar reexecutando. Logs
- * registram falhas.
+ * Responde 200 na maioria dos casos (mesmo em erro) pra MP não ficar
+ * reexecutando. Exceções deliberadas (Fase Admin 4):
+ *   - 503 se mp.webhook_secret não configurado (CVE #2 — fail-closed;
+ *     MP reagenda, pagamento fica pendente até o admin configurar)
+ *   - 400 se valor pago != valor cobrado (CVE #1 — nunca credita)
  */
 function extractPaymentId(
   body: Record<string, unknown>,
@@ -41,8 +44,23 @@ export async function POST(req: Request) {
   const url = new URL(req.url);
   const paymentId = extractPaymentId(body, url);
 
+  // CVE #2 — sem webhook secret configurado, QUALQUER POST forjado passaria
+  // pela validação permissiva. Fail-closed: 503 até o admin configurar
+  // mp.webhook_secret no painel /admin/settings/secrets. MP reagenda a
+  // notificação, então nenhum pagamento se perde — só fica pendente.
+  if (!(await mp.hasWebhookSecret())) {
+    console.warn(
+      "[wallet/webhook] mp.webhook_secret NÃO configurado — recusando webhook (503). " +
+        "Configure em /admin/settings/secrets antes de aceitar pagamentos.",
+    );
+    return NextResponse.json(
+      { error: "webhook-secret-not-configured" },
+      { status: 503 },
+    );
+  }
+
   // Validação de assinatura — só rejeita se secret está configurado e bate negativo
-  const sigCheck = mp.validateWebhookSignature(req.headers, paymentId);
+  const sigCheck = await mp.validateWebhookSignature(req.headers, paymentId);
   if (!sigCheck.valid) {
     console.warn(
       `[wallet/webhook] assinatura inválida (${sigCheck.reason}), payment=${paymentId}`,
@@ -55,7 +73,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ received: true, ignored: "no-payment-id" });
   }
 
-  if (!mp.isConfigured()) {
+  if (!(await mp.isConfigured())) {
     console.warn("[wallet/webhook] MP não configurado — ignorando");
     return NextResponse.json({ received: true, ignored: "mp-not-configured" });
   }
@@ -97,6 +115,31 @@ export async function POST(req: Request) {
     }
 
     if (payment.status === "approved") {
+      // CVE #1 — valida valor pago vs valor cobrado. Sem isso, um pagamento
+      // de R$0,01 numa preferência adulterada creditaria os coins da tx
+      // original. Divergiu → log crítico + audit + 400, NÃO credita.
+      const expectedAmount = Number(tx.amount);
+      if (Math.abs(payment.amount - expectedAmount) > 0.009) {
+        console.error(
+          `[wallet/webhook] CRÍTICO: valor pago R$${payment.amount} != cobrado ` +
+            `R$${expectedAmount} (tx ${txId}, payment ${paymentId}) — coins NÃO creditados`,
+        );
+        await audit({
+          userId,
+          action: "wallet_webhook_amount_mismatch",
+          details: {
+            txId,
+            paymentId,
+            paidAmount: payment.amount,
+            expectedAmount,
+          },
+        });
+        return NextResponse.json(
+          { error: "amount-mismatch" },
+          { status: 400 },
+        );
+      }
+
       // Atomic (all-or-nothing): flip status pendente→aprovado E credita coins
       // dentro da MESMA transação. O updateMany continua sendo a trava
       // anti-double-credit (só um webhook concorrente pega count===1); o

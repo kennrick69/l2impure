@@ -187,7 +187,7 @@ model WalletTransaction {
   amount         Decimal   @db.Decimal(10, 2)
   coins          Int
   status         String    @default("pending") @db.VarChar(20)
-  mpPaymentId    String?   @map("mp_payment_id") @db.VarChar(64)
+  mpPaymentId    String?   @unique @map("mp_payment_id") @db.VarChar(64)
   mpPreferenceId String?   @map("mp_preference_id") @db.VarChar(64)
   type           String    @db.VarChar(20)
   description    String?   @db.VarChar(255)
@@ -198,7 +198,6 @@ model WalletTransaction {
 
   @@index([userId])
   @@index([status])
-  @@index([mpPaymentId])
   @@index([createdAt])
   @@map("wallet_transactions")
 }
@@ -261,4 +260,21 @@ model EventConfig {
   updatedAt     DateTime  @default(now()) @updatedAt @map("updated_at")
 
   @@map("event_configs")
+}
+
+/// Secrets operacionais editáveis pelo painel admin (/admin/settings/secrets).
+/// `value` NUNCA é plaintext: AES-256-GCM, base64(iv|ciphertext|tag), chave
+/// derivada de JWT_SECRET via scrypt (ver src/lib/secrets.ts). Leitura em
+/// runtime via getSecret(key, envFallback) — DB tem prioridade, env var é
+/// fallback. NÃO ROTACIONAR JWT_SECRET sem re-encriptar tudo (SECRETS_ROTACAO.md).
+model AdminSecret {
+  id          Int      @id @default(autoincrement())
+  key         String   @unique @db.VarChar(64)
+  value       String   @db.Text
+  category    String   @default("general") @db.VarChar(32)
+  description String?  @db.VarChar(255)
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at")
+  updatedBy   String?  @map("updated_by") @db.VarChar(128)
+
+  @@map("admin_secrets")
 }
