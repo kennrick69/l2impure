@@ -410,20 +410,23 @@ export async function voteRoutes(app: FastifyInstance) {
     }
 
     try {
-      const [rows] = await pool.query(
-        "SELECT id FROM vote_pending WHERE site = ? AND char_id = ? AND claimed = 0 ORDER BY voted_at DESC LIMIT 1",
+      // Claim atômico anti-dupe: colapsa o antigo SELECT-then-UPDATE (TOCTOU)
+      // em UMA única statement guardada. Duas /vote/check concorrentes pro
+      // mesmo char antes davam ambas ok:true → o game server creditava a coin
+      // 2×. Agora só o request cujo UPDATE alterou de fato a linha
+      // (affectedRows === 1) recebe ok:true; o perdedor cai em no_pending_vote.
+      const [res] = await pool.query(
+        "UPDATE vote_pending SET claimed = 1, claimed_at = NOW() " +
+          "WHERE site = ? AND char_id = ? AND claimed = 0 " +
+          "ORDER BY voted_at DESC LIMIT 1",
         [site, charIdNum],
       );
-      const list = rows as Array<{ id: number }>;
-      if (list.length === 0) {
+      const affected = (res as { affectedRows?: number }).affectedRows ?? 0;
+      if (affected < 1) {
         reply.send({ ok: false, reason: "no_pending_vote" });
         return;
       }
 
-      await pool.query(
-        "UPDATE vote_pending SET claimed = 1, claimed_at = NOW() WHERE id = ?",
-        [list[0]!.id],
-      );
       await pool.query(
         "INSERT INTO vote_cooldown (char_id, site, last_vote) VALUES (?, ?, NOW()) " +
           "ON DUPLICATE KEY UPDATE last_vote = NOW()",

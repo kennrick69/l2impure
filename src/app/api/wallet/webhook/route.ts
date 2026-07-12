@@ -97,19 +97,28 @@ export async function POST(req: Request) {
     }
 
     if (payment.status === "approved") {
-      // Atomic: muda status pendente→aprovado E credita coins
-      const updated = await prisma.walletTransaction.updateMany({
-        where: { id: txId, status: { not: "approved" } },
-        data: {
-          status: "approved",
-          mpPaymentId: paymentId,
-        },
-      });
-      if (updated.count === 1) {
-        await prisma.user.update({
+      // Atomic (all-or-nothing): flip status pendente→aprovado E credita coins
+      // dentro da MESMA transação. O updateMany continua sendo a trava
+      // anti-double-credit (só um webhook concorrente pega count===1); o
+      // $transaction garante que status-aprovado e crédito de coins nunca
+      // divergem — sem esse wrap, um crash entre os dois statements deixaria a
+      // tx "approved" mas sem coins creditados (perda de coins pro jogador).
+      const credited = await prisma.$transaction(async (txdb) => {
+        const updated = await txdb.walletTransaction.updateMany({
+          where: { id: txId, status: { not: "approved" } },
+          data: {
+            status: "approved",
+            mpPaymentId: paymentId,
+          },
+        });
+        if (updated.count !== 1) return false;
+        await txdb.user.update({
           where: { id: userId },
           data: { coins: { increment: tx.coins } },
         });
+        return true;
+      });
+      if (credited) {
         await audit({
           userId,
           action: "wallet_recharge_approved",
