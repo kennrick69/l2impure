@@ -180,9 +180,11 @@ export function maskSecret(v: string): string {
 // ---------- Bootstrap ----------
 
 /**
- * Garante que todo secret do catálogo tem linha no DB e, se a linha está
- * vazia mas existe env var (ou defaultValue não-secreto), encripta e
- * persiste. Idempotente; nunca sobrescreve valor já setado pelo painel.
+ * Semeia linhas AUSENTES do catálogo no DB (primeira inicialização).
+ * Se há env var (ou defaultValue não-secreto), encripta e persiste junto.
+ * Idempotente e NÃO-destrutivo: linha que já existe nunca é tocada — nem
+ * o valor nem o updatedBy — porque o admin pode ter salvo string vazia
+ * de propósito (desativar um secret) e o bootstrap precisa respeitar isso.
  * Chamado no GET /api/admin/secrets (abrir o painel já semeia).
  */
 export async function bootstrapSecrets(): Promise<void> {
@@ -191,7 +193,10 @@ export async function bootstrapSecrets(): Promise<void> {
       const row = await prisma.adminSecret.findUnique({
         where: { key: def.key },
       });
-      if (row?.value) continue;
+      // Linha já existe → NUNCA sobrescrever (nem valor, nem updatedBy).
+      // Admin pode ter salvo string vazia deliberadamente (desativar); respeitar.
+      // Bootstrap só semeia linhas AUSENTES (primeira inicialização do DB).
+      if (row) continue;
 
       const envVal = def.envFallback ? cleanEnv(process.env[def.envFallback]) : "";
       const plain = envVal || def.defaultValue || "";
@@ -201,24 +206,16 @@ export async function bootstrapSecrets(): Promise<void> {
           : "bootstrap:default"
         : null;
 
-      if (!row) {
-        await prisma.adminSecret.create({
-          data: {
-            key: def.key,
-            value: plain ? encrypt(plain) : "",
-            category: def.category,
-            description: def.description,
-            updatedBy,
-          },
-        });
-        if (plain) invalidateCache(def.key);
-      } else if (plain) {
-        await prisma.adminSecret.update({
-          where: { key: def.key },
-          data: { value: encrypt(plain), updatedBy },
-        });
-        invalidateCache(def.key);
-      }
+      await prisma.adminSecret.create({
+        data: {
+          key: def.key,
+          value: plain ? encrypt(plain) : "",
+          category: def.category,
+          description: def.description,
+          updatedBy,
+        },
+      });
+      if (plain) invalidateCache(def.key);
     } catch (e) {
       console.error(`[secrets] bootstrap falhou pra ${def.key}:`, (e as Error).message);
     }
