@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { bridge } from "@/lib/bridge";
 import { PageTitle } from "@/components/dashboard/Placeholder";
 import { CreateAccountTrigger } from "@/components/dashboard/CreateAccountTrigger";
 import { AccountRowActions } from "@/components/dashboard/AccountRowActions";
@@ -18,6 +19,33 @@ export default async function DashboardPage() {
     select: { id: true, gameLogin: true, createdAt: true },
     orderBy: { createdAt: "desc" },
   });
+
+  // Contagem real de personagens via bridge (fail-soft: bridge fora → conta
+  // some como 0, mesmo padrão da página /characters). null = não deu pra
+  // consultar nenhuma conta (bridge totalmente fora) → mostra "—" em vez de 0
+  // enganoso.
+  let charCount: number | null = null;
+  if (accounts.length > 0) {
+    const counts = await Promise.all(
+      accounts.map(async (acc) => {
+        try {
+          const data = await bridge.getCharacters(acc.gameLogin);
+          return data.count ?? data.characters.length;
+        } catch (e) {
+          console.warn(
+            `[dashboard] bridge.getCharacters(${acc.gameLogin}) falhou:`,
+            (e as Error).message,
+          );
+          return null;
+        }
+      }),
+    );
+    const ok = counts.filter((c): c is number => c !== null);
+    charCount = ok.length > 0 ? ok.reduce((a, b) => a + b, 0) : null;
+  } else {
+    charCount = 0;
+  }
+  const charCountLabel = charCount === null ? "—" : String(charCount);
 
   return (
     <>
@@ -57,7 +85,7 @@ export default async function DashboardPage() {
         <StatCard
           title="Personagens"
           icon="⚔️"
-          value="0"
+          value={charCountLabel}
           footer={
             <Link
               href="/characters"
