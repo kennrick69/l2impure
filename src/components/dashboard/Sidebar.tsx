@@ -45,7 +45,7 @@ export function Sidebar({
           className="flex w-full items-center justify-between rounded-md border border-white/8 bg-[color:var(--l2-bg-input)] px-3 py-2 text-sm text-white/85 transition hover:border-white/20"
           aria-label="Trocar servidor (em breve)"
         >
-          <span className="truncate">🏰 Bartz · Interlude x10 (NOVO)</span>
+          <span className="truncate">🏰 Impure 10x (NOVO)</span>
           <span className="ml-2 text-white/40">▼</span>
         </button>
       </div>
@@ -89,9 +89,9 @@ export function Sidebar({
           <li className="flex items-center justify-between">
             <span className="flex items-center gap-2 text-white/75">
               <span>🏰</span>
-              <span>Bartz · x10 NOVO</span>
+              <span>Impure 10x NOVO</span>
             </span>
-            <BartzStatusBadge status={serverStatus} />
+            <ImpureStatusBadge status={serverStatus} />
           </li>
           <li>
             <a
@@ -119,7 +119,7 @@ export function Sidebar({
   );
 }
 
-function BartzStatusBadge({ status }: { status: ServerStatus | null }) {
+function ImpureStatusBadge({ status }: { status: ServerStatus | null }) {
   if (!status) {
     return (
       <span className="flex items-center gap-1.5 font-display text-[10px] font-semibold uppercase tracking-wider text-white/35">

@@ -137,7 +137,7 @@ function CreateAccountModal() {
             <span className="font-semibold text-[color:var(--l2-text-gold)]">
               Servidor:
             </span>{" "}
-            🏰 Bartz · Interlude x10
+            🏰 Impure 10x
           </div>
 
           {/* Login */}
