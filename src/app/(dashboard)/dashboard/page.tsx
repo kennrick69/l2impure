@@ -136,7 +136,7 @@ export default async function DashboardPage() {
         />
       </section>
 
-      <section className="mb-8 rounded-xl border border-white/5 bg-[color:var(--l2-bg-card)]">
+      <section className="l2-panel mb-8">
         <div className="flex items-center justify-between border-b border-white/5 px-6 py-4">
           <h3 className="font-display text-sm font-semibold uppercase tracking-wider text-white">
             Contas do Jogo{" "}
@@ -254,7 +254,7 @@ export default async function DashboardPage() {
         )}
       </section>
 
-      <section className="flex items-center gap-4 rounded-xl border border-white/5 bg-[color:var(--l2-bg-card)] p-6">
+      <section className="l2-panel flex items-center gap-4 p-6">
         <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-l2-gold/10 text-l2-gold">
           <HeadsetIcon className="h-7 w-7" />
         </div>
@@ -292,7 +292,7 @@ function StatCard({
   footer: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col rounded-xl border border-white/5 bg-[color:var(--l2-bg-card)] p-5">
+    <div className="l2-panel flex flex-col p-5">
       <div className="mb-3 flex items-center justify-between">
         <span className="font-display text-xs font-semibold uppercase tracking-wider text-white/55">
           {title}
