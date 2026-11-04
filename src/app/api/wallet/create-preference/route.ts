@@ -10,6 +10,21 @@ const MIN_AMOUNT_BRL = 5;
 const MAX_AMOUNT_BRL = 5000;
 const COIN_RATE = 1.5; // 1 TOL = R$1,50
 
+// Bônus é aplicado NA COMPRA (TOL extra cai no painel), não no envio ao jogo.
+const BONUS_TIERS = [
+  { from: 300, bonus: 40 },
+  { from: 200, bonus: 30 },
+  { from: 150, bonus: 25 },
+  { from: 100, bonus: 20 },
+  { from: 50, bonus: 15 },
+] as const;
+
+/** % de bônus na compra de `tol` TOL (base, antes do bônus). */
+function bonusFor(tol: number): number {
+  for (const t of BONUS_TIERS) if (tol >= t.from) return t.bonus;
+  return 0;
+}
+
 const schema = z.object({
   amount: z.coerce.number().min(MIN_AMOUNT_BRL).max(MAX_AMOUNT_BRL),
 });
@@ -57,10 +72,13 @@ export async function POST(req: Request) {
   }
 
   const amount = Math.round(body.amount * 100) / 100;
-  const coins = Math.floor(amount / COIN_RATE);
-  if (coins <= 0) {
+  const baseCoins = Math.floor(amount / COIN_RATE);
+  if (baseCoins <= 0) {
     return NextResponse.json({ error: "Valor muito baixo" }, { status: 400 });
   }
+  // Bônus na compra: o painel recebe base + bônus do tier.
+  const bonusPct = bonusFor(baseCoins);
+  const coins = Math.floor(baseCoins * (1 + bonusPct / 100));
 
   // Cria a transação primeiro pra ter o ID, depois usa em external_reference.
   const tx = await prisma.walletTransaction.create({
@@ -70,7 +88,10 @@ export async function POST(req: Request) {
       coins,
       status: "pending",
       type: "recharge",
-      description: `Recarga de ${coins} coins`,
+      description:
+        bonusPct > 0
+          ? `Recarga de ${baseCoins} TOL (+${bonusPct}% = ${coins})`
+          : `Recarga de ${coins} TOL`,
     },
   });
 

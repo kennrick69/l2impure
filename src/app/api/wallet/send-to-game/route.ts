@@ -18,19 +18,8 @@ const TOL_ITEM_ID = 9503;
 const MIN_SEND = 1;
 const MAX_SEND = 1_000_000;
 
-// Tiers de bônus (maior primeiro). Aplicado ao ENVIAR pro jogo.
-const BONUS_TIERS = [
-  { from: 300, bonus: 40 },
-  { from: 200, bonus: 30 },
-  { from: 150, bonus: 25 },
-  { from: 100, bonus: 20 },
-  { from: 50, bonus: 15 },
-] as const;
-
-function bonusFor(tol: number): number {
-  for (const t of BONUS_TIERS) if (tol >= t.from) return t.bonus;
-  return 0;
-}
+// Envio ao jogo é 1:1 — o bônus é aplicado NA COMPRA (create-preference),
+// não aqui. O personagem recebe exatamente o TOL enviado.
 
 const Body = z
   .object({
@@ -102,8 +91,7 @@ export async function POST(req: Request) {
     );
   }
 
-  const bonus = bonusFor(body.tol);
-  const delivered = Math.floor(body.tol * (1 + bonus / 100));
+  const delivered = body.tol; // 1:1, sem bônus no envio
 
   // 2. Débito atômico (coins -= tol) + transação pendente.
   let txId: number;
@@ -125,7 +113,7 @@ export async function POST(req: Request) {
           coins: -body.tol,
           status: "pending",
           type: "send_to_game",
-          description: `Enviar ${body.tol} TOL (+${bonus}% = ${delivered}) para ${body.charName}`,
+          description: `Enviar ${body.tol} TOL para ${body.charName}`,
         },
         select: { id: true },
       });
@@ -183,8 +171,8 @@ export async function POST(req: Request) {
     userId: session.sub,
     action: "wallet_send_to_game",
     ipAddress: clientIp(req),
-    details: { charName: body.charName, tol: body.tol, bonus, delivered },
+    details: { charName: body.charName, tol: body.tol, delivered },
   }).catch(() => {});
 
-  return NextResponse.json({ ok: true, delivered, bonus });
+  return NextResponse.json({ ok: true, delivered });
 }

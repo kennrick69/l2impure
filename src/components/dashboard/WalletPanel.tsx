@@ -24,8 +24,8 @@ const BONUS_TIERS = [
   { from: 300, bonus: 40 },
 ] as const;
 
-/** % de bônus ao enviar `tol` pro jogo. */
-function sendBonusPct(tol: number): number {
+/** % de bônus NA COMPRA de `tol` TOL (o extra cai no painel). */
+function bonusPct(tol: number): number {
   for (let i = BONUS_TIERS.length - 1; i >= 0; i--) {
     if (tol >= BONUS_TIERS[i].from) return BONUS_TIERS[i].bonus;
   }
@@ -164,16 +164,12 @@ export function WalletPanel({
       const data = (await res.json().catch(() => ({}))) as {
         error?: string;
         delivered?: number;
-        bonus?: number;
       };
       if (!res.ok) {
         show(data.error ?? "Falha ao enviar", "error");
         return;
       }
-      show(
-        `Enviado! ${data.delivered} TOL a caminho de ${char} (bônus +${data.bonus}%)`,
-        "success",
-      );
+      show(`Enviado! ${data.delivered} TOL a caminho de ${char}`, "success");
       setSendTol("");
       router.refresh();
     } catch {
@@ -183,9 +179,9 @@ export function WalletPanel({
     }
   }
 
-  const sendN = Math.floor(Number(sendTol) || 0);
-  const sendBonus = sendBonusPct(sendN);
-  const sendDelivered = Math.floor(sendN * (1 + sendBonus / 100));
+  // Bônus da COMPRA (preview): base selecionada + bônus = TOL no painel.
+  const buyBonus = bonusPct(tolNum);
+  const buyTotal = Math.floor(tolNum * (1 + buyBonus / 100));
 
   return (
     <>
@@ -214,8 +210,8 @@ export function WalletPanel({
             Enviar TOL ao jogo
           </h3>
           <p className="mb-4 mt-1 text-xs text-white/55">
-            Debita do saldo e entrega no personagem (online ou offline), já com
-            o bônus do tier.
+            Debita do saldo e entrega no personagem (online ou offline). O
+            personagem recebe exatamente o que você enviar.
           </p>
           <form onSubmit={sendToGame} className="flex flex-col gap-3">
             <div>
@@ -254,12 +250,6 @@ export function WalletPanel({
               </button>
             </div>
           </form>
-          {sendN >= 50 && (
-            <p className="mt-2 text-[11px] text-l2-green">
-              Bônus +{sendBonus}% → o personagem recebe{" "}
-              <strong>{sendDelivered} TOL</strong>
-            </p>
-          )}
         </div>
       </section>
 
@@ -295,7 +285,7 @@ export function WalletPanel({
           {/* Bônus */}
           <div>
             <div className="mb-3 text-[10px] font-semibold uppercase tracking-wider text-white/45">
-              Bônus ao enviar pro jogo
+              Bônus na compra
             </div>
             <div className="overflow-hidden rounded-lg border border-white/5">
               {BONUS_TIERS.map((t, i) => (
@@ -320,8 +310,8 @@ export function WalletPanel({
             <p className="mt-2 flex items-start gap-1.5 text-[10px] text-white/40">
               <AlertTriangleIcon className="mt-px h-3.5 w-3.5 shrink-0" />
               <span>
-                O bônus é aplicado quando você envia o TOL do painel para o
-                jogo.
+                O bônus é aplicado na compra — o TOL extra já entra no seu
+                painel. O envio ao personagem é 1:1.
               </span>
             </p>
           </div>
@@ -337,6 +327,12 @@ export function WalletPanel({
                 <strong className="font-display text-base text-l2-gold">
                   R$ {priceBRL.toFixed(2).replace(".", ",")}
                 </strong>
+                {buyBonus > 0 && (
+                  <span className="text-l2-green">
+                    {" "}
+                    → recebe <strong>{buyTotal} TOL</strong>
+                  </span>
+                )}
               </span>
             </div>
             <div className="mb-3 flex flex-wrap gap-2">
