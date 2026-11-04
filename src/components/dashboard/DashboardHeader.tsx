@@ -41,7 +41,7 @@ export function DashboardHeader({
           <img
             src="/images/logo.png"
             alt="L2Impure"
-            className="h-[40px] w-auto shrink-0 select-none object-contain"
+            className="h-[54px] w-auto shrink-0 select-none object-contain"
           />
         </Link>
 
@@ -54,13 +54,11 @@ export function DashboardHeader({
         <button
           type="button"
           onClick={open}
-          className="hidden items-center gap-2 rounded-[10px] px-7 py-3 font-display text-[15px] font-semibold text-white shadow-[0_2px_12px_rgba(245,130,10,0.35)] transition hover:brightness-110 sm:inline-flex"
-          style={{
-            background: "linear-gradient(180deg, #FBA532 0%, #F2870C 100%)",
-          }}
+          className="hidden items-center gap-2 rounded-md px-5 py-2.5 font-display text-[13px] font-semibold uppercase tracking-wider text-black transition hover:opacity-90 sm:inline-flex"
+          style={{ background: "var(--l2-gold-gradient)" }}
         >
           <UserIcon className="h-[18px] w-[18px]" />
-          <span>Criar uma conta</span>
+          <span>Criar conta</span>
         </button>
       </div>
 

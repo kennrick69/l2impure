@@ -250,7 +250,7 @@ export default async function DashboardPage() {
         )}
       </section>
 
-      <section className="l2-panel flex items-center gap-4 p-6">
+      <Link href="/support" className="l2-panel group flex items-center gap-4 p-6">
         <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-l2-gold/10 text-l2-gold">
           <HeadsetIcon className="h-7 w-7" />
         </div>
@@ -263,13 +263,10 @@ export default async function DashboardPage() {
             o mais breve possível.
           </p>
         </div>
-        <Link
-          href="/support"
-          className="rounded-md border border-white/8 bg-[color:var(--l2-bg-card-hover)] px-4 py-2 font-display text-xs font-semibold uppercase tracking-wider text-white/75 transition hover:border-white/20 hover:text-white"
-        >
+        <span className="rounded-md border border-white/8 bg-[color:var(--l2-bg-card-hover)] px-4 py-2 font-display text-xs font-semibold uppercase tracking-wider text-white/75 transition group-hover:border-[color:var(--l2-border-gold)] group-hover:text-white">
           Suporte
-        </Link>
-      </section>
+        </span>
+      </Link>
     </>
   );
 }
