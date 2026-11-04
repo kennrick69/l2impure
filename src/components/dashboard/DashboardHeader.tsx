@@ -33,19 +33,19 @@ export function DashboardHeader({
   const { open } = useCreateAccountModal();
 
   return (
-    <header className="sticky top-0 z-30 flex h-[70px] items-center justify-between gap-4 border-b border-white/5 bg-[color:var(--l2-bg-secondary)]/95 px-5 backdrop-blur lg:px-8">
+    <header className="sticky top-0 z-30 flex h-[78px] items-center justify-between gap-4 border-b border-white/5 bg-[color:var(--l2-bg-secondary)]/95 px-5 backdrop-blur lg:px-8">
       {/* Esquerda: logo + nav + CTA */}
-      <div className="flex items-center gap-7">
+      <div className="flex items-center gap-9">
         <Link href="/" className="flex shrink-0 items-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/images/logo.png"
             alt="L2Impure"
-            className="h-[34px] w-auto select-none"
+            className="h-[40px] w-auto select-none"
           />
         </Link>
 
-        <nav className="hidden items-center gap-6 md:flex">
+        <nav className="hidden items-center gap-8 md:flex">
           <NavLink href="/" Icon={HomeIcon} label="Site" />
           <NavLink href={DISCORD_URL} Icon={ForumIcon} label="Fórum" external />
           <NavLink href="/wallet" Icon={HeartHandIcon} label="Doar" />
@@ -54,11 +54,13 @@ export function DashboardHeader({
         <button
           type="button"
           onClick={open}
-          className="hidden items-center gap-2 rounded-full px-5 py-2.5 font-display text-[13px] font-semibold uppercase tracking-wide text-black shadow-[0_2px_10px_rgba(212,161,74,0.25)] transition hover:brightness-110 sm:inline-flex"
-          style={{ background: "var(--l2-gold-gradient)" }}
+          className="hidden items-center gap-2 rounded-[10px] px-7 py-3 font-display text-[15px] font-semibold text-white shadow-[0_2px_12px_rgba(245,130,10,0.35)] transition hover:brightness-110 sm:inline-flex"
+          style={{
+            background: "linear-gradient(180deg, #FBA532 0%, #F2870C 100%)",
+          }}
         >
-          <UserIcon className="h-4 w-4" />
-          <span>Criar conta</span>
+          <UserIcon className="h-[18px] w-[18px]" />
+          <span>Criar uma conta</span>
         </button>
       </div>
 
@@ -69,10 +71,10 @@ export function DashboardHeader({
           className="flex items-center gap-1.5 rounded-md px-1.5 py-1 transition hover:bg-white/5"
           title="Saldo de TOL"
         >
-          <span className="font-display text-base font-bold tabular-nums text-[color:var(--l2-text-gold)]">
+          <span className="font-display text-lg font-bold tabular-nums text-[color:var(--l2-text-gold)]">
             {balance}
           </span>
-          <CoinsIcon className="h-[18px] w-[18px] text-[color:var(--l2-text-gold)]" />
+          <CoinsIcon className="h-5 w-5 text-[color:var(--l2-text-gold)]" />
         </Link>
 
         <LanguageSwitch />
@@ -95,10 +97,10 @@ function NavLink({
   external?: boolean;
 }) {
   const className =
-    "flex items-center gap-2 text-[15px] font-semibold text-white/85 transition hover:text-[color:var(--l2-text-gold)]";
+    "flex items-center gap-2 text-[17px] font-semibold text-white/90 transition hover:text-[color:var(--l2-text-gold)]";
   const inner = (
     <>
-      <Icon className="h-[18px] w-[18px]" />
+      <Icon className="h-5 w-5" />
       <span>{label}</span>
     </>
   );
