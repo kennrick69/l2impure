@@ -103,10 +103,10 @@ export function Sidebar({
           Status dos Servidores
         </div>
         <ul className="flex flex-col gap-2 text-xs">
-          <li className="flex items-center justify-between">
-            <span className="flex items-center gap-2 text-white/75">
-              <CastleIcon className="h-4 w-4 text-white/45" />
-              <span>Impure 10x NOVO</span>
+          <li className="flex items-center justify-between gap-2">
+            <span className="flex min-w-0 items-center gap-2 text-white/75">
+              <CastleIcon className="h-4 w-4 shrink-0 text-white/45" />
+              <span className="truncate">Impure 10x</span>
             </span>
             <ImpureStatusBadge status={serverStatus} />
           </li>
@@ -139,7 +139,7 @@ export function Sidebar({
 function ImpureStatusBadge({ status }: { status: ServerStatus | null }) {
   if (!status) {
     return (
-      <span className="flex items-center gap-1.5 font-display text-[10px] font-semibold uppercase tracking-wider text-white/35">
+      <span className="flex shrink-0 items-center gap-1.5 whitespace-nowrap font-display text-[10px] font-semibold uppercase tracking-wider text-white/35">
         <span className="h-1.5 w-1.5 rounded-full bg-white/25" />
         Indisponível
       </span>
@@ -147,20 +147,20 @@ function ImpureStatusBadge({ status }: { status: ServerStatus | null }) {
   }
   if (status.online) {
     return (
-      <span className="flex items-center gap-1.5 font-display text-[10px] font-semibold uppercase tracking-wider text-l2-green">
+      <span className="flex shrink-0 items-center gap-1.5 whitespace-nowrap font-display text-[10px] font-semibold uppercase tracking-wider text-l2-green">
         <span className="relative flex h-1.5 w-1.5">
           <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-l2-green opacity-75"></span>
           <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-l2-green"></span>
         </span>
         Online
-        <span className="text-white/55 normal-case tracking-normal">
-          · {status.players} {status.players === 1 ? "jogador" : "jogadores"}
+        <span className="text-white/50 normal-case tracking-normal">
+          · {status.players}
         </span>
       </span>
     );
   }
   return (
-    <span className="flex items-center gap-1.5 font-display text-[10px] font-semibold uppercase tracking-wider text-l2-red">
+    <span className="flex shrink-0 items-center gap-1.5 whitespace-nowrap font-display text-[10px] font-semibold uppercase tracking-wider text-l2-red">
       <span className="h-1.5 w-1.5 rounded-full bg-l2-red" />
       Offline
     </span>

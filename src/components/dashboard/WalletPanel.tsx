@@ -3,6 +3,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useToast } from "@/components/ui/Toast";
+import { CoinsIcon } from "@/components/icons";
 
 // Preço: 1 TOL = R$ 1,50. Presets casam com os tiers de bônus.
 const PRESET_TOL = [50, 100, 150, 200, 300] as const;
@@ -192,7 +193,7 @@ export function WalletPanel({
           <span className="font-display text-5xl font-bold text-l2-gold">
             {coins}
           </span>
-          <span className="mb-1 text-2xl">🪙</span>
+          <CoinsIcon className="mb-1.5 h-8 w-8 text-l2-gold" />
         </div>
         <div className="mt-1 text-xs text-white/45">
           TOL no painel — disponível para enviar a um personagem
