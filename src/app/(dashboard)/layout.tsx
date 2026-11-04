@@ -63,14 +63,13 @@ export default async function DashboardLayout({
   return (
     <ToastProvider>
       <CreateAccountModalProvider>
-        <div className="l2-atmosphere relative flex min-h-screen flex-col">
-          <div className="l2-grain" aria-hidden="true" />
+        <div className="flex min-h-screen flex-col bg-[color:var(--l2-bg-primary)]">
           <DashboardHeader
             email={session.email}
             isAdmin={isAdmin}
             balance={balance}
           />
-          <div className="relative z-10 flex flex-1 flex-col lg:flex-row">
+          <div className="flex flex-1 flex-col lg:flex-row">
             <Sidebar serverStatus={serverStatus} />
             <main className="flex-1 px-6 py-8 lg:px-10 lg:py-10">
               <div className="mx-auto w-full max-w-[1100px]">{children}</div>
