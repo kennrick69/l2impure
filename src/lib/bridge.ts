@@ -136,11 +136,23 @@ export type GameCharacter = {
   pk: number;
   clanId: number | null;
   clanName: string | null;
+  /** Tempo total jogado em segundos (characters.onlinetime). */
+  gameTime: number;
+  /** Último acesso do personagem em epoch ms (characters.lastAccess). */
+  lastAccess: number;
 };
 export type CharactersResponse = {
   login: string;
   characters: GameCharacter[];
   count: number;
+  /** Último login da CONTA em epoch ms (accounts.lastactive). */
+  lastActive: number;
+  /** Conta banida (access_level < 0 — bloqueia o login). */
+  banned: boolean;
+  /** Motivo do ban ativo, se houver (account_bans.reason). */
+  banReason: string | null;
+  /** Expiração do ban em epoch ms, ou null = permanente. */
+  banUntil: number | null;
 };
 
 /** Resposta da busca admin (/admin/characters/search) — campos extras vs GameCharacter. */

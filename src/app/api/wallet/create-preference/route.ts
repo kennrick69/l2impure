@@ -8,7 +8,7 @@ import { mp, MercadoPagoError } from "@/lib/mercadopago";
 
 const MIN_AMOUNT_BRL = 5;
 const MAX_AMOUNT_BRL = 5000;
-const COIN_RATE = 1; // 1 coin = R$1
+const COIN_RATE = 1.5; // 1 TOL = R$1,50
 
 const schema = z.object({
   amount: z.coerce.number().min(MIN_AMOUNT_BRL).max(MAX_AMOUNT_BRL),

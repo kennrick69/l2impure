@@ -4,9 +4,19 @@ import { useEffect, useState, type FormEvent } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useToast } from "@/components/ui/Toast";
 
-const PRESET_VALUES = [5, 10, 25, 50, 100] as const;
-const MIN_AMOUNT = 5;
-const COIN_RATE = 1;
+// Preço: 1 TOL = R$ 1,50. Presets casam com os tiers de bônus.
+const PRESET_TOL = [50, 100, 150, 200, 300] as const;
+const MIN_TOL = 10;
+const MAX_TOL = 3000;
+const COIN_RATE = 1.5; // R$ por TOL
+// Bônus aplicado ao ENVIAR TOL do painel pro jogo (não na compra).
+const BONUS_TIERS = [
+  { from: 50, bonus: 15 },
+  { from: 100, bonus: 20 },
+  { from: 150, bonus: 25 },
+  { from: 200, bonus: 30 },
+  { from: 300, bonus: 40 },
+] as const;
 
 type Tx = {
   id: number;
@@ -29,7 +39,7 @@ export function WalletPanel({
   const router = useRouter();
   const { show } = useToast();
   const searchParams = useSearchParams();
-  const [amount, setAmount] = useState<string>("10");
+  const [amount, setAmount] = useState<string>("50");
   const [busy, setBusy] = useState(false);
   const [cancelling, setCancelling] = useState<number | null>(null);
 
@@ -78,14 +88,14 @@ export function WalletPanel({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const amountNum = Number(amount);
-  const validAmount = Number.isFinite(amountNum) && amountNum >= MIN_AMOUNT;
-  const previewCoins = validAmount ? Math.floor(amountNum / COIN_RATE) : 0;
+  const tolNum = Math.max(0, Math.floor(Number(amount) || 0));
+  const validAmount = tolNum >= MIN_TOL && tolNum <= MAX_TOL;
+  const priceBRL = tolNum * COIN_RATE;
 
   async function pay(e?: FormEvent) {
     e?.preventDefault();
     if (!validAmount) {
-      show(`Valor mínimo R$ ${MIN_AMOUNT}`, "error");
+      show(`Quantidade mínima: ${MIN_TOL} TOL`, "error");
       return;
     }
     setBusy(true);
@@ -93,7 +103,7 @@ export function WalletPanel({
       const res = await fetch("/api/wallet/create-preference", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amount: amountNum }),
+        body: JSON.stringify({ amount: priceBRL }),
       });
       const data = (await res.json().catch(() => ({}))) as {
         error?: string;
@@ -125,72 +135,147 @@ export function WalletPanel({
           <span className="mb-1 text-2xl">🪙</span>
         </div>
         <div className="mt-1 text-xs text-white/45">
-          {coins === 1 ? "crédito" : "créditos"} do painel L2 Impure
+          TOL no painel — disponível para enviar a um personagem
         </div>
       </section>
 
-      {/* Recarga */}
-      <section className="mb-8 rounded-xl border border-white/5 bg-[color:var(--l2-bg-card)] p-6">
-        <h3 className="mb-1 font-display text-sm font-semibold uppercase tracking-wider text-white">
-          Recarregar
-        </h3>
-        <p className="mb-5 text-xs text-white/55">
-          1 coin = R$ 1. Pagamento via Mercado Pago (PIX, cartão ou boleto).
-        </p>
+      {/* Top up — layout fiel ao L2MAD */}
+      <section className="mb-8 overflow-hidden rounded-xl border border-white/5 bg-[color:var(--l2-bg-card)]">
+        <div className="flex items-center gap-2 border-b border-white/5 px-6 py-4">
+          <span className="text-l2-gold">⛁</span>
+          <h3 className="font-display text-sm font-semibold uppercase tracking-wider text-white">
+            Recarregar saldo do servidor:{" "}
+            <span className="text-l2-gold">L2 Impure</span>
+          </h3>
+        </div>
 
-        <form onSubmit={pay} className="flex flex-col gap-4">
-          <div className="flex flex-wrap gap-2">
-            {PRESET_VALUES.map((v) => (
-              <button
-                key={v}
-                type="button"
-                onClick={() => setAmount(String(v))}
-                className={`rounded-md border px-4 py-2 font-display text-xs font-bold uppercase tracking-wider transition ${
-                  Number(amount) === v
-                    ? "border-l2-gold bg-l2-gold/10 text-l2-gold"
-                    : "border-white/10 text-white/75 hover:border-white/20 hover:text-white"
-                }`}
-              >
-                R$ {v}
-              </button>
-            ))}
+        <form onSubmit={pay} className="grid gap-6 p-6 lg:grid-cols-2">
+          {/* Forma de pagamento */}
+          <div>
+            <div className="mb-3 text-[10px] font-semibold uppercase tracking-wider text-white/45">
+              Forma de pagamento
+            </div>
+            <div className="flex items-center gap-3 rounded-lg border-2 border-l2-gold bg-l2-gold/10 px-4 py-4">
+              <span className="text-2xl">💳</span>
+              <div>
+                <div className="font-display text-sm font-semibold text-white">
+                  Mercado Pago
+                </div>
+                <div className="text-[11px] text-white/55">
+                  PIX, cartão ou boleto
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
-            <div className="flex-1">
-              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-white/55">
-                Ou valor customizado (mín R${MIN_AMOUNT})
+          {/* Bônus */}
+          <div>
+            <div className="mb-3 text-[10px] font-semibold uppercase tracking-wider text-white/45">
+              Bônus ao enviar pro jogo
+            </div>
+            <div className="overflow-hidden rounded-lg border border-white/5">
+              {BONUS_TIERS.map((t, i) => (
+                <div
+                  key={t.from}
+                  className={`flex items-center justify-between px-4 py-2.5 text-xs ${
+                    i % 2 === 0 ? "bg-black/20" : ""
+                  }`}
+                >
+                  <span className="text-white/55">
+                    A partir de{" "}
+                    <span className="font-semibold text-l2-gold">
+                      {t.from} TOL
+                    </span>
+                  </span>
+                  <span className="font-display font-bold text-l2-green">
+                    +{t.bonus}%
+                  </span>
+                </div>
+              ))}
+            </div>
+            <p className="mt-2 flex items-start gap-1.5 text-[10px] text-white/40">
+              <span>⚠️</span>
+              <span>
+                O bônus é aplicado quando você envia o TOL do painel para o
+                jogo.
+              </span>
+            </p>
+          </div>
+
+          {/* Quantidade + slider */}
+          <div className="lg:col-span-2">
+            <div className="mb-2 flex items-end justify-between">
+              <label className="text-[10px] font-semibold uppercase tracking-wider text-white/45">
+                Quantidade de TOL
               </label>
-              <input
-                type="number"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                min={MIN_AMOUNT}
-                step="1"
-                className="w-full rounded-md border border-white/8 bg-[color:var(--l2-bg-input)] px-3 py-2.5 text-sm text-white focus:border-l2-gold focus:outline-none"
-              />
+              <span className="text-xs text-white/55">
+                Você paga{" "}
+                <strong className="font-display text-base text-l2-gold">
+                  R$ {priceBRL.toFixed(2).replace(".", ",")}
+                </strong>
+              </span>
             </div>
-            <div className="flex items-baseline gap-2 px-1 text-sm">
-              <span className="text-white/55">você recebe:</span>
-              <strong className="font-display text-2xl text-l2-gold">
-                {previewCoins}
-              </strong>
-              <span className="text-white/55">🪙</span>
+            <div className="mb-3 flex flex-wrap gap-2">
+              {PRESET_TOL.map((v) => (
+                <button
+                  key={v}
+                  type="button"
+                  onClick={() => setAmount(String(v))}
+                  className={`rounded-md border px-4 py-2 font-display text-xs font-bold uppercase tracking-wider transition ${
+                    Number(amount) === v
+                      ? "border-l2-gold bg-l2-gold/10 text-l2-gold"
+                      : "border-white/10 text-white/75 hover:border-white/20 hover:text-white"
+                  }`}
+                >
+                  {v} TOL
+                </button>
+              ))}
+            </div>
+            <input
+              type="number"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              min={MIN_TOL}
+              max={MAX_TOL}
+              step="1"
+              className="mb-3 w-full rounded-md border border-white/8 bg-[color:var(--l2-bg-input)] px-3 py-2.5 text-sm text-white focus:border-l2-gold focus:outline-none"
+            />
+            <input
+              type="range"
+              min={MIN_TOL}
+              max={MAX_TOL}
+              step="1"
+              value={Math.min(MAX_TOL, Math.max(MIN_TOL, tolNum))}
+              onChange={(e) => setAmount(e.target.value)}
+              className="w-full accent-[color:var(--l2-gold)]"
+            />
+            <div className="mt-1 flex justify-between text-[10px] text-white/35">
+              <span>{MIN_TOL} TOL</span>
+              <span>{MAX_TOL} TOL</span>
             </div>
           </div>
 
-          <button
-            type="submit"
-            disabled={busy || !validAmount}
-            className="rounded-md px-5 py-3 font-display text-sm font-bold uppercase tracking-wider text-black disabled:cursor-not-allowed disabled:opacity-40"
-            style={{ background: "var(--l2-gold-gradient)" }}
-          >
-            {busy ? "Criando pagamento..." : "Pagar com Mercado Pago"}
-          </button>
-          <p className="text-[10px] text-white/45">
-            Você será redirecionado pro checkout do Mercado Pago. Após
-            confirmar, volta aqui automaticamente e os coins aparecem em
-            até 1-2 minutos.
+          {/* Botões */}
+          <div className="flex flex-col gap-3 sm:flex-row lg:col-span-2">
+            <button
+              type="submit"
+              disabled={busy || !validAmount}
+              className="flex-1 rounded-md px-5 py-3 font-display text-sm font-bold uppercase tracking-wider text-black disabled:cursor-not-allowed disabled:opacity-40"
+              style={{ background: "var(--l2-gold-gradient)" }}
+            >
+              {busy ? "Criando pagamento..." : "Recarregar"}
+            </button>
+            <button
+              type="button"
+              onClick={() => show("Envio de TOL pro jogo — em breve", "info")}
+              className="flex-1 rounded-md border border-l2-gold/40 px-5 py-3 font-display text-sm font-bold uppercase tracking-wider text-l2-gold transition hover:bg-l2-gold/10"
+            >
+              Enviar ao jogo
+            </button>
+          </div>
+          <p className="text-[10px] text-white/45 lg:col-span-2">
+            1 TOL = R$ 1,50. Você será redirecionado pro checkout do Mercado
+            Pago; após confirmar, o saldo aparece em 1-2 minutos.
           </p>
         </form>
       </section>

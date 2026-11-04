@@ -16,6 +16,15 @@ type CharRow = {
   pkkills: number;
   clanid: number;
   clan_name: string | null;
+  onlinetime: number | null;
+  lastAccess: number | string | null;
+};
+
+type AccInfoRow = {
+  access_level: number | null;
+  lastactive: number | string | null;
+  ban_reason: string | null;
+  ban_expires: Date | string | null;
 };
 
 export async function characterRoutes(app: FastifyInstance) {
@@ -73,13 +82,34 @@ export async function characterRoutes(app: FastifyInstance) {
              c.pvpkills,
              c.pkkills,
              c.clanid,
-             cd.clan_name
+             cd.clan_name,
+             c.onlinetime,
+             c.lastAccess
            FROM characters c
            LEFT JOIN clan_data cd ON cd.clan_id = c.clanid
            WHERE c.account_name = ?
            ORDER BY c.level DESC, c.char_name ASC`,
           [login],
         );
+        // Info a nível de conta (funciona mesmo com 0 personagens):
+        // lastactive = último login da conta; access_level < 0 = banida
+        // (o que de fato bloqueia o login); account_bans dá motivo/validade.
+        const [accRows] = await pool.query(
+          `SELECT
+             a.access_level,
+             a.lastactive,
+             b.reason AS ban_reason,
+             b.expires_at AS ban_expires
+           FROM accounts a
+           LEFT JOIN account_bans b
+             ON b.account_login = a.login
+            AND b.unbanned_at IS NULL
+            AND (b.expires_at IS NULL OR b.expires_at > NOW())
+           WHERE a.login = ?
+           LIMIT 1`,
+          [login],
+        );
+        const acc = (accRows as AccInfoRow[])[0];
         const list = (rows as CharRow[]).map((r) => ({
           name: r.char_name,
           classId: r.classid,
@@ -90,8 +120,18 @@ export async function characterRoutes(app: FastifyInstance) {
           pk: r.pkkills,
           clanId: r.clanid || null,
           clanName: r.clan_name,
+          gameTime: Number(r.onlinetime ?? 0),
+          lastAccess: Number(r.lastAccess ?? 0),
         }));
-        reply.send({ login, characters: list, count: list.length });
+        reply.send({
+          login,
+          characters: list,
+          count: list.length,
+          lastActive: Number(acc?.lastactive ?? 0),
+          banned: (acc?.access_level ?? 0) < 0,
+          banReason: acc?.ban_reason ?? null,
+          banUntil: acc?.ban_expires ? new Date(acc.ban_expires).getTime() : null,
+        });
       } catch (e) {
         const err = e as Error;
         req.log.error({ err }, "[/characters/:login] failed");

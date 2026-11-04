@@ -30,13 +30,15 @@ export const GM_COMMAND_DEFS = {
       .strict(),
   },
   give_item: {
-    label: "Dar item (online)",
-    description: "Entrega item a um personagem ONLINE (offline use o Game master)",
+    label: "Dar item",
+    description:
+      "Entrega item a um personagem online (ao vivo) ou offline (gravado direto no inventário do char no DB, aparece no próximo login). enchant opcional para itens não-stackáveis.",
     schema: z
       .object({
         charName: z.string().trim().min(1).max(35),
         itemId: z.coerce.number().int().positive(),
         count: z.coerce.number().int().min(1).max(1_000_000),
+        enchant: z.coerce.number().int().min(0).max(65535).default(0),
       })
       .strict(),
   },

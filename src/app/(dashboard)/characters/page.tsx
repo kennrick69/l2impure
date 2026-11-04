@@ -5,7 +5,30 @@ import { bridge, type GameCharacter } from "@/lib/bridge";
 import { PageTitle } from "@/components/dashboard/Placeholder";
 import { CreateAccountTrigger } from "@/components/dashboard/CreateAccountTrigger";
 
-type Row = GameCharacter & { account: string };
+type Row = GameCharacter & { account: string; banned: boolean };
+
+/** segundos → "Xh Ym" (tempo jogado). */
+function fmtGameTime(sec: number): string {
+  if (!sec || sec <= 0) return "—";
+  const h = Math.floor(sec / 3600);
+  const m = Math.floor((sec % 3600) / 60);
+  if (h > 0) return `${h}h ${m}m`;
+  return `${m}m`;
+}
+
+/** epoch ms → "dd-mm-aaaa hh:mm", ou "—". */
+function fmtLastChar(ms: number): string {
+  if (!ms || ms <= 0) return "—";
+  const d = new Date(ms);
+  if (Number.isNaN(d.getTime())) return "—";
+  return d.toLocaleString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
 
 export default async function CharactersPage({
   searchParams,
@@ -40,7 +63,11 @@ export default async function CharactersPage({
         try {
           const data = await bridge.getCharacters(acc.gameLogin);
           return data.characters.map(
-            (c): Row => ({ ...c, account: acc.gameLogin }),
+            (c): Row => ({
+              ...c,
+              account: acc.gameLogin,
+              banned: Boolean(data.banned),
+            }),
           );
         } catch (e) {
           console.warn(
@@ -122,6 +149,9 @@ function CharactersTable({ rows }: { rows: Row[] }) {
               <th className="px-6 py-3 text-right">PvP</th>
               <th className="px-6 py-3 text-right">PK</th>
               <th className="px-6 py-3 text-left">Conta</th>
+              <th className="px-6 py-3 text-left">Tempo</th>
+              <th className="px-6 py-3 text-left">Último login</th>
+              <th className="px-6 py-3 text-left">Ban</th>
               <th className="px-6 py-3 text-left">Status</th>
             </tr>
           </thead>
@@ -149,6 +179,21 @@ function CharactersTable({ rows }: { rows: Row[] }) {
                 </td>
                 <td className="px-6 py-3 text-xs text-white/55">
                   {c.account}
+                </td>
+                <td className="px-6 py-3 text-xs text-white/55">
+                  {fmtGameTime(c.gameTime)}
+                </td>
+                <td className="px-6 py-3 text-xs text-white/55">
+                  {fmtLastChar(c.lastAccess)}
+                </td>
+                <td className="px-6 py-3">
+                  {c.banned ? (
+                    <span className="rounded bg-l2-red/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-l2-red">
+                      Banida
+                    </span>
+                  ) : (
+                    <span className="text-white/30">—</span>
+                  )}
                 </td>
                 <td className="px-6 py-3">
                   {c.online ? (
