@@ -6,7 +6,18 @@ import { PageTitle } from "@/components/dashboard/Placeholder";
 import { CreateAccountTrigger } from "@/components/dashboard/CreateAccountTrigger";
 import { AccountRowActions } from "@/components/dashboard/AccountRowActions";
 import { ResetHwidButton } from "@/components/dashboard/ResetHwidButton";
-import { HeadsetIcon } from "@/components/icons";
+import type { SVGProps } from "react";
+import {
+  HeadsetIcon,
+  CoinsIcon,
+  SendIcon,
+  SwordsIcon,
+  PlusIcon,
+  DotsIcon,
+  ArrowUpRightIcon,
+} from "@/components/icons";
+
+type IconType = (props: SVGProps<SVGSVGElement>) => React.ReactElement;
 
 const MAX_ACCOUNTS = 15;
 
@@ -100,42 +111,27 @@ export default async function DashboardPage() {
       <section className="mb-8 grid gap-4 sm:grid-cols-3">
         <StatCard
           title="Saldo (TOL)"
-          icon="🪙"
+          Icon={CoinsIcon}
           value={String(balance)}
           accent="gold"
           footer={
-            <Link
-              href="/wallet"
-              className="text-xs text-white/55 transition hover:text-white"
-            >
-              🪙 Comprar / recarregar →
-            </Link>
+            <CardLink href="/wallet" label="Comprar / recarregar" />
           }
         />
         <StatCard
           title="Enviar ao jogo"
-          icon="📨"
-          value="TOL"
+          Icon={SendIcon}
+          value={<span className="text-xl font-semibold text-white/80">Mandar TOL</span>}
           footer={
-            <Link
-              href="/wallet"
-              className="text-xs text-white/55 transition hover:text-white"
-            >
-              Mandar TOL para um personagem →
-            </Link>
+            <CardLink href="/wallet" label="Enviar para um personagem" />
           }
         />
         <StatCard
           title="Personagens"
-          icon="⚔️"
+          Icon={SwordsIcon}
           value={totalCharsLabel}
           footer={
-            <Link
-              href="/characters"
-              className="text-xs text-white/55 transition hover:text-white"
-            >
-              Gerenciar personagens →
-            </Link>
+            <CardLink href="/characters" label="Gerenciar personagens" />
           }
         />
       </section>
@@ -149,14 +145,14 @@ export default async function DashboardPage() {
             </span>
           </h3>
           <CreateAccountTrigger variant="primary">
-            <span>➕</span>
+            <PlusIcon className="h-4 w-4" />
             <span>Criar conta</span>
           </CreateAccountTrigger>
         </div>
 
         {accounts.length === 0 ? (
           <div className="px-6 py-12 text-center">
-            <div className="mb-3 text-4xl opacity-30">⚔️</div>
+            <SwordsIcon className="mx-auto mb-3 h-10 w-10 text-white/20" />
             <p className="mb-1 text-sm text-white/65">
               Você ainda não tem contas de jogo
             </p>
@@ -164,7 +160,7 @@ export default async function DashboardPage() {
               Crie sua conta e já pode logar no servidor.
             </p>
             <CreateAccountTrigger variant="primary">
-              <span>➕</span>
+              <PlusIcon className="h-4 w-4" />
               <span>Criar primeira conta</span>
             </CreateAccountTrigger>
           </div>
@@ -284,14 +280,14 @@ export default async function DashboardPage() {
 
 function StatCard({
   title,
-  icon,
+  Icon,
   value,
   accent,
   footer,
 }: {
   title: string;
-  icon: string;
-  value: string;
+  Icon: IconType;
+  value: React.ReactNode;
   accent?: "gold";
   footer: React.ReactNode;
 }) {
@@ -301,21 +297,45 @@ function StatCard({
         <span className="font-display text-xs font-semibold uppercase tracking-wider text-white/55">
           {title}
         </span>
-        <span className="text-white/30">⋯</span>
+        <DotsIcon className="h-4 w-4 text-white/25" />
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-3">
         <span
-          className={
+          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${
             accent === "gold"
-              ? "font-display text-3xl font-bold text-[color:var(--l2-text-gold)]"
-              : "font-display text-3xl font-bold text-white"
-          }
+              ? "bg-[color:var(--l2-gold)]/10 text-[color:var(--l2-text-gold)]"
+              : "bg-white/5 text-white/70"
+          }`}
         >
-          {value}
+          <Icon className="h-5 w-5" />
         </span>
-        <span className="text-2xl">{icon}</span>
+        {typeof value === "string" ? (
+          <span
+            className={
+              accent === "gold"
+                ? "font-display text-3xl font-bold leading-none text-[color:var(--l2-text-gold)]"
+                : "font-display text-3xl font-bold leading-none text-white"
+            }
+          >
+            {value}
+          </span>
+        ) : (
+          value
+        )}
       </div>
       <div className="mt-4 border-t border-white/5 pt-3">{footer}</div>
     </div>
+  );
+}
+
+function CardLink({ href, label }: { href: string; label: string }) {
+  return (
+    <Link
+      href={href}
+      className="group inline-flex items-center gap-1.5 text-xs text-white/55 transition hover:text-white"
+    >
+      <span>{label}</span>
+      <ArrowUpRightIcon className="transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+    </Link>
   );
 }

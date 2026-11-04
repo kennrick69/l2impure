@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCreateAccountModal } from "./CreateAccountModal";
 import { UserDropdown } from "./UserDropdown";
 import { NotificationsButton } from "./NotificationsButton";
+import { PlusIcon } from "@/components/icons";
 
 export function DashboardHeader({
   email,
@@ -32,7 +33,7 @@ export function DashboardHeader({
           className="hidden items-center gap-2 rounded-md px-4 py-2 font-display text-xs font-semibold uppercase tracking-wider text-black transition hover:opacity-90 sm:inline-flex"
           style={{ background: "var(--l2-gold-gradient)" }}
         >
-          <span>➕</span>
+          <PlusIcon className="h-4 w-4" />
           <span>Criar conta no jogo</span>
         </button>
       </div>

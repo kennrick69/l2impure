@@ -1,10 +1,27 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback, type FormEvent } from "react";
+import {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  type FormEvent,
+  type SVGProps,
+  type ReactElement,
+} from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/components/ui/Toast";
+import {
+  DotsIcon,
+  ShieldIcon,
+  KeyIcon,
+  SwordsIcon,
+  TrashIcon,
+} from "@/components/icons";
+
+type IconType = (props: SVGProps<SVGSVGElement>) => ReactElement;
 
 type ActionKind = "reset-hwid" | "change-password" | "delete";
 
@@ -151,10 +168,10 @@ export function AccountRowActions({ gameLogin }: { gameLogin: string }) {
         onClick={() => (menuRect ? closeMenu() : openMenu())}
         aria-haspopup="menu"
         aria-expanded={menuRect !== null}
-        className="rounded-md px-2 py-1 text-white/55 transition hover:bg-white/5 hover:text-white"
+        className="inline-flex items-center justify-center rounded-md px-2 py-1 text-white/55 transition hover:bg-white/5 hover:text-white"
         title="Ações"
       >
-        ⋯
+        <DotsIcon className="h-4 w-4" />
       </button>
 
       {mounted &&
@@ -172,24 +189,24 @@ export function AccountRowActions({ gameLogin }: { gameLogin: string }) {
             className="w-56 overflow-hidden rounded-lg border border-white/10 bg-[color:var(--l2-bg-secondary)] shadow-[0_10px_40px_rgba(0,0,0,0.6)]"
           >
             <MenuButton
-              icon="🔓"
+              Icon={ShieldIcon}
               label="Redefinir HWID"
               onClick={() => pickAction("reset-hwid")}
             />
             <MenuButton
-              icon="🔑"
+              Icon={KeyIcon}
               label="Trocar senha"
               onClick={() => pickAction("change-password")}
             />
             <MenuLink
-              icon="⚔️"
+              Icon={SwordsIcon}
               label="Ver personagens"
               href={`/characters?login=${encodeURIComponent(gameLogin)}`}
               onNavigate={closeMenu}
             />
             <div className="border-t border-white/5" />
             <MenuButton
-              icon="🗑️"
+              Icon={TrashIcon}
               label="Excluir conta"
               onClick={() => pickAction("delete")}
               danger
@@ -239,12 +256,12 @@ export function AccountRowActions({ gameLogin }: { gameLogin: string }) {
 }
 
 function MenuButton({
-  icon,
+  Icon,
   label,
   onClick,
   danger,
 }: {
-  icon: string;
+  Icon: IconType;
   label: string;
   onClick: () => void;
   danger?: boolean;
@@ -259,19 +276,19 @@ function MenuButton({
           : "text-white/85 hover:bg-white/5 hover:text-white"
       }`}
     >
-      <span>{icon}</span>
+      <Icon className="h-4 w-4 shrink-0 opacity-80" />
       <span>{label}</span>
     </button>
   );
 }
 
 function MenuLink({
-  icon,
+  Icon,
   label,
   href,
   onNavigate,
 }: {
-  icon: string;
+  Icon: IconType;
   label: string;
   href: string;
   onNavigate: () => void;
@@ -282,7 +299,7 @@ function MenuLink({
       onClick={onNavigate}
       className="flex items-center gap-3 px-4 py-2.5 text-sm text-white/85 transition hover:bg-white/5 hover:text-white"
     >
-      <span>{icon}</span>
+      <Icon className="h-4 w-4 shrink-0 opacity-80" />
       <span>{label}</span>
     </Link>
   );

@@ -2,25 +2,41 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import type { ReactElement, SVGProps } from "react";
 import type { ServerStatus } from "@/lib/bridge";
+import {
+  HomeIcon,
+  SwordsIcon,
+  PackageIcon,
+  CoinsIcon,
+  UsersIcon,
+  GiftIcon,
+  TrophyIcon,
+  HeadsetIcon,
+  SettingsIcon,
+  CastleIcon,
+  CaretDownIcon,
+  DiscordIcon,
+} from "@/components/icons";
+
+type IconType = (props: SVGProps<SVGSVGElement>) => ReactElement;
 
 type MenuItem = {
   href: string;
-  icon: string;
+  Icon: IconType;
   label: string;
-  badge?: string;
 };
 
 const MENU: MenuItem[] = [
-  { href: "/dashboard", icon: "🏠", label: "Página principal" },
-  { href: "/characters", icon: "⚔️", label: "Meus personagens" },
-  { href: "/warehouse", icon: "📦", label: "Meu depósito" },
-  { href: "/wallet", icon: "💰", label: "Saldo", badge: "0" },
-  { href: "/referrals", icon: "👥", label: "Indicações" },
-  { href: "/promo-code", icon: "🎁", label: "Código Promocional" },
-  { href: "/rankings", icon: "🏆", label: "Classificação" },
-  { href: "/support", icon: "📞", label: "Suporte" },
-  { href: "/settings", icon: "⚙️", label: "Configurações" },
+  { href: "/dashboard", Icon: HomeIcon, label: "Página principal" },
+  { href: "/characters", Icon: SwordsIcon, label: "Meus personagens" },
+  { href: "/warehouse", Icon: PackageIcon, label: "Meu depósito" },
+  { href: "/wallet", Icon: CoinsIcon, label: "Saldo" },
+  { href: "/referrals", Icon: UsersIcon, label: "Indicações" },
+  { href: "/promo-code", Icon: GiftIcon, label: "Código Promocional" },
+  { href: "/rankings", Icon: TrophyIcon, label: "Classificação" },
+  { href: "/support", Icon: HeadsetIcon, label: "Suporte" },
+  { href: "/settings", Icon: SettingsIcon, label: "Configurações" },
 ];
 
 export function Sidebar({
@@ -45,8 +61,11 @@ export function Sidebar({
           className="flex w-full items-center justify-between rounded-md border border-white/8 bg-[color:var(--l2-bg-input)] px-3 py-2 text-sm text-white/85 transition hover:border-white/20"
           aria-label="Trocar servidor (em breve)"
         >
-          <span className="truncate">🏰 Impure 10x (NOVO)</span>
-          <span className="ml-2 text-white/40">▼</span>
+          <span className="flex min-w-0 items-center gap-2">
+            <CastleIcon className="h-4 w-4 shrink-0 text-[color:var(--l2-text-gold)]" />
+            <span className="truncate">Impure 10x (NOVO)</span>
+          </span>
+          <CaretDownIcon className="ml-2 shrink-0 text-white/40" />
         </button>
       </div>
 
@@ -57,6 +76,7 @@ export function Sidebar({
         <ul className="flex flex-col gap-0.5">
           {MENU.map((item) => {
             const active = isActive(item.href);
+            const { Icon } = item;
             return (
               <li key={item.href}>
                 <Link
@@ -67,13 +87,12 @@ export function Sidebar({
                       : "text-white/75 hover:bg-[color:var(--l2-bg-card)]/60 hover:text-white"
                   }`}
                 >
-                  <span className="text-base">{item.icon}</span>
+                  <Icon
+                    className={`h-[18px] w-[18px] shrink-0 ${
+                      active ? "" : "text-white/55"
+                    }`}
+                  />
                   <span className="flex-1">{item.label}</span>
-                  {item.badge && (
-                    <span className="rounded-full bg-white/8 px-2 py-0.5 text-[10px] font-semibold text-white/65">
-                      {item.badge}
-                    </span>
-                  )}
                 </Link>
               </li>
             );
@@ -88,7 +107,7 @@ export function Sidebar({
         <ul className="flex flex-col gap-2 text-xs">
           <li className="flex items-center justify-between">
             <span className="flex items-center gap-2 text-white/75">
-              <span>🏰</span>
+              <CastleIcon className="h-4 w-4 text-white/45" />
               <span>Impure 10x NOVO</span>
             </span>
             <ImpureStatusBadge status={serverStatus} />
@@ -101,7 +120,7 @@ export function Sidebar({
               className="-mx-1 flex items-center justify-between rounded-md px-1 py-0.5 transition hover:bg-white/5"
             >
               <span className="flex items-center gap-2 text-white/75">
-                <span>⚔️</span>
+                <DiscordIcon className="h-4 w-4 text-[#5865F2]" />
                 <span>Discord</span>
               </span>
               <span className="flex items-center gap-1.5 font-display text-[10px] font-semibold uppercase tracking-wider text-l2-green">
