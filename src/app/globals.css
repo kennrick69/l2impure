@@ -19,13 +19,14 @@
   --l2-green: 0, 200, 83; /* #00c853 */
   --l2-discord: 88, 101, 242; /* #5865F2 */
 
-  /* Backgrounds (darkest → lightest layer) */
-  --l2-bg-primary: #0a0a0f;
-  --l2-bg-secondary: #101018;
-  --l2-bg-tertiary: #16161f;
-  --l2-bg-card: #1a1a25;
-  --l2-bg-card-hover: #22222f;
-  --l2-bg-input: #0d0d14;
+  /* Backgrounds — valores reais do L2MAD (dark-clr #13171C, grey-clr #212426)
+     pro contraste de card que a gente não tinha (tudo sumia no preto). */
+  --l2-bg-primary: #13171c;
+  --l2-bg-secondary: #171b21;
+  --l2-bg-tertiary: #1b2026;
+  --l2-bg-card: #212426;
+  --l2-bg-card-hover: #282d30;
+  --l2-bg-input: #0f1317;
 
   /* Text */
   --l2-text-primary: #ffffff;
