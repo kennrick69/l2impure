@@ -3,6 +3,26 @@
 import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import {
+  CaretDownIcon,
+  ShieldIcon,
+  SettingsIcon,
+  HeadsetIcon,
+  LogOutIcon,
+} from "@/components/icons";
+
+/** "kennrick@gmail.com" -> "Kennrick" (nome de exibição derivado do e-mail). */
+function displayName(email: string): string {
+  const local = email.split("@")[0] || email;
+  const first = local.split(/[._-]/)[0] || local;
+  return first.charAt(0).toUpperCase() + first.slice(1);
+}
+
+/** "kennrick@gmail.com" -> "ke***********com" (igual ao mascaramento do MAD). */
+function maskEmail(email: string): string {
+  if (email.length <= 5) return email;
+  return `${email.slice(0, 2)}***********${email.slice(-3)}`;
+}
 
 export function UserDropdown({
   email,
@@ -16,6 +36,8 @@ export function UserDropdown({
   const [loading, setLoading] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const initial = email.charAt(0).toUpperCase();
+  const name = displayName(email);
+  const masked = maskEmail(email);
 
   useEffect(() => {
     function onClickOutside(e: MouseEvent) {
@@ -50,20 +72,25 @@ export function UserDropdown({
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="flex h-9 items-center gap-2 rounded-md border border-white/8 bg-[color:var(--l2-bg-card)] px-2 transition hover:border-white/20"
+        className="flex items-center gap-2.5 rounded-md px-1.5 py-1 transition hover:bg-white/5"
         aria-haspopup="menu"
         aria-expanded={open}
       >
         <span
-          className="flex h-7 w-7 items-center justify-center rounded-full font-display text-xs font-bold uppercase text-black"
+          className="flex h-9 w-9 items-center justify-center rounded-full font-display text-sm font-bold uppercase text-black ring-2 ring-white/10"
           style={{ background: "var(--l2-gold-gradient)" }}
         >
           {initial}
         </span>
-        <span className="hidden max-w-[140px] truncate text-xs text-white/75 sm:inline">
-          {email}
+        <span className="hidden flex-col items-start leading-tight sm:flex">
+          <span className="max-w-[150px] truncate text-[13px] font-semibold text-white">
+            {name}
+          </span>
+          <span className="max-w-[150px] truncate text-[11px] text-white/45">
+            {masked}
+          </span>
         </span>
-        <span className="text-[10px] text-white/40">▼</span>
+        <CaretDownIcon className="text-white/40" />
       </button>
 
       {open && (
@@ -71,11 +98,19 @@ export function UserDropdown({
           role="menu"
           className="absolute right-0 z-50 mt-2 w-56 overflow-hidden rounded-lg border border-white/8 bg-[color:var(--l2-bg-secondary)] shadow-[0_10px_40px_rgba(0,0,0,0.6)]"
         >
-          <div className="border-b border-white/5 px-4 py-3">
-            <div className="text-[10px] font-semibold uppercase tracking-wider text-white/45">
-              Conta
+          <div className="flex items-center gap-3 border-b border-white/5 px-4 py-3">
+            <span
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full font-display text-sm font-bold uppercase text-black"
+              style={{ background: "var(--l2-gold-gradient)" }}
+            >
+              {initial}
+            </span>
+            <div className="min-w-0">
+              <div className="truncate text-sm font-semibold text-white">
+                {name}
+              </div>
+              <div className="truncate text-[11px] text-white/45">{email}</div>
             </div>
-            <div className="mt-1 truncate text-xs text-white/85">{email}</div>
           </div>
           {isAdmin && (
             <Link
@@ -83,7 +118,7 @@ export function UserDropdown({
               onClick={() => setOpen(false)}
               className="flex items-center gap-3 border-b border-white/5 px-4 py-2.5 text-sm text-l2-red transition hover:bg-l2-red/10"
             >
-              <span>🛡️</span>
+              <ShieldIcon className="h-4 w-4 shrink-0" />
               <span>Painel admin</span>
             </Link>
           )}
@@ -92,7 +127,7 @@ export function UserDropdown({
             onClick={() => setOpen(false)}
             className="flex items-center gap-3 px-4 py-2.5 text-sm text-white/75 transition hover:bg-white/5 hover:text-white"
           >
-            <span>⚙️</span>
+            <SettingsIcon className="h-4 w-4 shrink-0 opacity-80" />
             <span>Configurações</span>
           </Link>
           <button
@@ -103,7 +138,7 @@ export function UserDropdown({
             }}
             className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-white/75 transition hover:bg-white/5 hover:text-white"
           >
-            <span>📞</span>
+            <HeadsetIcon className="h-4 w-4 shrink-0 opacity-80" />
             <span>Suporte</span>
           </button>
           <div className="border-t border-white/5">
@@ -113,7 +148,7 @@ export function UserDropdown({
               disabled={loading}
               className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm text-l2-red transition hover:bg-l2-red/10 disabled:opacity-50"
             >
-              <span>🚪</span>
+              <LogOutIcon className="h-4 w-4 shrink-0" />
               <span>{loading ? "Saindo..." : "Sair"}</span>
             </button>
           </div>

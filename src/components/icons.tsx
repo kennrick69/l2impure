@@ -301,6 +301,54 @@ export function TrashIcon(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+export function LogOutIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <LineIcon {...props}>
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+      <path d="m16 17 5-5-5-5" />
+      <path d="M21 12H9" />
+    </LineIcon>
+  );
+}
+
+export function UserIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <LineIcon {...props}>
+      <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+      <circle cx="12" cy="7" r="4" />
+    </LineIcon>
+  );
+}
+
+export function GlobeLineIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <LineIcon {...props}>
+      <circle cx="12" cy="12" r="10" />
+      <path d="M2 12h20" />
+      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+    </LineIcon>
+  );
+}
+
+export function ForumIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <LineIcon {...props}>
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+    </LineIcon>
+  );
+}
+
+export function HeartHandIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <LineIcon {...props}>
+      <path d="M11 14h2a2 2 0 0 0 0-4h-3c-.6 0-1.1.2-1.4.6L3 16" />
+      <path d="m7 20 1.6-1.4c.3-.4.8-.6 1.4-.6h4c1.1 0 2.1-.4 2.8-1.2l4.6-4.4a2 2 0 0 0-2.75-2.91l-4.2 3.9" />
+      <path d="m2 15 6 6" />
+      <path d="M19.5 8.5c.7-.7 1.5-1.6 1.5-2.7A2.73 2.73 0 0 0 16 4a2.78 2.78 0 0 0-5 1.8c0 1.2.8 2 1.5 2.8L16 12Z" />
+    </LineIcon>
+  );
+}
+
 export function DotsIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <svg
