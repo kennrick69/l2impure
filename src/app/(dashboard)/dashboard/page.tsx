@@ -39,11 +39,18 @@ export default async function DashboardPage() {
   const session = await getSession();
   if (!session) return null;
 
-  const accounts = await prisma.gameAccount.findMany({
-    where: { userId: session.sub },
-    select: { id: true, gameLogin: true, createdAt: true },
-    orderBy: { createdAt: "desc" },
-  });
+  const [accounts, user] = await Promise.all([
+    prisma.gameAccount.findMany({
+      where: { userId: session.sub },
+      select: { id: true, gameLogin: true, createdAt: true },
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.user.findUnique({
+      where: { id: session.sub },
+      select: { coins: true },
+    }),
+  ]);
+  const balance = user?.coins ?? 0;
 
   // Uma chamada por conta → count + status online + último login + ban.
   // Fail-soft: bridge fora numa conta → charCount null (mostra "—").
@@ -94,7 +101,7 @@ export default async function DashboardPage() {
         <StatCard
           title="Saldo (TOL)"
           icon="🪙"
-          value="0"
+          value={String(balance)}
           accent="gold"
           footer={
             <Link

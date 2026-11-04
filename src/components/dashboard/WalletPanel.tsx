@@ -18,6 +18,14 @@ const BONUS_TIERS = [
   { from: 300, bonus: 40 },
 ] as const;
 
+/** % de bônus ao enviar `tol` pro jogo. */
+function sendBonusPct(tol: number): number {
+  for (let i = BONUS_TIERS.length - 1; i >= 0; i--) {
+    if (tol >= BONUS_TIERS[i].from) return BONUS_TIERS[i].bonus;
+  }
+  return 0;
+}
+
 type Tx = {
   id: number;
   amount: number;
@@ -40,6 +48,9 @@ export function WalletPanel({
   const { show } = useToast();
   const searchParams = useSearchParams();
   const [amount, setAmount] = useState<string>("50");
+  const [sendChar, setSendChar] = useState<string>("");
+  const [sendTol, setSendTol] = useState<string>("");
+  const [sendBusy, setSendBusy] = useState(false);
   const [busy, setBusy] = useState(false);
   const [cancelling, setCancelling] = useState<number | null>(null);
 
@@ -120,6 +131,55 @@ export function WalletPanel({
       setBusy(false);
     }
   }
+
+  async function sendToGame(e?: FormEvent) {
+    e?.preventDefault();
+    const n = Math.floor(Number(sendTol) || 0);
+    const char = sendChar.trim();
+    if (!char) {
+      show("Informe o personagem", "error");
+      return;
+    }
+    if (n < 1) {
+      show("Quantidade de TOL inválida", "error");
+      return;
+    }
+    if (n > coins) {
+      show("Saldo de TOL insuficiente", "error");
+      return;
+    }
+    setSendBusy(true);
+    try {
+      const res = await fetch("/api/wallet/send-to-game", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ charName: char, tol: n }),
+      });
+      const data = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        delivered?: number;
+        bonus?: number;
+      };
+      if (!res.ok) {
+        show(data.error ?? "Falha ao enviar", "error");
+        return;
+      }
+      show(
+        `Enviado! ${data.delivered} TOL a caminho de ${char} (bônus +${data.bonus}%)`,
+        "success",
+      );
+      setSendTol("");
+      router.refresh();
+    } catch {
+      show("Erro de rede", "error");
+    } finally {
+      setSendBusy(false);
+    }
+  }
+
+  const sendN = Math.floor(Number(sendTol) || 0);
+  const sendBonus = sendBonusPct(sendN);
+  const sendDelivered = Math.floor(sendN * (1 + sendBonus / 100));
 
   return (
     <>
@@ -280,14 +340,59 @@ export function WalletPanel({
         </form>
       </section>
 
-      {/* Transferir (placeholder) */}
+      {/* Enviar TOL ao jogo */}
       <section className="mb-8 rounded-xl border border-white/5 bg-[color:var(--l2-bg-card)] p-6">
-        <h3 className="mb-2 font-display text-sm font-semibold uppercase tracking-wider text-white">
-          Transferir pra conta de jogo
+        <h3 className="mb-1 font-display text-sm font-semibold uppercase tracking-wider text-white">
+          Enviar TOL ao jogo
         </h3>
-        <p className="text-xs text-white/55">
-          Trocar coins do painel por adena ou items in-game — em breve.
+        <p className="mb-4 text-xs text-white/55">
+          Debita do seu saldo e entrega no personagem (online ou offline), já
+          com o bônus do tier.
         </p>
+        <form
+          onSubmit={sendToGame}
+          className="flex flex-col gap-3 sm:flex-row sm:items-end"
+        >
+          <div className="flex-1">
+            <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-white/55">
+              Personagem
+            </label>
+            <input
+              value={sendChar}
+              onChange={(e) => setSendChar(e.target.value)}
+              placeholder="Nome do personagem"
+              className="w-full rounded-md border border-white/8 bg-[color:var(--l2-bg-input)] px-3 py-2.5 text-sm text-white focus:border-l2-gold focus:outline-none"
+            />
+          </div>
+          <div className="w-full sm:w-40">
+            <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-white/55">
+              TOL (saldo {coins})
+            </label>
+            <input
+              type="number"
+              min={1}
+              max={coins}
+              step="1"
+              value={sendTol}
+              onChange={(e) => setSendTol(e.target.value)}
+              placeholder="0"
+              className="w-full rounded-md border border-white/8 bg-[color:var(--l2-bg-input)] px-3 py-2.5 text-sm text-white focus:border-l2-gold focus:outline-none"
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={sendBusy}
+            className="rounded-md border border-l2-gold/40 px-5 py-2.5 font-display text-xs font-bold uppercase tracking-wider text-l2-gold transition hover:bg-l2-gold/10 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {sendBusy ? "Enviando..." : "Enviar"}
+          </button>
+        </form>
+        {sendN >= 50 && (
+          <p className="mt-2 text-[11px] text-l2-green">
+            Bônus +{sendBonus}% → o personagem recebe{" "}
+            <strong>{sendDelivered} TOL</strong>
+          </p>
+        )}
       </section>
 
       {/* Histórico */}
