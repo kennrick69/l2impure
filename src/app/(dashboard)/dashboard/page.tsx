@@ -13,7 +13,6 @@ import {
   SendIcon,
   SwordsIcon,
   PlusIcon,
-  DotsIcon,
   ArrowUpRightIcon,
 } from "@/components/icons";
 
@@ -107,36 +106,33 @@ export default async function DashboardPage() {
         subtitle={`Logado como ${session.email}`}
       />
 
-      {/* 3 cards de topo: saldo TOL, enviar ao jogo, personagens */}
+      {/* 3 cards de topo (card inteiro clicável + glow no hover) */}
       <section className="mb-8 grid gap-4 sm:grid-cols-3">
         <StatCard
           title="Saldo (TOL)"
           Icon={CoinsIcon}
           value={String(balance)}
           accent="gold"
-          footer={
-            <CardLink href="/wallet" label="Comprar / recarregar" />
-          }
+          href="/wallet"
+          action="Comprar / recarregar"
         />
         <StatCard
           title="Enviar ao jogo"
           Icon={SendIcon}
           value={<span className="text-xl font-semibold text-white/80">Mandar TOL</span>}
-          footer={
-            <CardLink href="/wallet" label="Enviar para um personagem" />
-          }
+          href="/wallet"
+          action="Enviar para um personagem"
         />
         <StatCard
           title="Personagens"
           Icon={SwordsIcon}
           value={totalCharsLabel}
-          footer={
-            <CardLink href="/characters" label="Gerenciar personagens" />
-          }
+          href="/characters"
+          action="Gerenciar personagens"
         />
       </section>
 
-      <section className="mb-8 rounded-xl border border-white/5 bg-[color:var(--l2-bg-card)]">
+      <section className="l2-panel mb-8">
         <div className="flex items-center justify-between border-b border-white/5 px-6 py-4">
           <h3 className="font-display text-sm font-semibold uppercase tracking-wider text-white">
             Contas do Jogo{" "}
@@ -254,7 +250,7 @@ export default async function DashboardPage() {
         )}
       </section>
 
-      <section className="flex items-center gap-4 rounded-xl border border-white/5 bg-[color:var(--l2-bg-card)] p-6">
+      <section className="l2-panel flex items-center gap-4 p-6">
         <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-l2-gold/10 text-l2-gold">
           <HeadsetIcon className="h-7 w-7" />
         </div>
@@ -283,21 +279,25 @@ function StatCard({
   Icon,
   value,
   accent,
-  footer,
+  href,
+  action,
 }: {
   title: string;
   Icon: IconType;
   value: React.ReactNode;
   accent?: "gold";
-  footer: React.ReactNode;
+  href: string;
+  action: string;
 }) {
   return (
-    <div className="flex flex-col rounded-xl border border-white/5 bg-[color:var(--l2-bg-card)] p-5">
-      <div className="mb-3 flex items-center justify-between">
+    <Link
+      href={href}
+      className="l2-panel group flex flex-col p-5 transition"
+    >
+      <div className="mb-3 flex items-center">
         <span className="font-display text-xs font-semibold uppercase tracking-wider text-white/55">
           {title}
         </span>
-        <DotsIcon className="h-4 w-4 text-white/25" />
       </div>
       <div className="flex items-center gap-3">
         <span
@@ -323,19 +323,10 @@ function StatCard({
           value
         )}
       </div>
-      <div className="mt-4 border-t border-white/5 pt-3">{footer}</div>
-    </div>
-  );
-}
-
-function CardLink({ href, label }: { href: string; label: string }) {
-  return (
-    <Link
-      href={href}
-      className="group inline-flex items-center gap-1.5 text-xs text-white/55 transition hover:text-white"
-    >
-      <span>{label}</span>
-      <ArrowUpRightIcon className="transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+      <div className="mt-4 flex items-center gap-1.5 border-t border-white/5 pt-3 text-xs text-white/55 transition group-hover:text-white">
+        <span>{action}</span>
+        <ArrowUpRightIcon className="transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+      </div>
     </Link>
   );
 }

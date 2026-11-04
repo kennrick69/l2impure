@@ -304,3 +304,44 @@
   backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--l2-border);
 }
+
+/* ============================================================
+   Painel "forjado" com borda dourada brilhante — pedido do JOs.
+   Borda com tom de ouro + glow externo sutil + hairline dourada no
+   topo + brilho interno. Substitui o card flat (border branca 5%).
+   ============================================================ */
+.l2-panel {
+  position: relative;
+  border-radius: 10px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0) 40%),
+    var(--l2-bg-card);
+  border: 1px solid rgba(212, 161, 74, 0.28);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 8px 28px rgba(0, 0, 0, 0.45),
+    0 0 22px rgba(212, 161, 74, 0.08);
+}
+/* hairline dourada brilhante no topo (some nas pontas) */
+.l2-panel::before {
+  content: "";
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  top: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(230, 181, 90, 0.85),
+    transparent
+  );
+  pointer-events: none;
+}
+.l2-panel:hover {
+  border-color: rgba(230, 181, 90, 0.45);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 8px 28px rgba(0, 0, 0, 0.5),
+    0 0 28px rgba(212, 161, 74, 0.14);
+}
