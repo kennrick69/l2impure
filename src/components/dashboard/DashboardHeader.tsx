@@ -41,7 +41,7 @@ export function DashboardHeader({
           <img
             src="/images/logo.png"
             alt="L2Impure"
-            className="h-[40px] w-auto select-none"
+            className="h-[40px] w-auto shrink-0 select-none object-contain"
           />
         </Link>
 

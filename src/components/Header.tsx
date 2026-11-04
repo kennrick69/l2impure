@@ -23,12 +23,12 @@ export function Header() {
         data-scrolled={scrolled ? "true" : "false"}
       >
         <div className="l2-container flex h-full items-center gap-6">
-          <Link href="/" className="flex items-center" aria-label="L2 Impure">
+          <Link href="/" className="flex shrink-0 items-center" aria-label="L2 Impure">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/images/logo.png"
               alt="L2 Impure"
-              className="h-[134px] w-auto select-none md:h-[186px]"
+              className="h-[134px] w-auto shrink-0 select-none object-contain md:h-[186px]"
               draggable={false}
             />
           </Link>

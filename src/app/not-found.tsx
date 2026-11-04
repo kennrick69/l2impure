@@ -28,8 +28,8 @@ export default function NotFound() {
         src="/images/logo.png"
         alt="L2 Impure"
         width={140}
-        height={124}
-        style={{ opacity: 0.9 }}
+        height={86}
+        style={{ opacity: 0.9, objectFit: "contain" }}
       />
       <h1
         style={{

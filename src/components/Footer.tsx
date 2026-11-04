@@ -11,7 +11,7 @@ export function Footer() {
               <img
                 src="/images/logo.png"
                 alt="L2 Impure"
-                className="h-[120px] w-auto"
+                className="h-[120px] w-auto shrink-0 object-contain"
               />
             </div>
             <p className="max-w-sm text-sm text-white/60">
