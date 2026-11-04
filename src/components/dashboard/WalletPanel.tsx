@@ -189,9 +189,10 @@ export function WalletPanel({
 
   return (
     <>
-      {/* Saldo + botão enviar ao jogo ao lado */}
-      <section className="l2-panel mb-8 flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
-        <div>
+      {/* Saldo + formulário de envio lado a lado */}
+      <section className="l2-panel mb-8 grid gap-6 p-6 lg:grid-cols-2">
+        {/* Saldo */}
+        <div className="lg:border-r lg:border-white/5 lg:pr-6">
           <div className="font-display text-xs font-semibold uppercase tracking-wider text-white/55">
             Saldo atual
           </div>
@@ -205,13 +206,61 @@ export function WalletPanel({
             TOL no painel — disponível para enviar a um personagem
           </div>
         </div>
-        <a
-          href="#enviar-jogo"
-          className="inline-flex shrink-0 items-center justify-center gap-2 rounded-md border border-l2-gold/40 px-5 py-3 font-display text-sm font-bold uppercase tracking-wider text-l2-gold transition hover:bg-l2-gold/10"
-        >
-          <SendIcon className="h-4 w-4" />
-          Enviar ao jogo
-        </a>
+
+        {/* Enviar TOL ao jogo */}
+        <div>
+          <h3 className="flex items-center gap-2 font-display text-sm font-semibold uppercase tracking-wider text-white">
+            <SendIcon className="h-4 w-4 text-l2-gold" />
+            Enviar TOL ao jogo
+          </h3>
+          <p className="mb-4 mt-1 text-xs text-white/55">
+            Debita do saldo e entrega no personagem (online ou offline), já com
+            o bônus do tier.
+          </p>
+          <form onSubmit={sendToGame} className="flex flex-col gap-3">
+            <div>
+              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-white/55">
+                Personagem
+              </label>
+              <input
+                value={sendChar}
+                onChange={(e) => setSendChar(e.target.value)}
+                placeholder="Nome do personagem"
+                className="w-full rounded-md border border-white/8 bg-[color:var(--l2-bg-input)] px-3 py-2.5 text-sm text-white focus:border-l2-gold focus:outline-none"
+              />
+            </div>
+            <div className="flex items-end gap-3">
+              <div className="flex-1">
+                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-white/55">
+                  TOL (saldo {coins})
+                </label>
+                <input
+                  type="number"
+                  min={1}
+                  max={coins}
+                  step="1"
+                  value={sendTol}
+                  onChange={(e) => setSendTol(e.target.value)}
+                  placeholder="0"
+                  className="w-full rounded-md border border-white/8 bg-[color:var(--l2-bg-input)] px-3 py-2.5 text-sm text-white focus:border-l2-gold focus:outline-none"
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={sendBusy}
+                className="rounded-md border border-l2-gold/40 px-5 py-2.5 font-display text-xs font-bold uppercase tracking-wider text-l2-gold transition hover:bg-l2-gold/10 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                {sendBusy ? "Enviando..." : "Enviar"}
+              </button>
+            </div>
+          </form>
+          {sendN >= 50 && (
+            <p className="mt-2 text-[11px] text-l2-green">
+              Bônus +{sendBonus}% → o personagem recebe{" "}
+              <strong>{sendDelivered} TOL</strong>
+            </p>
+          )}
+        </div>
       </section>
 
       {/* Top up — layout fiel ao L2MAD */}
@@ -348,63 +397,6 @@ export function WalletPanel({
         </form>
       </section>
 
-      {/* Enviar TOL ao jogo */}
-      <section
-        id="enviar-jogo"
-        className="l2-panel mb-8 scroll-mt-24 p-6"
-      >
-        <h3 className="mb-1 font-display text-sm font-semibold uppercase tracking-wider text-white">
-          Enviar TOL ao jogo
-        </h3>
-        <p className="mb-4 text-xs text-white/55">
-          Debita do seu saldo e entrega no personagem (online ou offline), já
-          com o bônus do tier.
-        </p>
-        <form
-          onSubmit={sendToGame}
-          className="flex flex-col gap-3 sm:flex-row sm:items-end"
-        >
-          <div className="flex-1">
-            <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-white/55">
-              Personagem
-            </label>
-            <input
-              value={sendChar}
-              onChange={(e) => setSendChar(e.target.value)}
-              placeholder="Nome do personagem"
-              className="w-full rounded-md border border-white/8 bg-[color:var(--l2-bg-input)] px-3 py-2.5 text-sm text-white focus:border-l2-gold focus:outline-none"
-            />
-          </div>
-          <div className="w-full sm:w-40">
-            <label className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-white/55">
-              TOL (saldo {coins})
-            </label>
-            <input
-              type="number"
-              min={1}
-              max={coins}
-              step="1"
-              value={sendTol}
-              onChange={(e) => setSendTol(e.target.value)}
-              placeholder="0"
-              className="w-full rounded-md border border-white/8 bg-[color:var(--l2-bg-input)] px-3 py-2.5 text-sm text-white focus:border-l2-gold focus:outline-none"
-            />
-          </div>
-          <button
-            type="submit"
-            disabled={sendBusy}
-            className="rounded-md border border-l2-gold/40 px-5 py-2.5 font-display text-xs font-bold uppercase tracking-wider text-l2-gold transition hover:bg-l2-gold/10 disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            {sendBusy ? "Enviando..." : "Enviar"}
-          </button>
-        </form>
-        {sendN >= 50 && (
-          <p className="mt-2 text-[11px] text-l2-green">
-            Bônus +{sendBonus}% → o personagem recebe{" "}
-            <strong>{sendDelivered} TOL</strong>
-          </p>
-        )}
-      </section>
 
       {/* Histórico */}
       <section className="overflow-hidden rounded-xl border border-white/5 bg-[color:var(--l2-bg-card)]">
