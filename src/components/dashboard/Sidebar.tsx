@@ -7,7 +7,6 @@ import type { ServerStatus } from "@/lib/bridge";
 import {
   HomeIcon,
   SwordsIcon,
-  PackageIcon,
   CoinsIcon,
   UsersIcon,
   GiftIcon,
@@ -30,7 +29,6 @@ type MenuItem = {
 const MENU: MenuItem[] = [
   { href: "/dashboard", Icon: HomeIcon, label: "Página principal" },
   { href: "/characters", Icon: SwordsIcon, label: "Meus personagens" },
-  { href: "/warehouse", Icon: PackageIcon, label: "Meu depósito" },
   { href: "/wallet", Icon: CoinsIcon, label: "Saldo" },
   { href: "/referrals", Icon: UsersIcon, label: "Indicações" },
   { href: "/promo-code", Icon: GiftIcon, label: "Código Promocional" },
