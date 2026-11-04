@@ -3,7 +3,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useToast } from "@/components/ui/Toast";
-import { CoinsIcon } from "@/components/icons";
+import { CoinsIcon, CreditCardIcon, AlertTriangleIcon } from "@/components/icons";
 
 // Preço: 1 TOL = R$ 1,50. Presets casam com os tiers de bônus.
 const PRESET_TOL = [50, 100, 150, 200, 300] as const;
@@ -203,7 +203,7 @@ export function WalletPanel({
       {/* Top up — layout fiel ao L2MAD */}
       <section className="mb-8 overflow-hidden rounded-xl border border-white/5 bg-[color:var(--l2-bg-card)]">
         <div className="flex items-center gap-2 border-b border-white/5 px-6 py-4">
-          <span className="text-l2-gold">⛁</span>
+          <CoinsIcon className="h-5 w-5 text-l2-gold" />
           <h3 className="font-display text-sm font-semibold uppercase tracking-wider text-white">
             Recarregar saldo do servidor:{" "}
             <span className="text-l2-gold">L2 Impure</span>
@@ -217,7 +217,7 @@ export function WalletPanel({
               Forma de pagamento
             </div>
             <div className="flex items-center gap-3 rounded-lg border-2 border-l2-gold bg-l2-gold/10 px-4 py-4">
-              <span className="text-2xl">💳</span>
+              <CreditCardIcon className="h-7 w-7 text-l2-gold" />
               <div>
                 <div className="font-display text-sm font-semibold text-white">
                   Mercado Pago
@@ -255,7 +255,7 @@ export function WalletPanel({
               ))}
             </div>
             <p className="mt-2 flex items-start gap-1.5 text-[10px] text-white/40">
-              <span>⚠️</span>
+              <AlertTriangleIcon className="mt-px h-3.5 w-3.5 shrink-0" />
               <span>
                 O bônus é aplicado quando você envia o TOL do painel para o
                 jogo.

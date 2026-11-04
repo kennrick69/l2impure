@@ -1,9 +1,13 @@
 import Link from "next/link";
+import type { SVGProps, ReactElement } from "react";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { bridge, type GameCharacter } from "@/lib/bridge";
 import { PageTitle } from "@/components/dashboard/Placeholder";
 import { CreateAccountTrigger } from "@/components/dashboard/CreateAccountTrigger";
+import { SwordsIcon, PlusIcon, ArrowUpRightIcon } from "@/components/icons";
+
+type IconType = (props: SVGProps<SVGSVGElement>) => ReactElement;
 
 type Row = GameCharacter & { account: string; banned: boolean };
 
@@ -108,23 +112,24 @@ export default async function CharactersPage({
           </span>
           <Link
             href="/characters"
-            className="font-display text-[10px] font-semibold uppercase tracking-wider text-white/55 transition hover:text-white"
+            className="group inline-flex shrink-0 items-center gap-1.5 font-display text-[11px] font-semibold uppercase tracking-wider text-[color:var(--l2-text-gold)] transition hover:brightness-110"
           >
-            Ver todas →
+            <span>Ver todas</span>
+            <ArrowUpRightIcon className="transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
           </Link>
         </div>
       )}
 
       {accounts.length === 0 ? (
         <EmptyState
-          icon="⚔️"
+          Icon={SwordsIcon}
           title="Você ainda não tem contas de jogo"
           description="Crie sua primeira conta de jogo e entre no servidor pra começar a criar personagens."
           cta
         />
       ) : all.length === 0 ? (
         <EmptyState
-          icon="🎭"
+          Icon={SwordsIcon}
           title="Nenhum personagem encontrado"
           description="Crie uma conta e entre no jogo!"
         />
@@ -221,19 +226,19 @@ function CharactersTable({ rows }: { rows: Row[] }) {
 }
 
 function EmptyState({
-  icon,
+  Icon,
   title,
   description,
   cta,
 }: {
-  icon: string;
+  Icon: IconType;
   title: string;
   description: string;
   cta?: boolean;
 }) {
   return (
-    <div className="rounded-xl border border-white/5 bg-[color:var(--l2-bg-card)] p-12 text-center">
-      <div className="mb-4 text-5xl opacity-40">{icon}</div>
+    <div className="l2-panel p-12 text-center">
+      <Icon className="mx-auto mb-4 h-14 w-14 text-white/20" />
       <h2 className="mb-2 font-display text-lg font-bold uppercase tracking-wider text-white">
         {title}
       </h2>
@@ -242,7 +247,7 @@ function EmptyState({
       </p>
       {cta && (
         <CreateAccountTrigger variant="outline">
-          <span>➕</span>
+          <PlusIcon className="h-4 w-4" />
           <span>Criar conta de jogo</span>
         </CreateAccountTrigger>
       )}

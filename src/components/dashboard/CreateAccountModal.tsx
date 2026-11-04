@@ -11,6 +11,7 @@ import {
 } from "react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/components/ui/Toast";
+import { CastleIcon, AlertTriangleIcon } from "@/components/icons";
 
 // ---------- Context ----------
 
@@ -133,11 +134,12 @@ function CreateAccountModal() {
 
         {/* Body */}
         <form onSubmit={onSubmit} className="flex flex-col gap-5 px-6 py-5">
-          <div className="rounded-md border border-white/5 bg-[color:var(--l2-bg-card)] px-4 py-3 text-xs text-white/65">
+          <div className="flex items-center gap-2 rounded-md border border-white/5 bg-[color:var(--l2-bg-card)] px-4 py-3 text-xs text-white/65">
             <span className="font-semibold text-[color:var(--l2-text-gold)]">
               Servidor:
-            </span>{" "}
-            🏰 Impure 10x
+            </span>
+            <CastleIcon className="h-4 w-4 text-[color:var(--l2-text-gold)]" />
+            <span>Impure 10x</span>
           </div>
 
           {/* Login */}
@@ -209,12 +211,15 @@ function CreateAccountModal() {
           </div>
 
           {/* Aviso */}
-          <div className="rounded-md border border-[color:var(--l2-border-gold)]/30 bg-l2-gold/5 p-3 text-xs text-white/65">
-            <span className="font-semibold text-[color:var(--l2-text-gold)]">
-              ⚠️ Atenção:
-            </span>{" "}
-            Esta é a senha pra entrar no <strong>jogo</strong>, não no site.
-            Anote em lugar seguro — não dá pra recuperar pelo painel ainda.
+          <div className="flex gap-2 rounded-md border border-[color:var(--l2-border-gold)]/30 bg-l2-gold/5 p-3 text-xs text-white/65">
+            <AlertTriangleIcon className="mt-0.5 h-4 w-4 shrink-0 text-[color:var(--l2-text-gold)]" />
+            <p>
+              <span className="font-semibold text-[color:var(--l2-text-gold)]">
+                Atenção:
+              </span>{" "}
+              Esta é a senha pra entrar no <strong>jogo</strong>, não no site.
+              Anote em lugar seguro — não dá pra recuperar pelo painel ainda.
+            </p>
           </div>
 
           {/* Submit */}
