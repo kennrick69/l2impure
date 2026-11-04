@@ -48,7 +48,7 @@ export default async function WalletPage() {
     <>
       <PageTitle
         title="Saldo"
-        subtitle="Recarregue coins via Mercado Pago (PIX, cartão, boleto). 1 coin = R$1."
+        subtitle="Recarregue TOL via Mercado Pago (PIX, cartão, boleto). 1 TOL = R$1,50."
       />
       <WalletPanel coins={coins} transactions={transactions} />
     </>
