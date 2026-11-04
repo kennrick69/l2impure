@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { Oswald, Open_Sans } from "next/font/google";
+import { Oswald, Open_Sans, Jost } from "next/font/google";
+import localFont from "next/font/local";
 import Script from "next/script";
 import "./globals.css";
 
@@ -14,6 +15,34 @@ const openSans = Open_Sans({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
   variable: "--font-open-sans",
+  display: "swap",
+});
+
+// Sistema tipográfico real do L2MAD (extraído do CSS deles):
+//   corpo = Jost · títulos/display = Reaver · sabor L2 = Radiance (fonte
+//   do cliente Lineage II). Reaver/Radiance self-hosted em public/fonts.
+const jost = Jost({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-jost",
+  display: "swap",
+});
+
+const reaver = localFont({
+  src: [
+    { path: "../../public/fonts/Reaver-SemiBold.woff", weight: "600", style: "normal" },
+    { path: "../../public/fonts/Reaver-Bold.woff", weight: "700", style: "normal" },
+  ],
+  variable: "--font-reaver",
+  display: "swap",
+});
+
+const radiance = localFont({
+  src: [
+    { path: "../../public/fonts/radiance.woff2", weight: "400", style: "normal" },
+    { path: "../../public/fonts/radiance-semibold.woff2", weight: "600", style: "normal" },
+  ],
+  variable: "--font-radiance",
   display: "swap",
 });
 
@@ -129,7 +158,7 @@ export default function RootLayout({
   return (
     <html
       lang="pt-BR"
-      className={`${oswald.variable} ${openSans.variable} h-full antialiased`}
+      className={`${oswald.variable} ${openSans.variable} ${jost.variable} ${reaver.variable} ${radiance.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-[color:var(--l2-bg-primary)] text-white">
         <script

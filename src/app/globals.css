@@ -44,9 +44,10 @@
   --l2-shadow-lg: 0 8px 34px rgba(0, 0, 0, 0.4);
   --l2-shadow-gold: 0 5px 21px rgba(212, 161, 74, 0.25);
 
-  /* Fonts */
-  --l2-ff: var(--font-open-sans), "Open Sans", -apple-system, BlinkMacSystemFont, sans-serif;
-  --l2-ff-display: var(--font-oswald), "Oswald", "Impact", sans-serif;
+  /* Fonts — sistema real do L2MAD: corpo Jost, display Reaver, L2 Radiance */
+  --l2-ff: var(--font-jost), "Jost", var(--font-open-sans), "Open Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+  --l2-ff-display: var(--font-reaver), "Reaver", var(--font-radiance), "Radiance", var(--font-oswald), "Oswald", "Impact", sans-serif;
+  --l2-ff-l2: var(--font-radiance), "Radiance", var(--font-reaver), "Reaver", sans-serif;
 
   /* Spacing (Fibonacci) */
   --l2-space-xs: 5px;
