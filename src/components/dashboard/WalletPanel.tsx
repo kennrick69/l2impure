@@ -3,7 +3,12 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useToast } from "@/components/ui/Toast";
-import { CoinsIcon, CreditCardIcon, AlertTriangleIcon } from "@/components/icons";
+import {
+  CoinsIcon,
+  CreditCardIcon,
+  AlertTriangleIcon,
+  SendIcon,
+} from "@/components/icons";
 
 // Preço: 1 TOL = R$ 1,50. Presets casam com os tiers de bônus.
 const PRESET_TOL = [50, 100, 150, 200, 300] as const;
@@ -184,20 +189,29 @@ export function WalletPanel({
 
   return (
     <>
-      {/* Saldo */}
-      <section className="mb-8 rounded-xl border border-white/5 bg-[color:var(--l2-bg-card)] p-6">
-        <div className="font-display text-xs font-semibold uppercase tracking-wider text-white/55">
-          Saldo atual
+      {/* Saldo + botão enviar ao jogo ao lado */}
+      <section className="l2-panel mb-8 flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <div className="font-display text-xs font-semibold uppercase tracking-wider text-white/55">
+            Saldo atual
+          </div>
+          <div className="mt-2 flex items-end gap-2">
+            <span className="font-display text-5xl font-bold text-l2-gold">
+              {coins}
+            </span>
+            <CoinsIcon className="mb-1.5 h-8 w-8 text-l2-gold" />
+          </div>
+          <div className="mt-1 text-xs text-white/45">
+            TOL no painel — disponível para enviar a um personagem
+          </div>
         </div>
-        <div className="mt-2 flex items-end gap-2">
-          <span className="font-display text-5xl font-bold text-l2-gold">
-            {coins}
-          </span>
-          <CoinsIcon className="mb-1.5 h-8 w-8 text-l2-gold" />
-        </div>
-        <div className="mt-1 text-xs text-white/45">
-          TOL no painel — disponível para enviar a um personagem
-        </div>
+        <a
+          href="#enviar-jogo"
+          className="inline-flex shrink-0 items-center justify-center gap-2 rounded-md border border-l2-gold/40 px-5 py-3 font-display text-sm font-bold uppercase tracking-wider text-l2-gold transition hover:bg-l2-gold/10"
+        >
+          <SendIcon className="h-4 w-4" />
+          Enviar ao jogo
+        </a>
       </section>
 
       {/* Top up — layout fiel ao L2MAD */}
@@ -316,22 +330,15 @@ export function WalletPanel({
             </div>
           </div>
 
-          {/* Botões */}
-          <div className="flex flex-col gap-3 sm:flex-row lg:col-span-2">
+          {/* Botão */}
+          <div className="lg:col-span-2">
             <button
               type="submit"
               disabled={busy || !validAmount}
-              className="flex-1 rounded-md px-5 py-3 font-display text-sm font-bold uppercase tracking-wider text-black disabled:cursor-not-allowed disabled:opacity-40"
+              className="w-full rounded-md px-5 py-3 font-display text-sm font-bold uppercase tracking-wider text-black disabled:cursor-not-allowed disabled:opacity-40"
               style={{ background: "var(--l2-gold-gradient)" }}
             >
               {busy ? "Criando pagamento..." : "Recarregar"}
-            </button>
-            <button
-              type="button"
-              onClick={() => show("Envio de TOL pro jogo — em breve", "info")}
-              className="flex-1 rounded-md border border-l2-gold/40 px-5 py-3 font-display text-sm font-bold uppercase tracking-wider text-l2-gold transition hover:bg-l2-gold/10"
-            >
-              Enviar ao jogo
             </button>
           </div>
           <p className="text-[10px] text-white/45 lg:col-span-2">
@@ -342,7 +349,10 @@ export function WalletPanel({
       </section>
 
       {/* Enviar TOL ao jogo */}
-      <section className="mb-8 rounded-xl border border-white/5 bg-[color:var(--l2-bg-card)] p-6">
+      <section
+        id="enviar-jogo"
+        className="l2-panel mb-8 scroll-mt-24 p-6"
+      >
         <h3 className="mb-1 font-display text-sm font-semibold uppercase tracking-wider text-white">
           Enviar TOL ao jogo
         </h3>

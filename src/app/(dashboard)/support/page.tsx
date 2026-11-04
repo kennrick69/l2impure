@@ -14,11 +14,8 @@ export default function SupportPage() {
 
       <div className="rounded-xl border border-white/5 bg-[color:var(--l2-bg-card)] p-8">
         <div className="flex flex-col items-start gap-6 lg:flex-row lg:items-center">
-          <div
-            className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full"
-            style={{ backgroundColor: "rgb(var(--l2-discord) / 0.95)" }}
-          >
-            <DiscordIcon className="h-8 w-8 text-white" />
+          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-white">
+            <DiscordIcon className="h-8 w-8 text-[#5865F2]" />
           </div>
           <div className="flex-1">
             <h2 className="mb-2 font-display text-lg font-bold uppercase tracking-wider text-white">
